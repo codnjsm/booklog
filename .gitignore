@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+.firebase/
+functions/lib/
+functions/node_modules/
+tsconfig.tsbuildinfo
+.DS_Store
