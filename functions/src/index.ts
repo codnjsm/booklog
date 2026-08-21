@@ -1,23 +1,21 @@
 import { onRequest } from 'firebase-functions/v2/https'
 import { defineSecret } from 'firebase-functions/params'
 
-const naverClientId = defineSecret('NAVER_CLIENT_ID')
-const naverClientSecret = defineSecret('NAVER_CLIENT_SECRET')
+const kakaoRestApiKey = defineSecret('KAKAO_REST_API_KEY')
 const opendictApiKey = defineSecret('OPENDICT_API_KEY')
 
-export const naverBookSearch = onRequest(
-  { cors: true, secrets: [naverClientId, naverClientSecret], region: 'asia-northeast3', invoker: 'public' },
+export const kakaoBookSearch = onRequest(
+  { cors: true, secrets: [kakaoRestApiKey], region: 'asia-northeast3', invoker: 'public' },
   async (req, res) => {
     const query = req.query.query as string
     if (!query) {
       res.status(400).json({ error: 'query required' })
       return
     }
-    const url = `https://openapi.naver.com/v1/search/book.json?query=${encodeURIComponent(query)}&display=15`
+    const url = `https://dapi.kakao.com/v3/search/book?query=${encodeURIComponent(query)}&size=15`
     const response = await fetch(url, {
       headers: {
-        'X-Naver-Client-Id': naverClientId.value(),
-        'X-Naver-Client-Secret': naverClientSecret.value(),
+        Authorization: `KakaoAK ${kakaoRestApiKey.value()}`,
       },
     })
     const data = await response.json()

@@ -8,8 +8,8 @@
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       {
-        "source": "/api/naverBookSearch",
-        "function": "naverBookSearch"
+        "source": "/api/kakaoBookSearch",
+        "function": "kakaoBookSearch"
       },
       {
         "source": "/api/koreanDictSearch",

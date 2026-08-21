@@ -2,11 +2,11 @@ import { useState, useRef } from 'react'
 import Modal from './Modal'
 import type { BookPrefill } from '../../types'
 
-interface NaverItem {
+interface KakaoItem {
   title: string
-  author: string
-  image: string
-  pubdate: string
+  authors: string[]
+  thumbnail: string
+  datetime: string
   isbn: string
 }
 
@@ -14,7 +14,7 @@ interface Props { onClose: () => void; onSelectBook: (p: BookPrefill) => void; o
 
 export default function AddBookModal({ onClose, onSelectBook, onManualEntry }: Props) {
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState<NaverItem[]>([])
+  const [results, setResults] = useState<KakaoItem[]>([])
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
   const [error, setError] = useState(false)
@@ -24,9 +24,9 @@ export default function AddBookModal({ onClose, onSelectBook, onManualEntry }: P
     if (q.length < 2) { setResults([]); setSearched(false); return }
     setLoading(true); setError(false)
     try {
-      const res = await fetch(`/api/naverBookSearch?query=${encodeURIComponent(q)}`)
-      const data = await res.json() as { items?: NaverItem[] }
-      setResults(data.items || []); setSearched(true)
+      const res = await fetch(`/api/kakaoBookSearch?query=${encodeURIComponent(q)}`)
+      const data = await res.json() as { documents?: KakaoItem[] }
+      setResults(data.documents || []); setSearched(true)
     } catch { setError(true) } finally { setLoading(false) }
   }
 
@@ -35,8 +35,6 @@ export default function AddBookModal({ onClose, onSelectBook, onManualEntry }: P
     if (timerRef.current) clearTimeout(timerRef.current)
     timerRef.current = setTimeout(() => search(v), 400)
   }
-
-  const stripHtml = (s: string) => s.replace(/<[^>]+>/g, '')
 
   return (
     <Modal onClose={onClose}>
@@ -51,13 +49,13 @@ export default function AddBookModal({ onClose, onSelectBook, onManualEntry }: P
           {!loading && results.length > 0 && (
             <div className="search-results">
               {results.map((item, i) => {
-                const title = stripHtml(item.title)
-                const author = stripHtml(item.author).replace(/\^/g, ', ')
-                const year = item.pubdate ? parseInt(item.pubdate.slice(0, 4)) : undefined
+                const title = item.title
+                const author = item.authors.join(', ')
+                const year = item.datetime ? parseInt(item.datetime.slice(0, 4)) : undefined
                 return (
-                  <div key={i} className="search-result" onClick={() => onSelectBook({ title, author, cover: item.image, year })}>
-                    {item.image
-                      ? <img src={item.image} alt={title} onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
+                  <div key={i} className="search-result" onClick={() => onSelectBook({ title, author, cover: item.thumbnail, year })}>
+                    {item.thumbnail
+                      ? <img src={item.thumbnail} alt={title} onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
                       : <div style={{ width: '50px', height: '70px', background: 'var(--surface-2)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', flexShrink: 0 }}>📕</div>
                     }
                     <div className="search-result-info">
