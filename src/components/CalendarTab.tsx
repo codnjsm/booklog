@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import type { Book } from '../types'
+import { useAppUI } from '../contexts/AppUIContext'
 
-interface Props { books: Book[]; onBookClick: (id: string) => void }
+interface Props { books: Book[] }
 
 const DOW_LABELS = ['월', '화', '수', '목', '금', '토', '일']
 const MONTH_NAMES = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월']
@@ -141,7 +142,8 @@ function BookBar({ bar, onClick }: { bar: EventBar; onClick: () => void }) {
   )
 }
 
-export default function CalendarTab({ books, onBookClick }: Props) {
+export default function CalendarTab({ books }: Props) {
+  const { openBookDetail: onBookClick } = useAppUI()
   const now = new Date()
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth())

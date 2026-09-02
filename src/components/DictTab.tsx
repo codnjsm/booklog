@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import type { Word } from '../types'
 
 interface DictSense { definition: string; pos?: string }
@@ -11,29 +12,31 @@ interface Props {
 
 const BTN_SMALL_SECONDARY = "bg-surface text-ink border border-border px-3 py-1.5 rounded-lg text-xs cursor-pointer transition-all duration-150 font-sans hover:bg-surface2"
 
+async function searchDict(q: string): Promise<DictItem[]> {
+  const res = await fetch(`/api/koreanDictSearch?query=${encodeURIComponent(q)}`)
+  if (!res.ok) throw new Error('search failed')
+  const data = await res.json() as DictResponse
+  return data.channel?.item || []
+}
+
 export default function DictTab({ onAddWord }: Props) {
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState<DictItem[]>([])
-  const [loading, setLoading] = useState(false)
-  const [searched, setSearched] = useState(false)
-  const [error, setError] = useState(false)
+  const [debouncedQuery, setDebouncedQuery] = useState('')
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const search = async (q: string) => {
-    if (q.length < 1) { setResults([]); setSearched(false); return }
-    setLoading(true); setError(false)
-    try {
-      const res = await fetch(`/api/koreanDictSearch?query=${encodeURIComponent(q)}`)
-      const data = await res.json() as DictResponse
-      setResults(data.channel?.item || []); setSearched(true)
-    } catch { setError(true) } finally { setLoading(false) }
-  }
 
   const handleInput = (v: string) => {
     setQuery(v)
     if (timerRef.current) clearTimeout(timerRef.current)
-    timerRef.current = setTimeout(() => search(v), 400)
+    timerRef.current = setTimeout(() => setDebouncedQuery(v), 400)
   }
+
+  const { data: results = [], isFetching: loading, isError: error, isSuccess } = useQuery({
+    queryKey: ['koreanDict', debouncedQuery],
+    queryFn: () => searchDict(debouncedQuery),
+    enabled: debouncedQuery.length >= 1,
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  })
 
   return (
     <div>
@@ -45,7 +48,7 @@ export default function DictTab({ onAddWord }: Props) {
         <div className="text-center py-5 text-dim text-[13px] after:content-[''] after:inline-block after:w-3.5 after:h-3.5 after:border-2 after:border-border after:border-t-accent after:rounded-full after:ml-2 after:align-middle after:animate-spin">검색중</div>
       )}
       {error && <div className="text-center py-[30px] px-5 text-dim bg-surface border border-dashed border-border rounded-[10px]"><p>검색 중 오류가 발생했어요</p></div>}
-      {!loading && !error && searched && results.length === 0 && <div className="text-center py-[30px] px-5 text-dim bg-surface border border-dashed border-border rounded-[10px]"><p>검색 결과가 없어요</p></div>}
+      {!loading && !error && isSuccess && results.length === 0 && <div className="text-center py-[30px] px-5 text-dim bg-surface border border-dashed border-border rounded-[10px]"><p>검색 결과가 없어요</p></div>}
       {!loading && results.length > 0 && (
         <div className="mt-3 border-t border-border pt-3">
           {results.map((item, i) => (

@@ -1,9 +1,7 @@
-export type Tab = 'books' | 'quotes' | 'dict' | 'vocab' | 'stats' | 'calendar' | 'friends'
+import { useAppUI } from '../contexts/AppUIContext'
 
 interface Props {
-  active: Tab
   incomingRequestCount: number
-  onChange: (tab: Tab) => void
 }
 
 const TAB = "px-3 py-2.5 sm:px-[18px] sm:py-3 bg-transparent border-none border-b-2 cursor-pointer text-sm sm:text-base font-medium font-sans transition-all duration-150 whitespace-nowrap flex items-center"
@@ -12,7 +10,8 @@ function tabClass(isActive: boolean) {
   return `${TAB} ${isActive ? 'text-ink border-accent' : 'text-dim border-transparent'}`
 }
 
-export default function TabBar({ active, incomingRequestCount, onChange }: Props) {
+export default function TabBar({ incomingRequestCount }: Props) {
+  const { tab: active, changeTab: onChange } = useAppUI()
   return (
     <div className="flex gap-1 mb-4 sm:mb-6 border-b border-border overflow-x-auto">
       <button className={tabClass(active === 'books')} onClick={() => onChange('books')}>

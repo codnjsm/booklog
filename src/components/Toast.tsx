@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
+import { useAppUI } from '../contexts/AppUIContext'
 
-interface Props { msg: string; toastKey?: number }
-
-export default function Toast({ msg, toastKey }: Props) {
+export default function Toast() {
+  const { toast } = useAppUI()
+  const msg = toast?.msg ?? ''
+  const toastKey = toast?.key
   const [visible, setVisible] = useState(false)
   const [mounted, setMounted] = useState(false)
 

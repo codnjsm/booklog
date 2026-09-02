@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useMutation } from '@tanstack/react-query'
 import type { User } from 'firebase/auth'
 import type { UserProfile, FriendRequest, BookStatus, AppState } from '../types'
 import BookCard from './BookCard'
@@ -43,39 +44,37 @@ function Avatar({ url, name, size }: { url?: string; name: string; size: 'sm' | 
 export default function FriendsTab({ user, authLoading, friends, incoming, outgoing, onSearch, onSendRequest, onAcceptRequest, onRejectRequest, onRemoveFriend, onLoadFriendBooks }: Props) {
   const [emailInput, setEmailInput] = useState('')
   const [searchResult, setSearchResult] = useState<UserProfile | null | 'not-found' | 'self'>()
-  const [searching, setSearching] = useState(false)
-  const [sending, setSending] = useState(false)
 
   const [viewingFriend, setViewingFriend] = useState<UserProfile | null>(null)
-  const [friendData, setFriendData] = useState<AppState | null>(null)
-  const [loadingBooks, setLoadingBooks] = useState(false)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
 
-  const handleSearch = async () => {
+  const searchMutation = useMutation({
+    mutationFn: onSearch,
+    onSuccess: (result) => setSearchResult(result ?? 'not-found'),
+  })
+  const searching = searchMutation.isPending
+
+  const sendRequestMutation = useMutation({
+    mutationFn: (toUid: string) => Promise.resolve(onSendRequest(toUid)),
+    onSuccess: () => { setSearchResult(undefined); setEmailInput('') },
+  })
+  const sending = sendRequestMutation.isPending
+
+  const friendBooksQuery = useMutation({ mutationFn: onLoadFriendBooks })
+  const loadingBooks = friendBooksQuery.isPending
+  const friendData = friendBooksQuery.data ?? null
+
+  const handleSearch = () => {
     const email = emailInput.trim().toLowerCase()
     if (!email) return
     if (email === user?.email?.toLowerCase()) { setSearchResult('self'); return }
-    setSearching(true)
-    const result = await onSearch(email)
-    setSearchResult(result ?? 'not-found')
-    setSearching(false)
+    searchMutation.mutate(email)
   }
 
-  const handleSendRequest = async (toUid: string) => {
-    setSending(true)
-    await onSendRequest(toUid)
-    setSending(false)
-    setSearchResult(undefined)
-    setEmailInput('')
-  }
-
-  const handleViewFriend = async (friend: UserProfile) => {
+  const handleViewFriend = (friend: UserProfile) => {
     setViewingFriend(friend)
     setStatusFilter('all')
-    setLoadingBooks(true)
-    const data = await onLoadFriendBooks(friend.uid)
-    setFriendData(data)
-    setLoadingBooks(false)
+    friendBooksQuery.mutate(friend.uid)
   }
 
   const getRequestStatus = (uid: string) => {
@@ -103,7 +102,7 @@ export default function FriendsTab({ user, authLoading, friends, incoming, outgo
     return (
       <div>
         <div className="flex items-center gap-2.5 mb-4">
-          <button className="bg-transparent border-none text-ink text-[28px] leading-none cursor-pointer px-1 flex items-center" onClick={() => { setViewingFriend(null); setFriendData(null) }}>‹</button>
+          <button className="bg-transparent border-none text-ink text-[28px] leading-none cursor-pointer px-1 flex items-center" onClick={() => { setViewingFriend(null); friendBooksQuery.reset() }}>‹</button>
           <div className="flex items-center gap-2 text-[15px] font-semibold text-ink">
             <Avatar url={viewingFriend.photoURL} name={viewingFriend.displayName || viewingFriend.email} size="sm" />
             <span>{viewingFriend.displayName || viewingFriend.email}의 책장</span>
@@ -176,7 +175,7 @@ export default function FriendsTab({ user, authLoading, friends, incoming, outgo
             {getRequestStatus(searchResult.uid) === 'sent' && <span className="text-[11px] text-dim bg-bg border border-border rounded-full px-2.5 py-[3px] whitespace-nowrap flex-shrink-0">요청 보냄</span>}
             {getRequestStatus(searchResult.uid) === 'incoming' && <span className="text-[11px] text-dim bg-bg border border-border rounded-full px-2.5 py-[3px] whitespace-nowrap flex-shrink-0">받은 요청 있음</span>}
             {getRequestStatus(searchResult.uid) === 'none' && (
-              <button className={`${BTN_SM} flex-shrink-0`} onClick={() => handleSendRequest(searchResult.uid)} disabled={sending}>
+              <button className={`${BTN_SM} flex-shrink-0`} onClick={() => sendRequestMutation.mutate(searchResult.uid)} disabled={sending}>
                 {sending ? '전송중…' : '친구 추가'}
               </button>
             )}

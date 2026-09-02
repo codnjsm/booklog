@@ -1,11 +1,12 @@
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useAuth } from './hooks/useAuth'
 import { useData } from './hooks/useData'
 import { useFriends } from './hooks/useFriends'
 import { upsertUserProfile } from './firebase'
-import type { Book, BookPrefill } from './types'
+import { AppUIProvider, useAppUI } from './contexts/AppUIContext'
 import Header from './components/Header'
-import TabBar, { type Tab } from './components/TabBar'
+import TabBar from './components/TabBar'
 import DailyQuote from './components/DailyQuote'
 import BooksTab from './components/BooksTab'
 import QuotesTab from './components/QuotesTab'
@@ -22,19 +23,23 @@ import ManualBookModal from './components/modals/ManualBookModal'
 import BookDetailModal from './components/modals/BookDetailModal'
 import AddQuoteModal from './components/modals/AddQuoteModal'
 
-type Modal =
-  | { type: 'none' }
-  | { type: 'addBook' }
-  | { type: 'manualBook'; prefill?: BookPrefill | Partial<Book>; editId?: string }
-  | { type: 'bookDetail'; bookId: string }
-  | { type: 'addQuote'; bookId?: string | null; editId?: string }
-
-const THEME_KEY = 'reading-notes-theme'
+const queryClient = new QueryClient()
 
 export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AppUIProvider>
+        <AppShell />
+      </AppUIProvider>
+    </QueryClientProvider>
+  )
+}
+
+function AppShell() {
   const { user, loading, signIn, signOut } = useAuth()
   const { state, syncStatus, addBook, updateBook, deleteBook, addQuote, updateQuote, deleteQuote, addWord, deleteWord, exportData, setGoal } = useData(user)
   const { friends, incoming, outgoing, searchUser, sendRequest, acceptRequest, rejectRequest, removeRequest, loadFriendBooks } = useFriends(user)
+  const { tab, modal, theme, toggleTheme, showToast, loginDismissed, dismissLogin, userMenuOpen, toggleUserMenu, closeUserMenu, openManualBook, openAddQuote, closeModal } = useAppUI()
 
   useEffect(() => {
     if (!user) return
@@ -45,42 +50,20 @@ export default function App() {
     }).catch(() => {})
   }, [user])
 
-  const [tab, setTab] = useState<Tab>(() => (localStorage.getItem('reading-notes-tab') as Tab) || 'books')
-  const [modal, setModal] = useState<Modal>({ type: 'none' })
-  const [toast, setToast] = useState<{ msg: string; key: number } | null>(null)
-  const [loginDismissed, setLoginDismissed] = useState(false)
-  const [theme, setTheme] = useState<'dark' | 'light'>(() => (localStorage.getItem(THEME_KEY) as 'dark' | 'light') || 'light')
-  const [userMenuOpen, setUserMenuOpen] = useState(false)
   const userAreaRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light')
-    else document.documentElement.removeAttribute('data-theme')
-    localStorage.setItem(THEME_KEY, theme)
-  }, [theme])
-
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setModal({ type: 'none' }) }
-    document.addEventListener('keydown', handler)
-    return () => document.removeEventListener('keydown', handler)
-  }, [])
-
-  const changeTab = useCallback((t: Tab) => { setTab(t); localStorage.setItem('reading-notes-tab', t) }, [])
-  const showToast = useCallback((msg: string) => setToast({ msg, key: Date.now() }), [])
-  const closeModal = useCallback(() => setModal({ type: 'none' }), [])
+  const handleExport = useCallback(() => { exportData(); showToast('데이터를 내보냈어요') }, [exportData, showToast])
 
   return (
     <div className="max-w-[950px] mx-auto pb-[max(24px,env(safe-area-inset-bottom))]">
-      <Header onAddBook={() => setModal({ type: 'addBook' })} onExport={() => { exportData(); showToast('데이터를 내보냈어요') }} onLogoClick={() => changeTab('books')} />
+      <Header onExport={handleExport} />
       <DailyQuote key={tab} quotes={state.quotes} books={state.books} />
-      <TabBar active={tab} incomingRequestCount={incoming.length} onChange={changeTab} />
+      <TabBar incomingRequestCount={incoming.length} />
 
-      {tab === 'books' && <BooksTab books={state.books} quotes={state.quotes} onBookClick={(id) => setModal({ type: 'bookDetail', bookId: id })} />}
+      {tab === 'books' && <BooksTab books={state.books} quotes={state.quotes} />}
       {tab === 'quotes' && (
         <QuotesTab
           quotes={state.quotes} books={state.books}
-          onBookClick={(id) => setModal({ type: 'bookDetail', bookId: id })}
-          onEditQuote={(id) => setModal({ type: 'addQuote', editId: id })}
           onDeleteQuote={(id) => { if (!confirm('이 문장을 삭제할까요?')) return; deleteQuote(id); showToast('문장이 삭제됐어요') }}
         />
       )}
@@ -93,7 +76,7 @@ export default function App() {
           onDeleteWord={(id) => { deleteWord(id); showToast('단어가 삭제됐어요') }}
         />
       )}
-      {tab === 'calendar' && <CalendarTab books={state.books} onBookClick={(id) => setModal({ type: 'bookDetail', bookId: id })} />}
+      {tab === 'calendar' && <CalendarTab books={state.books} />}
       {tab === 'stats' && <StatsTab books={state.books} quotes={state.quotes} goal={state.readingGoal} onSetGoal={setGoal} />}
       {tab === 'friends' && (
         <FriendsTab
@@ -113,7 +96,7 @@ export default function App() {
 
       <button
         className="fixed bottom-[max(14px,env(safe-area-inset-bottom))] right-3.5 sm:bottom-6 sm:right-6 bg-surface border border-border text-ink w-[42px] h-[42px] sm:w-12 sm:h-12 rounded-full cursor-pointer flex items-center justify-center text-[17px] sm:text-xl transition-all duration-200 p-0 shadow-card z-[90] hover:bg-surface2 hover:-translate-y-0.5 hover:border-dim active:translate-y-0 active:scale-95"
-        onClick={() => setTheme((t) => t === 'light' ? 'dark' : 'light')}
+        onClick={toggleTheme}
         aria-label="테마 전환"
       >
         {theme === 'light' ? '☀️' : '🌙'}
@@ -123,7 +106,7 @@ export default function App() {
         <div ref={userAreaRef}>
           <button
             className="fixed bottom-[max(14px,env(safe-area-inset-bottom))] right-[66px] sm:bottom-6 sm:right-[84px] bg-surface border border-border w-[42px] h-[42px] sm:w-12 sm:h-12 rounded-full cursor-pointer p-0 overflow-hidden shadow-card z-[90] transition-all duration-200 flex items-center justify-center hover:-translate-y-0.5 hover:border-dim"
-            onClick={() => setUserMenuOpen((o) => !o)}
+            onClick={toggleUserMenu}
             title="계정"
           >
             {user.photoURL
@@ -133,17 +116,17 @@ export default function App() {
           </button>
           {userMenuOpen && (
             <UserMenu user={user} syncStatus={syncStatus}
-              onSignOut={async () => { if (!confirm('로그아웃할까요?\n이 기기의 데이터는 그대로 남아있어요.')) return; await signOut(); setUserMenuOpen(false); showToast('로그아웃됐어요') }}
-              onClose={() => setUserMenuOpen(false)}
+              onSignOut={async () => { if (!confirm('로그아웃할까요?\n이 기기의 데이터는 그대로 남아있어요.')) return; await signOut(); closeUserMenu(); showToast('로그아웃됐어요') }}
+              onClose={closeUserMenu}
             />
           )}
         </div>
       )}
 
-      <Toast msg={toast?.msg ?? ''} toastKey={toast?.key} />
+      <Toast />
 
       {modal.type === 'addBook' && (
-        <AddBookModal onClose={closeModal} onSelectBook={(p) => setModal({ type: 'manualBook', prefill: p })} onManualEntry={() => setModal({ type: 'manualBook' })} />
+        <AddBookModal onClose={closeModal} onSelectBook={(p) => openManualBook(p)} onManualEntry={() => openManualBook()} />
       )}
       {modal.type === 'manualBook' && (
         <ManualBookModal prefill={modal.prefill} editId={modal.editId} books={state.books} onClose={closeModal}
@@ -152,15 +135,15 @@ export default function App() {
       )}
       {modal.type === 'bookDetail' && (
         <BookDetailModal bookId={modal.bookId} books={state.books} quotes={state.quotes} onClose={closeModal}
-          onEdit={(id) => { const b = state.books.find((x) => x.id === id); if (b) setModal({ type: 'manualBook', editId: id, prefill: b }) }}
+          onEdit={(id) => { const b = state.books.find((x) => x.id === id); if (b) openManualBook(b, id) }}
           onDelete={(id) => {
             const b = state.books.find((x) => x.id === id); if (!b) return
             const qc = state.quotes.filter((q) => q.bookId === id).length
             if (!confirm(qc > 0 ? `"${b.title}"을(를) 삭제할까요?\n연결된 인용구 ${qc}개도 함께 사라져요.` : `"${b.title}"을(를) 삭제할까요?`)) return
             deleteBook(id); closeModal(); showToast('책이 삭제됐어요')
           }}
-          onAddQuote={(bookId) => setModal({ type: 'addQuote', bookId })}
-          onEditQuote={(quoteId) => setModal({ type: 'addQuote', editId: quoteId })}
+          onAddQuote={(bookId) => openAddQuote(bookId)}
+          onEditQuote={(quoteId) => openAddQuote(undefined, quoteId)}
         />
       )}
       {modal.type === 'addQuote' && (
@@ -173,7 +156,7 @@ export default function App() {
       {!loading && !user && !loginDismissed && (
         <LoginOverlay
           onSignIn={async () => { try { await signIn() } catch (e) { const err = e as { code?: string }; showToast(err.code === 'auth/popup-closed-by-user' ? '로그인이 취소됐어요' : '로그인 중 오류가 발생했어요') } }}
-          onDismiss={() => { setLoginDismissed(true); showToast('로그인 없이 사용 중 · 이 브라우저에만 저장돼요') }}
+          onDismiss={() => { dismissLogin(); showToast('로그인 없이 사용 중 · 이 브라우저에만 저장돼요') }}
         />
       )}
     </div>

@@ -1,16 +1,16 @@
 import { useState } from 'react'
 import type { Quote, Book } from '../types'
 import QuoteCard from './QuoteCard'
+import { useAppUI } from '../contexts/AppUIContext'
 
 interface Props {
   quotes: Quote[]
   books: Book[]
-  onBookClick: (id: string) => void
-  onEditQuote: (id: string) => void
   onDeleteQuote: (id: string) => void
 }
 
-export default function QuotesTab({ quotes, books, onBookClick, onEditQuote, onDeleteQuote }: Props) {
+export default function QuotesTab({ quotes, books, onDeleteQuote }: Props) {
+  const { openBookDetail, openAddQuote } = useAppUI()
   const [search, setSearch] = useState('')
   const [tagFilter, setTagFilter] = useState<string | null>(null)
 
@@ -61,7 +61,7 @@ export default function QuotesTab({ quotes, books, onBookClick, onEditQuote, onD
       ) : (
         <div className="grid gap-3.5">
           {filtered.map((q) => (
-            <QuoteCard key={q.id} quote={q} book={books.find((b) => b.id === q.bookId)} onBookClick={onBookClick} onEdit={() => onEditQuote(q.id)} onDelete={() => onDeleteQuote(q.id)} onTagClick={setTagFilter} />
+            <QuoteCard key={q.id} quote={q} book={books.find((b) => b.id === q.bookId)} onBookClick={openBookDetail} onEdit={() => openAddQuote(undefined, q.id)} onDelete={() => onDeleteQuote(q.id)} onTagClick={setTagFilter} />
           ))}
         </div>
       )}

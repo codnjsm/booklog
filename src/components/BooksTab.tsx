@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { Book, Quote, BookStatus } from '../types'
 import BookCard from './BookCard'
+import { useAppUI } from '../contexts/AppUIContext'
 
 const STATUSES: { id: BookStatus | 'all'; label: string }[] = [
   { id: 'all', label: '전체' },
@@ -27,7 +28,8 @@ function chipClass(isActive: boolean, isDoneStatus: boolean) {
   return `${base} border-border text-dim hover:text-ink`
 }
 
-export default function BooksTab({ books, quotes, onBookClick }: { books: Book[]; quotes: Quote[]; onBookClick: (id: string) => void }) {
+export default function BooksTab({ books, quotes }: { books: Book[]; quotes: Quote[] }) {
+  const { openBookDetail } = useAppUI()
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<BookStatus | 'all'>('all')
   const [sort, setSort] = useState<SortKey>('newest')
@@ -92,7 +94,7 @@ export default function BooksTab({ books, quotes, onBookClick }: { books: Book[]
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-2.5 sm:gap-[18px]">
           {filtered.map((b) => (
-            <BookCard key={b.id} book={b} quoteCount={quotes.filter((q) => q.bookId === b.id).length} onClick={() => onBookClick(b.id)} />
+            <BookCard key={b.id} book={b} quoteCount={quotes.filter((q) => q.bookId === b.id).length} onClick={() => openBookDetail(b.id)} />
           ))}
         </div>
       )}

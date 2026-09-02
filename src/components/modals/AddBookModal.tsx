@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import Modal from './Modal'
 import type { BookPrefill } from '../../types'
 
@@ -20,29 +21,31 @@ const BTN_SECONDARY = "bg-surface text-ink border border-border px-3 py-2 sm:px-
 
 interface Props { onClose: () => void; onSelectBook: (p: BookPrefill) => void; onManualEntry: () => void }
 
+async function searchKakaoBooks(q: string): Promise<KakaoItem[]> {
+  const res = await fetch(`/api/kakaoBookSearch?query=${encodeURIComponent(q)}`)
+  if (!res.ok) throw new Error('search failed')
+  const data = await res.json() as { documents?: KakaoItem[] }
+  return data.documents || []
+}
+
 export default function AddBookModal({ onClose, onSelectBook, onManualEntry }: Props) {
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState<KakaoItem[]>([])
-  const [loading, setLoading] = useState(false)
-  const [searched, setSearched] = useState(false)
-  const [error, setError] = useState(false)
+  const [debouncedQuery, setDebouncedQuery] = useState('')
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const search = async (q: string) => {
-    if (q.length < 2) { setResults([]); setSearched(false); return }
-    setLoading(true); setError(false)
-    try {
-      const res = await fetch(`/api/kakaoBookSearch?query=${encodeURIComponent(q)}`)
-      const data = await res.json() as { documents?: KakaoItem[] }
-      setResults(data.documents || []); setSearched(true)
-    } catch { setError(true) } finally { setLoading(false) }
-  }
 
   const handleInput = (v: string) => {
     setQuery(v)
     if (timerRef.current) clearTimeout(timerRef.current)
-    timerRef.current = setTimeout(() => search(v), 400)
+    timerRef.current = setTimeout(() => setDebouncedQuery(v), 400)
   }
+
+  const { data: results = [], isFetching: loading, isError: error, isSuccess } = useQuery({
+    queryKey: ['kakaoBooks', debouncedQuery],
+    queryFn: () => searchKakaoBooks(debouncedQuery),
+    enabled: debouncedQuery.length >= 2,
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  })
 
   return (
     <Modal onClose={onClose}>
@@ -78,7 +81,7 @@ export default function AddBookModal({ onClose, onSelectBook, onManualEntry }: P
               })}
             </div>
           )}
-          {!loading && !error && searched && results.length === 0 && <div className="text-center py-[30px] px-5 text-dim bg-surface border border-dashed border-border rounded-[10px]"><p>검색 결과가 없어요</p></div>}
+          {!loading && !error && isSuccess && results.length === 0 && <div className="text-center py-[30px] px-5 text-dim bg-surface border border-dashed border-border rounded-[10px]"><p>검색 결과가 없어요</p></div>}
           <div className="text-center my-5 text-dim text-xs">— 또는 —</div>
           <button className={`${BTN_SECONDARY} w-full`} onClick={onManualEntry}>직접 입력하기</button>
         </div>
