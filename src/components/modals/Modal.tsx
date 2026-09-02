@@ -9,7 +9,10 @@ export default function Modal({ onClose, children }: Props) {
   }, [])
 
   return (
-    <div className="modal-overlay active" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
+    <div
+      className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-[100] p-0 sm:p-5 backdrop-blur-sm"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
+    >
       {children}
     </div>
   )

@@ -6,6 +6,8 @@ interface Props {
   max?: string  // YYYY-MM-DD
 }
 
+const SELECT = "flex-1 bg-bg border border-border text-ink rounded-lg py-[9px] px-2.5 text-base font-sans cursor-pointer outline-none appearance-none focus:border-accent"
+
 export default function DatePicker({ value, onChange, max }: Props) {
   const parse = (v: string) => {
     const parts = v ? v.split('-') : ['', '', '']
@@ -54,16 +56,16 @@ export default function DatePicker({ value, onChange, max }: Props) {
   const handleDay = (d: string) => { setDay(d); emit(year, month, d) }
 
   return (
-    <div className="date-picker">
-      <select className="dp-year" value={year} onChange={(e) => handleYear(e.target.value)}>
+    <div className="flex gap-1.5">
+      <select className={SELECT} value={year} onChange={(e) => handleYear(e.target.value)}>
         <option value="">년도</option>
         {years.map((y) => <option key={y} value={y}>{y}년</option>)}
       </select>
-      <select className="dp-month" value={month} onChange={(e) => handleMonth(e.target.value)}>
+      <select className={SELECT} value={month} onChange={(e) => handleMonth(e.target.value)}>
         <option value="">월</option>
         {months.map((m) => <option key={m} value={m}>{m}월</option>)}
       </select>
-      <select className="dp-day" value={day} onChange={(e) => handleDay(e.target.value)}>
+      <select className={SELECT} value={day} onChange={(e) => handleDay(e.target.value)}>
         <option value="">일</option>
         {days.map((d) => <option key={d} value={d}>{d}일</option>)}
       </select>

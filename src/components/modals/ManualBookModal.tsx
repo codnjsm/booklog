@@ -23,6 +23,18 @@ function defaultStartDate(status: BookStatus, existingDate?: string) {
   return (status === 'reading' || status === 'done') ? today : ''
 }
 
+const MODAL_PANEL = "bg-surface border border-border rounded-t-2xl sm:rounded-xl w-full max-w-full sm:max-w-[560px] max-h-[92vh] sm:max-h-[90vh] overflow-y-auto shadow-card"
+const MODAL_HEADER = "pt-3.5 px-[18px] pb-3 sm:pt-[22px] sm:px-6 sm:pb-4 border-b border-border flex justify-between items-center"
+const MODAL_CLOSE = "bg-transparent border-none text-dim text-lg cursor-pointer leading-none px-2 py-1 hover:text-ink"
+const MODAL_BODY = "px-[18px] py-3.5 sm:px-6 sm:py-[22px] text-sm sm:text-[15px]"
+const MODAL_ACTIONS = "flex gap-2 justify-end px-[18px] py-3 sm:px-6 sm:py-4 border-t border-border pb-[max(12px,env(safe-area-inset-bottom))] sm:pb-4"
+const FORM_GROUP = "mb-3.5"
+const FORM_LABEL = "flex text-xs text-dim mb-1.5 uppercase tracking-[.05em]"
+const FORM_INPUT = "w-full bg-bg border border-border text-ink px-3 py-2 rounded-[7px] text-base font-sans placeholder:text-dim placeholder:opacity-50 focus:outline-none focus:border-accent"
+const FORM_TEXTAREA = `${FORM_INPUT} resize-y min-h-[90px] leading-[1.6]`
+const BTN = "bg-accent text-bg border-none px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg text-xs sm:text-[13px] cursor-pointer transition-all duration-150 font-sans hover:bg-accenthover disabled:opacity-50 disabled:cursor-not-allowed"
+const BTN_SECONDARY = "bg-surface text-ink border border-border px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg text-xs sm:text-[13px] cursor-pointer transition-all duration-150 font-sans hover:bg-surface2"
+
 interface Props { prefill?: BookPrefill | Partial<Book>; editId?: string; books: Book[]; onClose: () => void; onSave: (data: Omit<Book, 'id' | 'createdAt'>, editId?: string) => void }
 
 export default function ManualBookModal({ prefill, editId, books, onClose, onSave }: Props) {
@@ -47,48 +59,54 @@ export default function ManualBookModal({ prefill, editId, books, onClose, onSav
 
   return (
     <Modal onClose={onClose}>
-      <div className="modal">
-        <div className="modal-header"><h3>{editId ? '책 편집' : '책 추가'}</h3><button className="modal-close" onClick={onClose}>×</button></div>
-        <div className="modal-body">
-          <div className="form-group"><label>제목 <span style={{ color: 'var(--danger)' }}>*</span></label><input type="text" placeholder="책 제목" value={title} onChange={(e) => setTitle(e.target.value)} autoFocus={!prefill?.title} /></div>
-          <div className="form-group"><label>저자</label><input type="text" placeholder="저자명" value={author} onChange={(e) => setAuthor(e.target.value)} /></div>
-          <div className="form-group"><label>표지 이미지 URL</label><input type="text" placeholder="https://..." value={cover} onChange={(e) => setCover(e.target.value)} /></div>
-          <div className="form-group"><label>출판 연도</label><input type="number" placeholder="2024" value={year} onChange={(e) => setYear(e.target.value)} /></div>
-          <div className="form-group">
-            <label>상태</label>
-            <div className="status-options">
-              {STATUSES.map((s) => <div key={s.id} className={`status-option${status === s.id ? ' selected' : ''}`} onClick={() => handleStatusChange(s.id)}>{s.emoji} {s.label}</div>)}
+      <div className={MODAL_PANEL}>
+        <div className={MODAL_HEADER}><h3 className="font-sans text-base font-semibold">{editId ? '책 편집' : '책 추가'}</h3><button className={MODAL_CLOSE} onClick={onClose}>×</button></div>
+        <div className={MODAL_BODY}>
+          <div className={FORM_GROUP}><label className={FORM_LABEL}>제목 <span className="text-danger">*</span></label><input type="text" placeholder="책 제목" value={title} onChange={(e) => setTitle(e.target.value)} autoFocus={!prefill?.title} className={FORM_INPUT} /></div>
+          <div className={FORM_GROUP}><label className={FORM_LABEL}>저자</label><input type="text" placeholder="저자명" value={author} onChange={(e) => setAuthor(e.target.value)} className={FORM_INPUT} /></div>
+          <div className={FORM_GROUP}><label className={FORM_LABEL}>표지 이미지 URL</label><input type="text" placeholder="https://..." value={cover} onChange={(e) => setCover(e.target.value)} className={FORM_INPUT} /></div>
+          <div className={FORM_GROUP}><label className={FORM_LABEL}>출판 연도</label><input type="number" placeholder="2024" value={year} onChange={(e) => setYear(e.target.value)} className={FORM_INPUT} /></div>
+          <div className={FORM_GROUP}>
+            <label className={FORM_LABEL}>상태</label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
+              {STATUSES.map((s) => (
+                <div
+                  key={s.id}
+                  className={`py-[9px] px-2 rounded-[7px] text-center cursor-pointer text-[13px] transition-all duration-150 border ${status === s.id ? 'border-accent bg-[var(--accent-soft)] text-accent' : 'bg-bg border-border hover:border-dim'}`}
+                  onClick={() => handleStatusChange(s.id)}
+                >{s.emoji} {s.label}</div>
+              ))}
             </div>
           </div>
           {(status === 'reading' || status === 'done') && (
-            <div className="form-group">
-              <label>시작 날짜</label>
+            <div className={FORM_GROUP}>
+              <label className={FORM_LABEL}>시작 날짜</label>
               <DatePicker value={startedAt} max={today} onChange={setStartedAt} />
             </div>
           )}
           {status === 'done' && (
-            <div className="form-group">
-              <label>완독 날짜</label>
+            <div className={FORM_GROUP}>
+              <label className={FORM_LABEL}>완독 날짜</label>
               <DatePicker value={finishedAt} max={today} onChange={setFinishedAt} />
             </div>
           )}
-          <div className="form-group">
-            <label>별점</label>
-            <div className="star-input">
-              {[1,2,3,4,5].map((n) => <span key={n} className={`star${rating >= n ? ' filled' : ''}`} onClick={() => setRating(rating === n ? 0 : n)}>★</span>)}
+          <div className={FORM_GROUP}>
+            <label className={FORM_LABEL}>별점</label>
+            <div className="flex gap-1 text-2xl cursor-pointer">
+              {[1,2,3,4,5].map((n) => <span key={n} className={`transition-colors duration-100 ${rating >= n ? 'text-accent' : 'text-border'}`} onClick={() => setRating(rating === n ? 0 : n)}>★</span>)}
             </div>
           </div>
-          <div className="form-group"><label>독후감 / 메모</label><textarea placeholder="이 책에 대한 생각을 자유롭게 적어보세요…" value={review} onChange={(e) => setReview(e.target.value)} /></div>
-          <div className="form-group">
-            <label className="private-toggle-label">
-              <input type="checkbox" checked={isPrivate} onChange={(e) => setIsPrivate(e.target.checked)} />
+          <div className={FORM_GROUP}><label className={FORM_LABEL}>독후감 / 메모</label><textarea placeholder="이 책에 대한 생각을 자유롭게 적어보세요…" value={review} onChange={(e) => setReview(e.target.value)} className={FORM_TEXTAREA} /></div>
+          <div className={FORM_GROUP}>
+            <label className="flex items-center gap-1.5 cursor-pointer text-sm text-ink select-none leading-none">
+              <input type="checkbox" checked={isPrivate} onChange={(e) => setIsPrivate(e.target.checked)} className="w-[15px] h-[15px] accent-accent cursor-pointer flex-shrink-0 m-0" />
               <span>친구에게 비공개</span>
             </label>
           </div>
         </div>
-        <div className="modal-actions">
-          <button className="btn btn-secondary" onClick={onClose}>취소</button>
-          <button className="btn" onClick={() => {
+        <div className={MODAL_ACTIONS}>
+          <button className={BTN_SECONDARY} onClick={onClose}>취소</button>
+          <button className={BTN} onClick={() => {
             if (!title.trim()) return
             onSave({
               title: title.trim(), author: author.trim(), cover: cover.trim(), year: year.trim(),

@@ -12,15 +12,15 @@ export default function UserMenu({ user, syncStatus, onSignOut, onClose }: Props
     return () => document.removeEventListener('mousedown', handler)
   }, [onClose])
   const syncLabel = syncStatus === 'saving' ? '⏳ 저장 중…' : syncStatus === 'error' ? '⚠️ 저장 실패' : '☁️ 동기화됨'
-  const syncClass = `user-menu-sync${syncStatus === 'saving' ? ' saving' : syncStatus === 'error' ? ' error' : ''}`
+  const syncColor = syncStatus === 'saving' ? 'text-accent' : syncStatus === 'error' ? 'text-danger' : 'text-success'
   return (
-    <div className="user-menu" ref={ref}>
-      <div className="user-menu-info">
-        <div>{user.displayName || '사용자'}</div>
-        <div>{user.email || ''}</div>
+    <div className="fixed bottom-[68px] right-3.5 sm:bottom-[84px] sm:right-6 bg-surface border border-border rounded-[10px] p-1 w-[210px] sm:w-[240px] shadow-card z-[91]" ref={ref}>
+      <div className="px-4 pt-3.5 pb-3 border-b border-border">
+        <div className="text-sm font-semibold text-ink mb-0.5">{user.displayName || '사용자'}</div>
+        <div className="text-xs text-dim overflow-hidden text-ellipsis whitespace-nowrap">{user.email || ''}</div>
       </div>
-      <div className={syncClass}>{syncLabel}</div>
-      <button className="user-menu-btn" onClick={onSignOut}>로그아웃</button>
+      <div className={`px-4 py-2.5 text-xs border-b border-border ${syncColor}`}>{syncLabel}</div>
+      <button className="w-full bg-transparent border-none text-left px-4 py-2.5 text-[13px] text-ink cursor-pointer font-sans rounded-md hover:bg-surface2" onClick={onSignOut}>로그아웃</button>
     </div>
   )
 }

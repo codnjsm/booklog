@@ -70,7 +70,7 @@ export default function App() {
   const closeModal = useCallback(() => setModal({ type: 'none' }), [])
 
   return (
-    <div className="container">
+    <div className="max-w-[950px] mx-auto pb-[max(24px,env(safe-area-inset-bottom))]">
       <Header onAddBook={() => setModal({ type: 'addBook' })} onExport={() => { exportData(); showToast('데이터를 내보냈어요') }} onLogoClick={() => changeTab('books')} />
       <DailyQuote key={tab} quotes={state.quotes} books={state.books} />
       <TabBar active={tab} incomingRequestCount={incoming.length} onChange={changeTab} />
@@ -111,16 +111,24 @@ export default function App() {
         />
       )}
 
-      <button className="theme-toggle" onClick={() => setTheme((t) => t === 'light' ? 'dark' : 'light')} aria-label="테마 전환">
+      <button
+        className="fixed bottom-[max(14px,env(safe-area-inset-bottom))] right-3.5 sm:bottom-6 sm:right-6 bg-surface border border-border text-ink w-[42px] h-[42px] sm:w-12 sm:h-12 rounded-full cursor-pointer flex items-center justify-center text-[17px] sm:text-xl transition-all duration-200 p-0 shadow-card z-[90] hover:bg-surface2 hover:-translate-y-0.5 hover:border-dim active:translate-y-0 active:scale-95"
+        onClick={() => setTheme((t) => t === 'light' ? 'dark' : 'light')}
+        aria-label="테마 전환"
+      >
         {theme === 'light' ? '☀️' : '🌙'}
       </button>
 
       {user && (
         <div ref={userAreaRef}>
-          <button className="user-toggle" onClick={() => setUserMenuOpen((o) => !o)} title="계정">
+          <button
+            className="fixed bottom-[max(14px,env(safe-area-inset-bottom))] right-[66px] sm:bottom-6 sm:right-[84px] bg-surface border border-border w-[42px] h-[42px] sm:w-12 sm:h-12 rounded-full cursor-pointer p-0 overflow-hidden shadow-card z-[90] transition-all duration-200 flex items-center justify-center hover:-translate-y-0.5 hover:border-dim"
+            onClick={() => setUserMenuOpen((o) => !o)}
+            title="계정"
+          >
             {user.photoURL
-              ? <img src={user.photoURL} referrerPolicy="no-referrer" alt={user.displayName || ''} />
-              : <span className="user-initial">{(user.displayName || user.email || '?')[0].toUpperCase()}</span>
+              ? <img src={user.photoURL} referrerPolicy="no-referrer" alt={user.displayName || ''} className="w-full h-full object-cover" />
+              : <span className="w-full h-full flex items-center justify-center text-lg font-semibold text-ink bg-surface2">{(user.displayName || user.email || '?')[0].toUpperCase()}</span>
             }
           </button>
           {userMenuOpen && (

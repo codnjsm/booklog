@@ -16,5 +16,7 @@ export default function Toast({ msg, toastKey }: Props) {
   }, [toastKey])
 
   if (!mounted) return null
-  return <div className={`toast${visible ? ' show' : ''}`}>{msg}</div>
+  return (
+    <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 bg-surface text-ink px-5 py-3 border border-accent rounded-lg text-[13px] z-[200] transition-transform duration-300 ease-in-out shadow-card ${visible ? 'translate-y-0' : 'translate-y-[120%]'}`}>{msg}</div>
+  )
 }
