@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { BrowserRouter } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
 import { useData } from './hooks/useData'
 import { useFriends } from './hooks/useFriends'
@@ -28,9 +29,11 @@ const queryClient = new QueryClient()
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AppUIProvider>
-        <AppShell />
-      </AppUIProvider>
+      <BrowserRouter>
+        <AppUIProvider>
+          <AppShell />
+        </AppUIProvider>
+      </BrowserRouter>
     </QueryClientProvider>
   )
 }
