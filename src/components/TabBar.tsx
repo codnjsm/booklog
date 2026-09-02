@@ -4,7 +4,7 @@ interface Props {
   incomingRequestCount: number
 }
 
-const TAB = "px-3 py-2.5 sm:px-[18px] sm:py-3 bg-transparent border-none border-b-2 cursor-pointer text-sm sm:text-base font-medium font-sans transition-all duration-150 whitespace-nowrap flex items-center"
+const TAB = "px-3 py-2.5 sm:px-[18px] sm:py-3 bg-transparent border-b-2 cursor-pointer text-sm sm:text-base font-medium font-sans transition-all duration-150 whitespace-nowrap flex items-center"
 
 function tabClass(isActive: boolean) {
   return `${TAB} ${isActive ? 'text-ink border-accent' : 'text-dim border-transparent'}`
