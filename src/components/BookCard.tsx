@@ -29,8 +29,8 @@ export default function BookCard({ book, quoteCount, onClick }: Props) {
         ) : (
           <div className="text-center p-4 font-sans">
             <span className="sm:hidden text-[28px]">📖</span>
-            <div className="hidden sm:block text-base font-semibold mb-2 text-ink leading-[1.3]">{book.title}</div>
-            <div className="hidden sm:block text-xs text-dim">{book.author}</div>
+            <div className="hidden sm:block text-xs font-semibold mb-1.5 text-ink/70 leading-snug">{book.title}</div>
+            <div className="hidden sm:block text-[10px] text-dim">{book.author}</div>
           </div>
         )}
         <div className={`absolute top-2 right-2 text-[11px] px-2 py-1 rounded font-medium ${isDone ? 'bg-accent text-white border border-transparent' : 'bg-surface text-ink border border-border'}`}>{status.label}</div>

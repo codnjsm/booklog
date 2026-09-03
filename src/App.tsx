@@ -133,6 +133,7 @@ function AppShell() {
             if (!confirm(qc > 0 ? `"${b.title}"을(를) 삭제할까요?\n연결된 인용구 ${qc}개도 함께 사라져요.` : `"${b.title}"을(를) 삭제할까요?`)) return
             deleteBook(id); closeModal(); showToast('책이 삭제됐어요')
           }}
+          onTogglePrivate={(id, next) => { updateBook(id, { isPrivate: next || undefined }); showToast(next ? '친구에게 비공개로 바꿨어요' : '친구에게 공개로 바꿨어요') }}
           onAddQuote={(bookId) => openAddQuote(bookId)}
           onEditQuote={(quoteId) => openAddQuote(undefined, quoteId)}
         />

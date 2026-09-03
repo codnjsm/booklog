@@ -42,9 +42,11 @@ export default function StatsTab({ books, quotes, goal, onSetGoal }: Props) {
   done.forEach((b) => { if (b.author) authorCounts[b.author] = (authorCounts[b.author] || 0) + 1 })
   const topAuthors = Object.entries(authorCounts).sort((a, b) => b[1] - a[1]).slice(0, 5)
 
-  const tagCounts: Record<string, number> = {}
-  quotes.forEach((q) => (q.tags || []).forEach((t) => { tagCounts[t] = (tagCounts[t] || 0) + 1 }))
-  const topTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 5)
+  const quotesPerBook: Record<string, number> = {}
+  quotes.forEach((q) => { if (q.bookId) quotesPerBook[q.bookId] = (quotesPerBook[q.bookId] || 0) + 1 })
+  const topQuoted = Object.entries(quotesPerBook)
+    .map(([id, count]) => ({ title: books.find((b) => b.id === id)?.title ?? '삭제된 책', count }))
+    .sort((a, b) => b.count - a.count).slice(0, 5)
 
   const handleSaveGoal = () => {
     const n = parseInt(input)
@@ -138,13 +140,13 @@ export default function StatsTab({ books, quotes, goal, onSetGoal }: Props) {
           </div>
         </div>
       )}
-      {topTags.length > 0 && (
+      {topQuoted.length > 0 && (
         <div className="bg-surface border border-border rounded-[10px] p-4 sm:p-[22px] mb-4">
-          <div className="text-base font-semibold mb-4 text-dim uppercase tracking-[0.05em]">자주 쓴 태그</div>
+          <div className="text-base font-semibold mb-4 text-dim uppercase tracking-[0.05em]">문장을 많이 모은 책</div>
           <div className="flex flex-col gap-2">
-            {topTags.map(([t, c]) => (
-              <div key={t} className="flex justify-between items-center py-[7px] px-2.5 sm:py-2 sm:px-3 bg-bg rounded-md text-[13px]">
-                <span>#{t}</span><span className="font-semibold [font-variant-numeric:tabular-nums]">{c}회</span>
+            {topQuoted.map((t) => (
+              <div key={t.title} className="flex justify-between items-center gap-3 py-[7px] px-2.5 sm:py-2 sm:px-3 bg-bg rounded-md text-[13px]">
+                <span className="truncate">{t.title}</span><span className="font-semibold flex-shrink-0 [font-variant-numeric:tabular-nums]">{t.count}개</span>
               </div>
             ))}
           </div>
