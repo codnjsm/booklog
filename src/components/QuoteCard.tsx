@@ -27,7 +27,7 @@ export default function QuoteCard({ quote, book, onBookClick, onEdit, onDelete, 
       </div>
       {(quote.tags || []).length > 0 && (
         <div className="flex gap-1.5 flex-wrap mb-3">
-          {quote.tags.map((t) => <span key={t} className="text-[11px] px-2.5 py-[3px] bg-[var(--accent-soft)] text-accent rounded-full cursor-pointer" onClick={() => onTagClick(t)}>#{t}</span>)}
+          {quote.tags.map((t) => <span key={t} className="text-[11px] px-2.5 py-[3px] bg-accentsoft text-accent rounded-full cursor-pointer" onClick={() => onTagClick(t)}>#{t}</span>)}
         </div>
       )}
       <div className="flex gap-1.5 justify-end">

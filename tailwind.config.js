@@ -15,8 +15,10 @@ export default {
         dim: 'var(--text-dim)',
         accent: 'var(--accent)',
         accenthover: 'var(--accent-hover)',
+        accentsoft: 'var(--accent-soft)',
         danger: 'var(--danger)',
-        success: 'var(--success)',
+        ok: 'var(--ok)',
+        highlight: 'var(--highlight)',
       },
       fontFamily: {
         sans: ['"Noto Sans KR"', 'sans-serif'],

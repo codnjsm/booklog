@@ -4,7 +4,7 @@ import type { Book, Quote } from '../types'
 interface Props { books: Book[]; quotes: Quote[]; goal?: number; onSetGoal: (n: number) => void }
 
 const FORM_INPUT = "w-full bg-bg border border-border text-ink px-3 py-2 rounded-[7px] text-base font-sans placeholder:text-dim placeholder:opacity-50 focus:outline-none focus:border-accent"
-const BTN = "bg-accent text-bg border-none px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg text-xs sm:text-[13px] cursor-pointer transition-all duration-150 font-sans hover:bg-accenthover"
+const BTN = "bg-ink text-bg border-none px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg text-xs sm:text-[13px] cursor-pointer transition-all duration-150 font-sans hover:opacity-90"
 const BTN_SECONDARY = "bg-surface text-ink border border-border px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg text-xs sm:text-[13px] cursor-pointer transition-all duration-150 font-sans hover:bg-surface2"
 const BTN_SMALL_SECONDARY = "bg-surface text-ink border border-border px-3 py-1.5 rounded-lg text-xs cursor-pointer transition-all duration-150 font-sans hover:bg-surface2"
 
@@ -81,10 +81,10 @@ export default function StatsTab({ books, quotes, goal, onSetGoal }: Props) {
                   <span className="text-[13px] text-dim">
                     <span className="font-semibold text-ink">{doneThisYear}</span> / {goal}권
                   </span>
-                  <span className={`text-[13px] ${pct >= 100 ? 'text-success font-semibold' : 'text-dim'}`}>{pct}%</span>
+                  <span className={`text-[13px] ${pct >= 100 ? 'text-accent font-semibold' : 'text-dim'}`}>{pct}%</span>
                 </div>
                 <div className="h-2 bg-surface2 rounded-full overflow-hidden">
-                  <div className={`h-full rounded-full transition-[width] duration-[400ms] ease-in-out ${pct >= 100 ? 'bg-success' : 'bg-accent'}`} style={{ width: `${pct}%` }} />
+                  <div className={`h-full rounded-full transition-[width] duration-[400ms] ease-in-out ${'bg-accent'}`} style={{ width: `${pct}%` }} />
                 </div>
               </div>
             ) : (

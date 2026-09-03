@@ -4,7 +4,7 @@ interface Props {
   onExport: () => void
 }
 
-const BTN = "bg-accent text-bg border-none px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg text-xs sm:text-[13px] min-w-[50px] sm:min-w-0 cursor-pointer transition-all duration-150 font-sans hover:bg-accenthover disabled:opacity-50 disabled:cursor-not-allowed"
+const BTN = "bg-ink text-bg border-none px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg text-xs sm:text-[13px] min-w-[50px] sm:min-w-0 cursor-pointer transition-all duration-150 font-sans hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
 const BTN_SECONDARY = "bg-surface text-ink border border-border px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg text-xs sm:text-[13px] min-w-[50px] sm:min-w-0 cursor-pointer transition-all duration-150 font-sans hover:bg-surface2 disabled:opacity-50 disabled:cursor-not-allowed"
 
 export default function Header({ onExport }: Props) {

@@ -8,7 +8,7 @@ const MODAL_HEADER = "pt-3.5 px-[18px] pb-3 sm:pt-[22px] sm:px-6 sm:pb-4 border-
 const MODAL_CLOSE = "bg-transparent border-none text-dim text-lg cursor-pointer leading-none px-2 py-1 hover:text-ink"
 const MODAL_BODY = "px-[18px] py-3.5 sm:px-6 sm:py-[22px] text-sm sm:text-[15px]"
 const MODAL_ACTIONS = "flex gap-2 justify-end px-[18px] py-3 sm:px-6 sm:py-4 border-t border-border pb-[max(12px,env(safe-area-inset-bottom))] sm:pb-4"
-const BTN_SMALL = "bg-accent text-bg border-none px-3 py-1.5 rounded-lg text-xs cursor-pointer transition-all duration-150 font-sans hover:bg-accenthover"
+const BTN_SMALL = "bg-ink text-bg border-none px-3 py-1.5 rounded-lg text-xs cursor-pointer transition-all duration-150 font-sans hover:opacity-90"
 const BTN_SMALL_SECONDARY = "bg-surface text-ink border border-border px-3 py-1.5 rounded-lg text-xs cursor-pointer transition-all duration-150 font-sans hover:bg-surface2"
 const BTN_SECONDARY = "bg-surface text-ink border border-border px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg text-xs sm:text-[13px] cursor-pointer transition-all duration-150 font-sans hover:bg-surface2"
 const BTN_DANGER = "bg-transparent text-danger border border-border px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg text-xs sm:text-[13px] cursor-pointer transition-all duration-150 font-sans hover:bg-danger/10"
@@ -33,7 +33,7 @@ export default function BookDetailModal({ bookId, books, quotes, onClose, onEdit
             <div className="flex-1">
               <div className="font-semibold mb-1.5">{book.title}</div>
               <div className="text-dim text-sm mb-2">{book.author || '저자 미상'}{book.year ? ` · ${book.year}` : ''}</div>
-              <div className="mb-2"><span className="bg-[var(--accent-soft)] text-accent px-2.5 py-[3px] rounded-full text-xs">{status.emoji} {status.label}</span></div>
+              <div className="mb-2"><span className="bg-accentsoft text-accent px-2.5 py-[3px] rounded-full text-xs">{status.emoji} {status.label}</span></div>
               {book.rating > 0 && <div className="text-accent tracking-[1px]">{'★'.repeat(book.rating)}{'☆'.repeat(5 - book.rating)}</div>}
             </div>
           </div>

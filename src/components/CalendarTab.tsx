@@ -128,7 +128,7 @@ function BookBar({ bar, onClick }: { bar: EventBar; onClick: () => void }) {
 
   return (
     <div
-      className="flex items-center gap-0.5 sm:gap-1.5 bg-[var(--accent-soft)] border border-border rounded-[3px] sm:rounded-[5px] px-1 sm:px-2 py-1 cursor-pointer overflow-hidden transition-colors duration-150 mx-[1px] sm:mx-0.5 pointer-events-auto hover:bg-surface2 hover:border-accent"
+      className="flex items-center gap-0.5 sm:gap-1.5 bg-accentsoft border border-border rounded-[3px] sm:rounded-[5px] px-1 sm:px-2 py-1 cursor-pointer overflow-hidden transition-colors duration-150 mx-[1px] sm:mx-0.5 pointer-events-auto hover:bg-surface2 hover:border-accent"
       style={{ gridColumn: `${startCol + 1} / span ${span}`, gridRow: lane + 1 }}
       onClick={(e) => { e.stopPropagation(); onClick() }}
       title={book.title}

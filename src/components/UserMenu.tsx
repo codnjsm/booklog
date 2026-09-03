@@ -12,7 +12,7 @@ export default function UserMenu({ user, syncStatus, onSignOut, onClose }: Props
     return () => document.removeEventListener('mousedown', handler)
   }, [onClose])
   const syncLabel = syncStatus === 'saving' ? '⏳ 저장 중…' : syncStatus === 'error' ? '⚠️ 저장 실패' : '☁️ 동기화됨'
-  const syncColor = syncStatus === 'saving' ? 'text-accent' : syncStatus === 'error' ? 'text-danger' : 'text-success'
+  const syncColor = syncStatus === 'saving' ? 'text-accent' : syncStatus === 'error' ? 'text-danger' : 'text-ok'
   return (
     <div className="fixed bottom-[68px] right-3.5 sm:bottom-[84px] sm:right-6 bg-surface border border-border rounded-[10px] p-1 w-[210px] sm:w-[240px] shadow-card z-[91]" ref={ref}>
       <div className="px-4 pt-3.5 pb-3 border-b border-border">

@@ -9,34 +9,37 @@
   font-display: swap;
 }
 
+/* 라이트가 기본값. 다크는 [data-theme="dark"] 로 전환 */
 :root {
-  --bg: #1c1917;
-  --surface: #262422;
-  --surface-2: #34302d;
-  --border: #44403c;
-  --text: #f5f5f4;
-  --text-dim: #a8a29e;
-  --accent: #fafaf9;
-  --accent-hover: #e7e5e4;
-  --accent-soft: rgba(250, 250, 249, 0.1);
-  --danger: #f87171;
-  --success: #4FA3E0;
-  --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  --logo: #fafaf9;
+  --bg: #FAFAFA;
+  --surface: #FFFFFF;
+  --surface-2: #F4F4F5;
+  --border: #E4E4E7;
+  --text: #18181B;
+  --text-dim: #71717A;
+  --accent: #2946C8;
+  --accent-hover: #1E37A6;
+  --accent-soft: #EEF1FC;
+  --danger: #DC2626;
+  --ok: #16A34A;
+  --highlight: #DDF247;
+  --shadow: 0 1px 2px rgba(24, 24, 27, 0.04), 0 8px 24px rgba(24, 24, 27, 0.06);
+  --logo: #18181B;
 }
 
-[data-theme="light"] {
-  --bg: #fafaf9;
-  --surface: #ffffff;
-  --surface-2: #f5f5f4;
-  --border: #e7e5e4;
-  --text: #1c1917;
-  --text-dim: #78716c;
-  --accent: #292524;
-  --accent-hover: #1c1917;
-  --accent-soft: rgba(41, 37, 36, 0.08);
-  --danger: #dc2626;
-  --success: #2272C3;
-  --shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-  --logo: #1c1917;
+[data-theme="dark"] {
+  --bg: #101012;
+  --surface: #17171A;
+  --surface-2: #202024;
+  --border: #2E2E33;
+  --text: #F4F4F5;
+  --text-dim: #9C9CA5;
+  --accent: #7B93FF;
+  --accent-hover: #9AACFF;
+  --accent-soft: rgba(123, 147, 255, 0.14);
+  --danger: #F87171;
+  --ok: #4ADE80;
+  --highlight: rgba(221, 242, 71, 0.3);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 28px rgba(0, 0, 0, 0.35);
+  --logo: #F4F4F5;
 }

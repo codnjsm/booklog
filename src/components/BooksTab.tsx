@@ -21,11 +21,11 @@ const SORTS: { id: SortKey; label: string }[] = [
 
 const CARET = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a8a29e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"
 
-function chipClass(isActive: boolean, isDoneStatus: boolean) {
-  const base = "px-3 py-[9px] bg-surface border rounded-full text-xs cursor-pointer transition-all duration-150 font-sans"
-  if (isActive && isDoneStatus) return `${base} bg-[rgba(123,143,161,0.12)] border-success text-success`
-  if (isActive) return `${base} bg-[var(--accent-soft)] border-accent text-accent`
-  return `${base} border-border text-dim hover:text-ink`
+function chipClass(isActive: boolean) {
+  const base = "px-3 py-[9px] border rounded-full text-xs cursor-pointer transition-all duration-150 font-sans"
+  return isActive
+    ? `${base} bg-accentsoft border-accent text-accent`
+    : `${base} bg-surface border-border text-dim hover:text-ink`
 }
 
 export default function BooksTab({ books, quotes }: { books: Book[]; quotes: Quote[] }) {
@@ -59,7 +59,7 @@ export default function BooksTab({ books, quotes }: { books: Book[]; quotes: Quo
             const count = s.id === 'all' ? books.length : books.filter((b) => b.status === s.id).length
             const isActive = statusFilter === s.id
             return (
-              <button key={s.id} className={chipClass(isActive, s.id === 'done')} onClick={() => setStatusFilter(s.id)}>
+              <button key={s.id} className={chipClass(isActive)} onClick={() => setStatusFilter(s.id)}>
                 {s.label} ({count})
               </button>
             )

@@ -20,7 +20,7 @@ export default function BookCard({ book, quoteCount, onClick }: Props) {
 
   return (
     <div
-      className={`bg-surface border rounded-[10px] overflow-hidden cursor-pointer transition-all duration-200 flex flex-row sm:flex-col hover:-translate-y-[3px] hover:border-accent hover:shadow-card ${isDone ? 'border-[rgba(123,143,161,0.35)] border-l-[3px] border-l-success' : 'border-border'}`}
+      className={`bg-surface border rounded-[10px] overflow-hidden cursor-pointer transition-all duration-200 flex flex-row sm:flex-col hover:-translate-y-[3px] hover:border-accent hover:shadow-card ${isDone ? 'border-accent/40 border-l-[3px] border-l-accent' : 'border-border'}`}
       onClick={onClick}
     >
       <div className="w-[90px] sm:w-full flex-shrink-0 sm:flex-shrink aspect-[2/3] bg-gradient-to-br from-surface2 to-bg flex items-center justify-center overflow-hidden relative rounded-none">
@@ -33,12 +33,12 @@ export default function BookCard({ book, quoteCount, onClick }: Props) {
             <div className="hidden sm:block text-xs text-dim">{book.author}</div>
           </div>
         )}
-        <div className={`absolute top-2 right-2 text-[11px] px-2 py-1 rounded font-medium ${isDone ? 'bg-success text-white border border-transparent' : 'bg-surface text-ink border border-border'}`}>{status.label}</div>
+        <div className={`absolute top-2 right-2 text-[11px] px-2 py-1 rounded font-medium ${isDone ? 'bg-accent text-white border border-transparent' : 'bg-surface text-ink border border-border'}`}>{status.label}</div>
       </div>
       <div className="flex-1 sm:flex-none px-3.5 py-3 sm:pt-3 sm:pb-4 flex flex-col justify-start">
         <div className="flex justify-between items-center text-[11px] text-dim mb-2 sm:mb-[15px]">
           <span className="tracking-[1px]">
-            <span style={{ color: '#f59e0b' }}>{'★'.repeat(book.rating || 0)}</span>
+            <span className="text-ink">{'★'.repeat(book.rating || 0)}</span>
             <span className="text-dim opacity-40">{'☆'.repeat(5 - (book.rating || 0))}</span>
           </span>
           {quoteCount > 0 && <span className="bg-surface2 px-1.5 py-0.5 rounded">💬 {quoteCount}</span>}

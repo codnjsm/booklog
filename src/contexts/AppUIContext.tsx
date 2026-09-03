@@ -77,7 +77,7 @@ export function AppUIProvider({ children }: { children: ReactNode }) {
     : localModal
 
   useEffect(() => {
-    if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light')
+    if (theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark')
     else document.documentElement.removeAttribute('data-theme')
     localStorage.setItem(THEME_KEY, theme)
   }, [theme])

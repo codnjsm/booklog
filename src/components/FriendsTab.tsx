@@ -26,13 +26,13 @@ interface Props {
   onLoadFriendBooks: (uid: string) => Promise<AppState | null>
 }
 
-const BTN_SM = "bg-accent text-bg border-none px-3 py-2.5 rounded-lg text-xs cursor-pointer transition-all duration-150 font-sans hover:bg-accenthover disabled:opacity-50 disabled:cursor-not-allowed"
+const BTN_SM = "bg-ink text-bg border-none px-3 py-2.5 rounded-lg text-xs cursor-pointer transition-all duration-150 font-sans hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
 const BTN_SM_SECONDARY = "bg-surface text-ink border border-border px-3 py-2.5 rounded-lg text-xs cursor-pointer transition-all duration-150 font-sans hover:bg-surface2"
 const BTN_SM_DANGER = "bg-transparent text-danger border border-border px-3 py-2.5 rounded-lg text-xs cursor-pointer transition-all duration-150 font-sans hover:bg-danger/10"
 
 function chipClass(isActive: boolean) {
-  const base = "px-3 py-[9px] bg-surface border rounded-full text-xs cursor-pointer transition-all duration-150 font-sans"
-  return isActive ? `${base} bg-[var(--accent-soft)] border-accent text-accent` : `${base} border-border text-dim hover:text-ink`
+  const base = "px-3 py-[9px] border rounded-full text-xs cursor-pointer transition-all duration-150 font-sans"
+  return isActive ? `${base} bg-accentsoft border-accent text-accent` : `${base} bg-surface border-border text-dim hover:text-ink`
 }
 
 function Avatar({ url, name, size }: { url?: string; name: string; size: 'sm' | 'md' }) {

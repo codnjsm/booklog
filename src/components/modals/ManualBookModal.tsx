@@ -32,7 +32,7 @@ const FORM_GROUP = "mb-3.5"
 const FORM_LABEL = "flex text-xs text-dim mb-1.5 uppercase tracking-[.05em]"
 const FORM_INPUT = "w-full bg-bg border border-border text-ink px-3 py-2 rounded-[7px] text-base font-sans placeholder:text-dim placeholder:opacity-50 focus:outline-none focus:border-accent"
 const FORM_TEXTAREA = `${FORM_INPUT} resize-y min-h-[90px] leading-[1.6]`
-const BTN = "bg-accent text-bg border-none px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg text-xs sm:text-[13px] cursor-pointer transition-all duration-150 font-sans hover:bg-accenthover disabled:opacity-50 disabled:cursor-not-allowed"
+const BTN = "bg-ink text-bg border-none px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg text-xs sm:text-[13px] cursor-pointer transition-all duration-150 font-sans hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
 const BTN_SECONDARY = "bg-surface text-ink border border-border px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg text-xs sm:text-[13px] cursor-pointer transition-all duration-150 font-sans hover:bg-surface2"
 
 interface Props { prefill?: BookPrefill | Partial<Book>; editId?: string; books: Book[]; onClose: () => void; onSave: (data: Omit<Book, 'id' | 'createdAt'>, editId?: string) => void }
@@ -72,7 +72,7 @@ export default function ManualBookModal({ prefill, editId, books, onClose, onSav
               {STATUSES.map((s) => (
                 <div
                   key={s.id}
-                  className={`py-[9px] px-2 rounded-[7px] text-center cursor-pointer text-[13px] transition-all duration-150 border ${status === s.id ? 'border-accent bg-[var(--accent-soft)] text-accent' : 'bg-bg border-border hover:border-dim'}`}
+                  className={`py-[9px] px-2 rounded-[7px] text-center cursor-pointer text-[13px] transition-all duration-150 border ${status === s.id ? 'border-accent bg-accentsoft text-accent' : 'bg-bg border-border hover:border-dim'}`}
                   onClick={() => handleStatusChange(s.id)}
                 >{s.emoji} {s.label}</div>
               ))}

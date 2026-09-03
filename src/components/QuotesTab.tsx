@@ -45,9 +45,9 @@ export default function QuotesTab({ quotes, books, onDeleteQuote }: Props) {
       {tags.length > 0 && (
         <div className="flex justify-between gap-3 items-center w-full mb-5">
           <div className="flex gap-1.5 flex-wrap">
-            <button className={`px-3 py-[9px] bg-surface border rounded-full text-xs cursor-pointer transition-all duration-150 font-sans ${tagFilter === null ? 'bg-[var(--accent-soft)] border-accent text-accent' : 'border-border text-dim hover:text-ink'}`} onClick={() => setTagFilter(null)}>전체</button>
+            <button className={`px-3 py-[9px] border rounded-full text-xs cursor-pointer transition-all duration-150 font-sans ${tagFilter === null ? 'bg-accentsoft border-accent text-accent' : 'bg-surface border-border text-dim hover:text-ink'}`} onClick={() => setTagFilter(null)}>전체</button>
             {tags.map(([t, c]) => (
-              <button key={t} className={`px-3 py-[9px] bg-surface border rounded-full text-xs cursor-pointer transition-all duration-150 font-sans ${tagFilter === t ? 'bg-[var(--accent-soft)] border-accent text-accent' : 'border-border text-dim hover:text-ink'}`} onClick={() => setTagFilter(t)}>#{t} ({c})</button>
+              <button key={t} className={`px-3 py-[9px] border rounded-full text-xs cursor-pointer transition-all duration-150 font-sans ${tagFilter === t ? 'bg-accentsoft border-accent text-accent' : 'bg-surface border-border text-dim hover:text-ink'}`} onClick={() => setTagFilter(t)}>#{t} ({c})</button>
             ))}
           </div>
         </div>
