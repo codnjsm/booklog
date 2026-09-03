@@ -108,10 +108,10 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 
         {/* 지금 읽는 중 */}
-        <div className={`${CARD} sm:col-span-2 px-5 py-4 flex flex-col gap-3.5`}>
+        <div className={`${CARD} px-5 py-4 flex flex-col gap-3.5`}>
           <div className={LABEL}>NOW READING</div>
           {reading.length === 0 ? (
             <div className="flex items-center gap-3 py-3">
@@ -128,7 +128,8 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
                   <div className="flex-1 min-w-0 flex flex-col">
                     <div className="flex items-center gap-2 h-[22px]">
                       <span className="text-[10px] font-medium px-2 py-0.5 rounded border border-ink text-ink">읽는중</span>
-                      <span className="font-mono text-[11px] text-dim">
+                      <span className="flex-1" />
+                      <span className="font-mono text-[11px] text-dim whitespace-nowrap">
                         {daysSince(readingSince(book))}일째 · 문장 {quotes.filter((q) => q.bookId === book.id).length}개
                       </span>
                     </div>
@@ -175,7 +176,7 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
         </div>
 
         {/* 최근 활동 */}
-        <div className={`${CARD} sm:col-span-3 px-5 py-4 flex flex-col gap-2`}>
+        <div className={`${CARD} sm:col-span-2 px-5 py-4 flex flex-col gap-2`}>
           <div className={LABEL}>RECENT ACTIVITY</div>
           {activity.length === 0 ? (
             <div className="py-3 text-sm text-dim">아직 기록이 없어요</div>
