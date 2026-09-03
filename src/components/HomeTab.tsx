@@ -119,9 +119,9 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
               <button onClick={() => changeTab('books')} className="text-xs font-medium px-3 py-2 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover">서재에서 고르기</button>
             </div>
           ) : (
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col">
               {reading.slice(0, 2).map((book) => (
-                <div key={book.id} className="flex gap-4">
+                <div key={book.id} className="flex gap-4 py-4 border-t border-border first:pt-0 first:border-t-0 last:pb-0">
                   <button onClick={() => openBookDetail(book.id)} className="bg-transparent border-none p-0 cursor-pointer flex-shrink-0">
                     <Cover book={book} className="w-20 h-[120px]" />
                   </button>
@@ -159,17 +159,18 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
           </div>
           {todayQuote ? (
             <>
-              <div className="font-serif text-[15px] leading-[1.85] text-ink">&ldquo;{todayQuote.text}&rdquo;</div>
-              <div className="flex-1" />
+              <div className="flex-1 flex items-center py-2">
+                <div className="font-serif text-[15px] leading-[1.85] text-ink">&ldquo;{todayQuote.text}&rdquo;</div>
+              </div>
               <button
                 onClick={() => quoteBook && openBookDetail(quoteBook.id)}
-                className="text-left bg-transparent border-none p-0 text-[11px] text-dim cursor-pointer hover:text-ink"
+                className="self-start text-left bg-transparent border-none p-0 text-[11px] text-dim cursor-pointer hover:text-ink"
               >
                 {quoteBook?.title ?? '출처 미상'}{todayQuote.page ? ` · p.${todayQuote.page}` : ''}
               </button>
             </>
           ) : (
-            <div className="flex flex-col gap-2 py-2">
+            <div className="flex-1 flex flex-col justify-center gap-2 py-2">
               <span className="text-[13px] text-dim leading-relaxed">아직 모은 문장이 없어요</span>
               <button onClick={() => openAddQuote()} className="self-start text-xs font-medium px-3 py-2 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover">문장 저장하기</button>
             </div>
