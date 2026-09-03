@@ -69,3 +69,10 @@ export const IconSignOut = ({ size = 16 }: Props) => (
 export const IconChevronRight = ({ size = 15 }: Props) => (
   <svg {...base(size)}><path d="m9 6 6 6-6 6" /></svg>
 )
+
+export const IconRefresh = ({ size = 18 }: Props) => (
+  <svg {...base(size)}>
+    <path d="M20 12a8 8 0 1 1-2.6-5.9" />
+    <path d="M20 4v4h-4" />
+  </svg>
+)

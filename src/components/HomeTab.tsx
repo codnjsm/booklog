@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { Book, Quote, AppState } from '../types'
 import { useAppUI } from '../contexts/AppUIContext'
 import { goalPace, readingSince, daysSince, recordedDaysThisWeek, recentActivity, relativeDay } from '../lib/insights'
-import { IconCollection, IconRecords } from './layout/icons'
+import { IconCollection, IconRecords, IconRefresh } from './layout/icons'
 
 interface Props {
   state: AppState
@@ -154,7 +154,9 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
           <div className="flex items-center justify-between">
             <div className={LABEL}>TODAY&rsquo;S QUOTE</div>
             {quotes.length > 1 && (
-              <button onClick={() => setQuoteIdx((i) => i + 1)} className="font-mono text-[10px] text-dim bg-transparent border-none cursor-pointer p-0 hover:text-ink">다른 문장</button>
+              <button onClick={() => setQuoteIdx((i) => i + 1)} aria-label="다른 문장 보기" title="다른 문장 보기" className="text-dim bg-transparent border-none cursor-pointer p-0 hover:text-ink">
+                <IconRefresh size={15} />
+              </button>
             )}
           </div>
           {todayQuote ? (
