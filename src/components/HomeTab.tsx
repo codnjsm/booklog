@@ -195,7 +195,7 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
                   {a.kind === 'finished' && a.rating ? (
                     <span className="text-[11px] text-dim tracking-[1px] flex-shrink-0">{'★'.repeat(a.rating)}</span>
                   ) : null}
-                  <span className="font-mono text-[11px] text-dim w-12 text-right flex-shrink-0">{relativeDay(a.at)}</span>
+                  <span className="font-mono text-[11px] text-dim text-right whitespace-nowrap flex-shrink-0">{relativeDay(a.at)}</span>
                 </div>
               ))}
             </div>
