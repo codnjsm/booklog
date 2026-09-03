@@ -60,7 +60,7 @@ export default function ManualBookModal({ prefill, editId, books, onClose, onSav
   return (
     <Modal onClose={onClose}>
       <div className={MODAL_PANEL}>
-        <div className={MODAL_HEADER}><h3 className="font-sans text-base font-semibold">{editId ? '책 편집' : '책 추가'}</h3><button className={MODAL_CLOSE} onClick={onClose}>×</button></div>
+        <div className={MODAL_HEADER}><h3 className="font-sans text-base font-semibold">{editId ? '책 편집' : '책 추가'}</h3><button className={MODAL_CLOSE} onClick={onClose} aria-label="닫기">×</button></div>
         <div className={MODAL_BODY}>
           <div className={FORM_GROUP}><label className={FORM_LABEL}>제목 <span className="text-danger">*</span></label><input type="text" placeholder="책 제목" value={title} onChange={(e) => setTitle(e.target.value)} autoFocus={!prefill?.title} className={FORM_INPUT} /></div>
           <div className={FORM_GROUP}><label className={FORM_LABEL}>저자</label><input type="text" placeholder="저자명" value={author} onChange={(e) => setAuthor(e.target.value)} className={FORM_INPUT} /></div>
@@ -70,11 +70,13 @@ export default function ManualBookModal({ prefill, editId, books, onClose, onSav
             <label className={FORM_LABEL}>상태</label>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
               {STATUSES.map((s) => (
-                <div
+                <button
                   key={s.id}
-                  className={`py-[9px] px-2 rounded-[7px] text-center cursor-pointer text-[13px] transition-all duration-150 border ${status === s.id ? 'border-accent bg-accentsoft text-accent' : 'bg-bg border-border hover:border-dim'}`}
+                  type="button"
+                  aria-pressed={status === s.id}
+                  className={`py-[9px] px-2 rounded-[7px] text-center cursor-pointer text-[13px] transition-all duration-150 border ${status === s.id ? 'border-accent bg-accentsoft text-accent' : 'bg-bg border-border text-ink hover:border-dim'}`}
                   onClick={() => handleStatusChange(s.id)}
-                >{s.emoji} {s.label}</div>
+                >{s.emoji} {s.label}</button>
               ))}
             </div>
           </div>

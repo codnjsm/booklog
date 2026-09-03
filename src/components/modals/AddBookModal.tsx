@@ -50,7 +50,7 @@ export default function AddBookModal({ onClose, onSelectBook, onManualEntry }: P
   return (
     <Modal onClose={onClose}>
       <div className={MODAL_PANEL}>
-        <div className={MODAL_HEADER}><h3 className="font-sans text-base font-semibold">책 추가</h3><button className={MODAL_CLOSE} onClick={onClose}>×</button></div>
+        <div className={MODAL_HEADER}><h3 className="font-sans text-base font-semibold">책 추가</h3><button className={MODAL_CLOSE} onClick={onClose} aria-label="닫기">×</button></div>
         <div className={MODAL_BODY}>
           <div className={FORM_GROUP}>
             <input type="text" placeholder="제목 또는 저자 입력" value={query} onChange={(e) => handleInput(e.target.value)} autoFocus autoComplete="off" className={FORM_INPUT} />

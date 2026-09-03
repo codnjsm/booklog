@@ -154,7 +154,7 @@ export default function BookDetailModal({ bookId, books, quotes, onClose, onEdit
         </div>
 
         <div className="flex items-center gap-2 px-5 sm:px-6 py-3.5 border-t border-border bg-bg pb-[max(14px,env(safe-area-inset-bottom))] sm:pb-3.5">
-          <button onClick={() => onDelete(bookId)} className="text-[13px] px-3 py-2.5 rounded-lg bg-transparent border-none text-danger cursor-pointer hover:bg-danger/10">책 삭제</button>
+          <button onClick={() => onDelete(bookId)} className="text-[13px] px-3 py-2.5 rounded-lg bg-transparent border border-border text-danger cursor-pointer hover:bg-danger/10">책 삭제</button>
           <span className="flex-1" />
           <button className={BTN_2} onClick={() => onEdit(bookId)}>책 정보 편집</button>
         </div>

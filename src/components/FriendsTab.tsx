@@ -30,7 +30,6 @@ interface Props {
 
 const BTN_SM = "bg-ink text-bg border-none px-3 py-2.5 rounded-lg text-xs cursor-pointer transition-all duration-150 font-sans hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
 const BTN_SM_SECONDARY = "bg-surface text-ink border border-border px-3 py-2.5 rounded-lg text-xs cursor-pointer transition-all duration-150 font-sans hover:bg-surface2"
-const BTN_SM_GHOST = "bg-transparent text-dim border-none px-3 py-2.5 rounded-lg text-xs cursor-pointer transition-all duration-150 font-sans hover:text-ink"
 const STATUS_PILL = "text-[11px] text-dim bg-bg border border-border rounded-full px-2.5 py-[3px] whitespace-nowrap flex-shrink-0"
 
 function chipClass(isActive: boolean) {
@@ -215,7 +214,7 @@ export default function FriendsTab({ user, authLoading, friends, incoming, outgo
                 <Person photoURL={req.profile?.photoURL} displayName={req.profile?.displayName} email={req.profile?.email} />
                 <div className="flex gap-1.5 flex-shrink-0">
                   <button className={BTN_SM} onClick={() => onAcceptRequest(req.id)}>수락</button>
-                  <button className={BTN_SM_GHOST} onClick={() => onRejectRequest(req.id)}>거절</button>
+                  <button className="bg-transparent text-danger border border-border px-3 py-2.5 rounded-lg text-xs cursor-pointer transition-all duration-150 font-sans hover:bg-danger/10" onClick={() => onRejectRequest(req.id)}>거절</button>
                 </div>
               </div>
             ))}
@@ -253,7 +252,7 @@ export default function FriendsTab({ user, authLoading, friends, incoming, outgo
                 <div className="flex items-center gap-1 flex-shrink-0">
                   <button className={BTN_SM_SECONDARY} onClick={() => handleViewFriend(f)}>책장 보기</button>
                   <button
-                    className="bg-transparent border-none px-2 py-2.5 rounded-lg text-xs text-dim cursor-pointer hover:text-danger"
+                    className="bg-transparent text-danger border border-border px-3 py-2.5 rounded-lg text-xs cursor-pointer transition-all duration-150 font-sans hover:bg-danger/10"
                     onClick={() => { if (confirm(`${f.displayName || f.email}님을 친구 목록에서 삭제할까요?`)) onRemoveFriend(f.uid) }}
                   >삭제</button>
                 </div>

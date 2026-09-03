@@ -71,7 +71,7 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
   return (
     <Modal onClose={onClose}>
       <div className={MODAL_PANEL}>
-        <div className={MODAL_HEADER}><h3 className="font-sans text-base font-semibold">{editId ? '인용구 편집' : '인용구 추가'}</h3><button className={MODAL_CLOSE} onClick={onClose}>×</button></div>
+        <div className={MODAL_HEADER}><h3 className="font-sans text-base font-semibold">{editId ? '인용구 편집' : '인용구 추가'}</h3><button className={MODAL_CLOSE} onClick={onClose} aria-label="닫기">×</button></div>
         <div className={MODAL_BODY}>
           <div className="mb-3.5">
             <label className={FORM_LABEL}>책</label>
