@@ -85,10 +85,10 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
     <div className="flex flex-col gap-4">
 
       <div className="flex gap-2 items-end mb-1">
-        <h1 className="text-[19px] sm:text-[22px] font-semibold tracking-[-0.01em] bg-[linear-gradient(transparent_58%,var(--highlight)_58%)]">
-          {greeting.text}
+        <h1 className="text-[19px] sm:text-[22px] font-semibold tracking-[-0.01em]">
+          <span className="bg-[linear-gradient(transparent_58%,var(--highlight)_58%)] [box-decoration-break:clone] [-webkit-box-decoration-break:clone]">{greeting.text}</span>
+          {greeting.emoji && <span className="ml-1">{greeting.emoji}</span>}
         </h1>
-        {greeting.emoji && <span className="text-[17px] sm:text-[19px] leading-none pb-0.5">{greeting.emoji}</span>}
         <div className="font-mono text-xs text-dim">
           {thisYear}.{String(now.getMonth() + 1).padStart(2, '0')}.{String(now.getDate()).padStart(2, '0')}
         </div>
