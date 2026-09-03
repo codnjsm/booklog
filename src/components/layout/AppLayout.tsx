@@ -99,7 +99,7 @@ export default function AppLayout({ user, syncStatus, bookCount, collectionCount
       </aside>
 
       <main className="flex-1 min-w-0 sm:ml-[220px] px-3 pt-4 pb-[calc(76px+env(safe-area-inset-bottom))] sm:px-8 sm:pt-7 sm:pb-10">
-        <div className="max-w-[1000px]">{children}</div>
+        <div className="max-w-[1000px] mx-auto">{children}</div>
       </main>
 
       <nav className="sm:hidden fixed bottom-0 inset-x-0 z-[80] grid grid-cols-5 bg-surface border-t border-border pt-2 pb-[max(14px,env(safe-area-inset-bottom))]">

@@ -52,7 +52,7 @@ export default function BookDetailModal({ bookId, books, quotes, onClose, onEdit
   return (
     <Modal onClose={onClose}>
       <div className={PANEL}>
-        <div className="flex items-center justify-between pl-6 pr-4 py-3.5 border-b border-border">
+        <div className="sticky top-0 z-10 bg-surface flex items-center justify-between pl-6 pr-4 py-3.5 border-b border-border">
           <span className={LABEL}>BOOK</span>
           <button onClick={onClose} aria-label="닫기" className="w-7 h-7 flex items-center justify-center rounded-md bg-transparent border-none cursor-pointer text-dim hover:text-ink">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M6 6l12 12" /><path d="M18 6L6 18" /></svg>
