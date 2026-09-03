@@ -33,14 +33,15 @@ export default function QuotesTab({ quotes, books, onDeleteQuote }: Props) {
 
   return (
     <div>
-      <div className="mb-5 w-full">
+      <div className="mb-5 w-full flex gap-2">
         <input
           type="text"
-          placeholder="제목 또는 저자 검색…"
+          placeholder="문장 · 책 · 저자 검색…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full bg-surface border border-border text-ink px-3.5 py-[9px] rounded-lg text-base font-sans focus:outline-none focus:border-accent"
+          className="flex-1 min-w-0 bg-surface border border-border text-ink px-3.5 py-[9px] rounded-lg text-base font-sans focus:outline-none focus:border-accent"
         />
+        <button onClick={() => openAddQuote()} className="flex-shrink-0 text-xs sm:text-[13px] font-medium px-3 sm:px-4 rounded-lg bg-ink text-bg border-none cursor-pointer hover:opacity-90">+ 문장 저장</button>
       </div>
       {tags.length > 0 && (
         <div className="flex justify-between gap-3 items-center w-full mb-5">

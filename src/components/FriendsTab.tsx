@@ -3,6 +3,7 @@ import { useMutation } from '@tanstack/react-query'
 import type { User } from 'firebase/auth'
 import type { UserProfile, FriendRequest, BookStatus, AppState } from '../types'
 import BookCard from './BookCard'
+import PageHeader from './layout/PageHeader'
 
 type StatusFilter = BookStatus | 'all'
 const STATUS_LABELS: { id: StatusFilter; label: string }[] = [
@@ -139,7 +140,9 @@ export default function FriendsTab({ user, authLoading, friends, incoming, outgo
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div>
+      <PageHeader title="친구" meta={friends.length > 0 ? `${friends.length}명` : undefined} />
+      <div className="flex flex-col gap-6">
       {/* 검색 */}
       <div className="bg-surface border border-border rounded-xl p-4">
         <div className="flex gap-2">
@@ -246,6 +249,7 @@ export default function FriendsTab({ user, authLoading, friends, incoming, outgo
             </div>
           ))
         )}
+      </div>
       </div>
     </div>
   )

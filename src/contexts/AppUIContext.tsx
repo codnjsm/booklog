@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import type { Book, BookPrefill } from '../types'
 
-export type Tab = 'books' | 'quotes' | 'dict' | 'vocab' | 'stats' | 'calendar' | 'friends'
+export type Tab = 'home' | 'books' | 'collection' | 'records' | 'friends' | 'more'
 
 export type Modal =
   | { type: 'none' }
@@ -46,13 +46,12 @@ const AppUIContext = createContext<AppUIValue | null>(null)
 const THEME_KEY = 'reading-notes-theme'
 
 const TAB_PATHS: Record<Tab, string> = {
+  home: '/',
   books: '/books',
-  quotes: '/quotes',
-  dict: '/dict',
-  vocab: '/vocab',
-  calendar: '/calendar',
-  stats: '/stats',
+  collection: '/collection',
+  records: '/records',
   friends: '/friends',
+  more: '/more',
 }
 const PATH_TABS: Record<string, Tab> = Object.fromEntries(
   Object.entries(TAB_PATHS).map(([t, path]) => [path, t as Tab]),
@@ -69,7 +68,7 @@ export function AppUIProvider({ children }: { children: ReactNode }) {
   const [loginDismissed, setLoginDismissed] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
 
-  const tab: Tab = PATH_TABS[location.pathname] ?? 'books'
+  const tab: Tab = PATH_TABS[location.pathname] ?? 'home'
 
   const bookDetailId = searchParams.get('book')
   const modal: Modal = bookDetailId && localModal.type === 'none'

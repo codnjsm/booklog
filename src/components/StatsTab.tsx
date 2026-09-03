@@ -8,10 +8,10 @@ const BTN = "bg-ink text-bg border-none px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg t
 const BTN_SECONDARY = "bg-surface text-ink border border-border px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg text-xs sm:text-[13px] cursor-pointer transition-all duration-150 font-sans hover:bg-surface2"
 const BTN_SMALL_SECONDARY = "bg-surface text-ink border border-border px-3 py-1.5 rounded-lg text-xs cursor-pointer transition-all duration-150 font-sans hover:bg-surface2"
 
-function StatCard({ label, value, sub }: { label: string; value: number | string; sub?: string }) {
+function StatCard({ label, value, sub, highlight }: { label: string; value: number | string; sub?: string; highlight?: boolean }) {
   return (
     <div className="bg-surface border border-border rounded-[10px] py-3.5 px-4 sm:py-[18px] sm:px-5">
-      <div className="text-[22px] sm:text-[28px] font-bold text-accent font-sans">{value}</div>
+      <div className={`text-[22px] sm:text-[28px] font-bold font-sans ${highlight ? 'text-accent' : 'text-ink'}`}>{value}</div>
       <div className="text-xs text-dim uppercase tracking-[0.05em] mt-1">{label}</div>
       {sub && <div className="text-[11px] text-dim mt-0.5">{sub}</div>}
     </div>
@@ -96,7 +96,7 @@ export default function StatsTab({ books, quotes, goal, onSetGoal }: Props) {
 
       <div className="grid grid-cols-2 sm:grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-2 sm:gap-3 mb-6">
         <StatCard label="전체 책" value={books.length} />
-        <StatCard label="완독" value={done.length} />
+        <StatCard label="완독" value={done.length} highlight />
         <StatCard label="읽는중" value={books.filter((b) => b.status === 'reading').length} />
         <StatCard label="위시리스트" value={books.filter((b) => b.status === 'wishlist').length} />
         <StatCard label="모은 문장" value={quotes.length} />
@@ -132,7 +132,7 @@ export default function StatsTab({ books, quotes, goal, onSetGoal }: Props) {
           <div className="flex flex-col gap-2">
             {topAuthors.map(([a, c]) => (
               <div key={a} className="flex justify-between items-center py-[7px] px-2.5 sm:py-2 sm:px-3 bg-bg rounded-md text-[13px]">
-                <span>{a}</span><span className="text-accent font-semibold [font-variant-numeric:tabular-nums]">{c}권</span>
+                <span>{a}</span><span className="font-semibold [font-variant-numeric:tabular-nums]">{c}권</span>
               </div>
             ))}
           </div>
@@ -144,7 +144,7 @@ export default function StatsTab({ books, quotes, goal, onSetGoal }: Props) {
           <div className="flex flex-col gap-2">
             {topTags.map(([t, c]) => (
               <div key={t} className="flex justify-between items-center py-[7px] px-2.5 sm:py-2 sm:px-3 bg-bg rounded-md text-[13px]">
-                <span>#{t}</span><span className="text-accent font-semibold [font-variant-numeric:tabular-nums]">{c}회</span>
+                <span>#{t}</span><span className="font-semibold [font-variant-numeric:tabular-nums]">{c}회</span>
               </div>
             ))}
           </div>

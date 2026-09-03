@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { Book, Quote, BookStatus } from '../types'
 import BookCard from './BookCard'
 import { useAppUI } from '../contexts/AppUIContext'
+import PageHeader from './layout/PageHeader'
 
 const STATUSES: { id: BookStatus | 'all'; label: string }[] = [
   { id: 'all', label: '전체' },
@@ -29,7 +30,7 @@ function chipClass(isActive: boolean) {
 }
 
 export default function BooksTab({ books, quotes }: { books: Book[]; quotes: Quote[] }) {
-  const { openBookDetail } = useAppUI()
+  const { openBookDetail, openAddBook } = useAppUI()
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<BookStatus | 'all'>('all')
   const [sort, setSort] = useState<SortKey>('newest')
@@ -53,6 +54,9 @@ export default function BooksTab({ books, quotes }: { books: Book[]; quotes: Quo
 
   return (
     <div>
+      <PageHeader title="서재" meta={`${books.length}권`}>
+        <button onClick={openAddBook} className="text-xs sm:text-[13px] font-medium px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-ink text-bg border-none cursor-pointer hover:opacity-90">+ 책 추가</button>
+      </PageHeader>
       <div className="flex flex-col gap-3 mb-5 flex-wrap items-start w-full">
         <div className="flex gap-1.5 flex-wrap">
           {STATUSES.map((s) => {
