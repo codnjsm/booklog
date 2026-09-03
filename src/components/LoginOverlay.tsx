@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { IconBooks } from './layout/icons'
 
 function isInAppBrowser() {
   const ua = navigator.userAgent
@@ -15,8 +16,8 @@ export default function LoginOverlay({ onSignIn, onDismiss }: Props) {
   return (
     <div className="fixed inset-0 bg-bg z-[200] flex items-center justify-center p-5">
       <div className="bg-surface border border-border rounded-[14px] px-8 py-10 max-w-[380px] w-full text-center shadow-card">
-        <div className="text-[44px] mb-3">📖</div>
-        <h2 className="text-[22px] font-bold mb-2 text-ink">독서 노트</h2>
+        <div className="w-14 h-14 mx-auto mb-3 rounded-full bg-accentsoft flex items-center justify-center text-accent"><IconBooks size={28} /></div>
+        <h2 className="text-[22px] font-bold mb-2 text-ink">Booklog</h2>
         <p className="text-dim text-sm mb-7 leading-[1.5]">여러 기기에서 동기화하려면 로그인이 필요해요</p>
         {inApp ? (
           <div className="bg-surface2 border border-border rounded-lg p-4 mb-2 text-sm text-ink leading-[1.6] text-center">

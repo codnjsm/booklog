@@ -4,7 +4,7 @@ import type { User } from 'firebase/auth'
 import type { UserProfile, FriendRequest, BookStatus, AppState } from '../types'
 import BookCard from './BookCard'
 import PageHeader from './layout/PageHeader'
-import { IconSearch } from './layout/icons'
+import { IconSearch, IconBooks } from './layout/icons'
 
 type StatusFilter = BookStatus | 'all'
 const STATUS_LABELS: { id: StatusFilter; label: string }[] = [
@@ -143,7 +143,7 @@ export default function FriendsTab({ user, authLoading, friends, incoming, outgo
           <div className="text-center py-[60px] px-5 text-dim bg-surface border border-dashed border-border rounded-[10px]"><p>불러오는 중…</p></div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-[60px] px-5 text-dim bg-surface border border-dashed border-border rounded-[10px]">
-            <div className="text-[40px] mb-3 opacity-60">📚</div>
+            <div className="w-11 h-11 mx-auto mb-3 rounded-full bg-surface2 flex items-center justify-center text-dim"><IconBooks size={22} /></div>
             <h3 className="font-sans text-ink mb-1.5 text-[15px]">{books.length === 0 ? '아직 책이 없어요' : '해당 상태의 책이 없어요'}</h3>
           </div>
         ) : (

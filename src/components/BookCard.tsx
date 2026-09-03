@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { Book } from '../types'
+import { IconBooks, IconCollection, IconLock } from './layout/icons'
 
 const STATUS_INFO = {
   wishlist: { label: '읽고싶음' },
@@ -28,7 +29,7 @@ export default function BookCard({ book, quoteCount, onClick }: Props) {
           <img src={book.cover} alt={book.title} onError={() => setImgError(true)} className="w-full h-full object-cover" />
         ) : (
           <div className="text-center p-4 font-sans">
-            <span className="sm:hidden text-[28px]">📖</span>
+            <span className="sm:hidden text-dim"><IconBooks size={26} /></span>
             <div className="hidden sm:block text-xs font-semibold mb-1.5 text-ink/70 leading-snug">{book.title}</div>
             <div className="hidden sm:block text-[10px] text-dim">{book.author}</div>
           </div>
@@ -41,9 +42,9 @@ export default function BookCard({ book, quoteCount, onClick }: Props) {
             <span className="text-ink">{'★'.repeat(book.rating || 0)}</span>
             <span className="text-dim opacity-40">{'☆'.repeat(5 - (book.rating || 0))}</span>
           </span>
-          {quoteCount > 0 && <span className="bg-surface2 px-1.5 py-0.5 rounded">💬 {quoteCount}</span>}
+          {quoteCount > 0 && <span className="bg-surface2 px-1.5 py-0.5 rounded inline-flex items-center gap-1"><IconCollection size={11} />{quoteCount}</span>}
         </div>
-        <div className="text-base font-semibold mb-1 leading-[1.3] flex items-center line-clamp-2">{book.title}{book.isPrivate && <span className="text-[11px] ml-1 pb-1">🔒</span>}</div>
+        <div className="text-base font-semibold mb-1 leading-[1.3] flex items-center line-clamp-2">{book.title}{book.isPrivate && <span className="text-dim ml-1 inline-flex items-center"><IconLock size={12} /></span>}</div>
         <div className="text-xs text-dim mb-2 sm:mb-2.5">{book.author || '저자 미상'}</div>
       </div>
     </div>

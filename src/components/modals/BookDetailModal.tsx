@@ -3,6 +3,7 @@ import Modal from './Modal'
 import type { Book, Quote } from '../../types'
 import { readingSince, daysSince } from '../../lib/insights'
 import HighlightedText from '../HighlightedText'
+import { IconLock } from '../layout/icons'
 
 const STATUS = {
   wishlist: { label: '읽고싶음', cls: 'border border-border text-dim' },
@@ -93,9 +94,7 @@ export default function BookDetailModal({ bookId, books, quotes, onClose, onEdit
             onClick={() => onTogglePrivate(bookId, !isPrivate)}
             className="flex items-center gap-2.5 px-4 py-3 rounded-[10px] border border-border bg-transparent cursor-pointer text-left w-full"
           >
-            <span className="text-dim">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="10" width="16" height="11" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>
-            </span>
+            <span className="text-dim"><IconLock /></span>
             <span className="flex flex-col gap-px">
               <span className="text-[13px] font-medium text-ink">친구에게 비공개</span>
               <span className="text-[11px] text-dim">{isPrivate ? '친구 책장에서 이 책이 숨겨져 있어요' : '친구가 내 책장을 볼 때 이 책도 보여요'}</span>

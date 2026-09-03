@@ -3,10 +3,10 @@ import Modal from './Modal'
 import type { Book, BookPrefill, BookStatus } from '../../types'
 import DatePicker from '../DatePicker'
 
-const STATUSES: { id: BookStatus; emoji: string; label: string }[] = [
-  { id: 'wishlist', emoji: '📚', label: '읽고싶음' },
-  { id: 'reading', emoji: '📖', label: '읽는중' },
-  { id: 'done', emoji: '✅', label: '완독' },
+const STATUSES: { id: BookStatus; label: string }[] = [
+  { id: 'wishlist', label: '읽고싶음' },
+  { id: 'reading', label: '읽는중' },
+  { id: 'done', label: '완독' },
 ]
 
 const today = new Date().toISOString().slice(0, 10)
@@ -76,7 +76,7 @@ export default function ManualBookModal({ prefill, editId, books, onClose, onSav
                   aria-pressed={status === s.id}
                   className={`py-[9px] px-2 rounded-[7px] text-center cursor-pointer text-[13px] transition-all duration-150 border ${status === s.id ? 'border-accent bg-accentsoft text-accent' : 'bg-bg border-border text-ink hover:border-dim'}`}
                   onClick={() => handleStatusChange(s.id)}
-                >{s.emoji} {s.label}</button>
+                >{s.label}</button>
               ))}
             </div>
           </div>

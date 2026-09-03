@@ -3,6 +3,7 @@ import type { Book, Quote, BookStatus } from '../types'
 import BookCard from './BookCard'
 import { useAppUI } from '../contexts/AppUIContext'
 import PageHeader from './layout/PageHeader'
+import { IconBooks } from './layout/icons'
 import { IconSearch } from './layout/icons'
 
 const STATUSES: { id: BookStatus | 'all'; label: string }[] = [
@@ -92,7 +93,7 @@ export default function BooksTab({ books, quotes }: { books: Book[]; quotes: Quo
       </div>
       {filtered.length === 0 ? (
         <div className="text-center py-[60px] px-5 text-dim bg-surface border border-dashed border-border rounded-[10px]">
-          <div className="text-[40px] mb-3 opacity-60">📚</div>
+          <div className="w-11 h-11 mx-auto mb-3 rounded-full bg-surface2 flex items-center justify-center text-dim"><IconBooks size={22} /></div>
           <h3 className="font-sans text-ink mb-1.5 text-[15px]">{books.length === 0 ? '아직 책이 없어요' : '검색 결과가 없어요'}</h3>
           <p className="text-sm">{books.length === 0 ? '"+ 책 추가" 버튼으로 시작해보세요' : '다른 검색어를 시도해보세요'}</p>
         </div>

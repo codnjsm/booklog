@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { Quote, Book } from '../types'
 import QuoteCard from './QuoteCard'
 import { useAppUI } from '../contexts/AppUIContext'
-import { IconSearch } from './layout/icons'
+import { IconSearch, IconCollection } from './layout/icons'
 
 interface Props {
   quotes: Quote[]
@@ -44,7 +44,7 @@ export default function QuotesTab({ quotes, books, onDeleteQuote }: Props) {
       </div>
       {filtered.length === 0 ? (
         <div className="text-center py-[60px] px-5 text-dim bg-surface border border-dashed border-border rounded-[10px]">
-          <div className="text-[40px] mb-3 opacity-60">💬</div>
+          <div className="w-11 h-11 mx-auto mb-3 rounded-full bg-surface2 flex items-center justify-center text-dim"><IconCollection size={20} /></div>
           <h3 className="font-sans text-ink mb-1.5 text-[15px]">{quotes.length === 0 ? '아직 모은 문장이 없어요' : '검색 결과가 없어요'}</h3>
           <p className="text-sm">{quotes.length === 0 ? '책 상세 페이지에서 문장을 추가할 수 있어요' : '다른 조건으로 검색해보세요'}</p>
         </div>
