@@ -1,4 +1,5 @@
 import type { Quote, Book } from '../types'
+import HighlightedText from './HighlightedText'
 
 interface Props {
   quote: Quote
@@ -14,7 +15,7 @@ const BTN_SMALL_DANGER = "bg-transparent text-danger border border-border px-3 p
 export default function QuoteCard({ quote, book, onBookClick, onEdit, onDelete }: Props) {
   return (
     <div className="bg-surface border border-border rounded-[10px] px-4 py-3.5 sm:px-[22px] sm:py-5 transition-all duration-150 shadow-[inset_3px_0_0_var(--accent)] hover:border-accent">
-      <div className="font-serif text-base leading-[1.7] mb-3 text-ink">"{quote.text}"</div>
+      <div className="font-serif text-base leading-[1.7] mb-3 text-ink">&ldquo;<HighlightedText text={quote.text} highlights={quote.highlights} />&rdquo;</div>
       {quote.note && (
         <div className="text-[13px] text-dim mb-2.5 italic pl-3 border-l-2 border-border">
           {quote.note}

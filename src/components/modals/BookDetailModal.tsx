@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Modal from './Modal'
 import type { Book, Quote } from '../../types'
 import { readingSince, daysSince } from '../../lib/insights'
+import HighlightedText from '../HighlightedText'
 
 const STATUS = {
   wishlist: { label: '읽고싶음', cls: 'border border-border text-dim' },
@@ -136,7 +137,7 @@ export default function BookDetailModal({ bookId, books, quotes, onClose, onEdit
               <div className="flex flex-col gap-2">
                 {bookQuotes.map((q) => (
                   <div key={q.id} className="border border-border rounded-[10px] px-4 py-3.5 flex flex-col gap-2">
-                    <div className="font-serif text-sm leading-[1.9]">&ldquo;{q.text}&rdquo;</div>
+                    <div className="font-serif text-sm leading-[1.9]">&ldquo;<HighlightedText text={q.text} highlights={q.highlights} />&rdquo;</div>
                     {q.note && <div className="text-xs leading-relaxed text-dim pl-3 border-l-2 border-border">{q.note}</div>}
                     <div className="flex items-center gap-2">
                       {q.page && <span className="font-mono text-[10px] text-dim">p.{q.page}</span>}

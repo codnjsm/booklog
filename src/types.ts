@@ -23,6 +23,7 @@ export interface Quote {
   tags: string[]
   note: string
   createdAt: string
+  highlights?: { start: number; end: number }[]
 }
 
 export interface Word {

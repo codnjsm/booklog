@@ -61,7 +61,7 @@ export default function StatsTab({ books, quotes, goal, onSetGoal }: Props) {
       <div className="bg-surface border border-border rounded-[10px] p-4 sm:p-[22px] mb-4">
         {editing ? (
           <div className="flex items-center gap-2">
-            <div className="text-base font-semibold text-dim uppercase tracking-[0.05em] flex-shrink-0">{thisYear}년 독서 목표</div>
+            <div className="text-base font-normal uppercase tracking-[0.05em] flex-shrink-0">{thisYear}년 독서 목표</div>
             <div className="flex-1" />
             <input type="number" value={input} onChange={(e) => setInput(e.target.value)} placeholder="목표 권수 입력" min={1}
               className={`${FORM_INPUT} w-[140px] h-[42px] box-border`}
@@ -72,7 +72,7 @@ export default function StatsTab({ books, quotes, goal, onSetGoal }: Props) {
         ) : (
           <div>
             <div className={`flex justify-between items-center ${goal ? 'mb-3.5' : ''}`}>
-              <div className="text-base font-semibold text-dim uppercase tracking-[0.05em]">{thisYear}년 독서 목표</div>
+              <div className="text-base font-normal uppercase tracking-[0.05em]">{thisYear}년 독서 목표</div>
               <button className={BTN_SMALL_SECONDARY} onClick={() => { setInput(String(goal || '')); setEditing(true) }}>
                 {goal ? '수정' : '목표 설정'}
               </button>
@@ -105,22 +105,24 @@ export default function StatsTab({ books, quotes, goal, onSetGoal }: Props) {
         <StatCard label="평균 별점" value={avgRating ? avgRating.toFixed(1) : '–'} sub={`${rated.length}권 평가`} />
       </div>
       <div className="bg-surface border border-border rounded-[10px] p-4 sm:p-[22px] mb-4">
-        <div className="text-base font-semibold mb-4 text-dim uppercase tracking-[0.05em]">최근 12개월 완독 추이</div>
-        <div className="flex gap-1.5 items-end h-[100px] sm:h-[140px] py-2">
+        <div className="text-base font-normal mb-4 uppercase tracking-[0.05em]">최근 12개월 완독 추이</div>
+        <div className="flex gap-1.5 items-stretch h-[130px] sm:h-[170px]">
           {Object.entries(monthCounts).map(([key, v]) => {
             const isCurrent = key === `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
             return (
-              <div key={key} className="flex-1 flex flex-col items-center gap-1.5">
-                <div className="w-full rounded-t-[4px] min-h-1 transition-all duration-300 relative hover:opacity-80" style={{
-                  height: `${(v / maxMonth) * 100}%`,
-                  background: isCurrent
-                    ? 'linear-gradient(180deg, var(--accent), var(--accent-hover))'
-                    : 'var(--border)',
-                }}>
-                  {v > 0 && <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-[11px] text-ink font-semibold">{v}</div>}
+              <div key={key} className="flex-1 flex flex-col items-center gap-1.5" title={`${parseInt(key.split('-')[1])}월 ${v}권`}>
+                <div className="flex-1 min-h-0 w-full flex flex-col justify-end items-center gap-2">
+                  <div className="h-4 text-[11px] font-semibold text-ink [font-variant-numeric:tabular-nums]">{v > 0 ? v : ''}</div>
+                  {/* 숫자 줄(1rem)과 간격(0.5rem)을 뺀 나머지 높이를 권수 비율로 나눠 갖는다 */}
+                  <div className="w-full rounded-t-[4px] min-h-[3px] transition-all duration-300 hover:opacity-80" style={{
+                    height: `calc((100% - 1.5rem) * ${v / maxMonth})`,
+                    background: isCurrent
+                      ? 'linear-gradient(180deg, var(--accent), var(--accent-hover))'
+                      : 'var(--border)',
+                  }} />
                 </div>
-                <div className={`text-[10px] ${isCurrent ? 'font-bold text-ink' : 'text-dim'}`}>
-                  {parseInt(key.split('-')[1])}월
+                <div className={`text-[10px] whitespace-nowrap ${isCurrent ? 'font-bold text-ink' : 'text-dim'}`}>
+                  {parseInt(key.split('-')[1])}<span className="max-[370px]:hidden">월</span>
                 </div>
               </div>
             )
@@ -130,7 +132,7 @@ export default function StatsTab({ books, quotes, goal, onSetGoal }: Props) {
       </div>
       {topAuthors.length > 0 && (
         <div className="bg-surface border border-border rounded-[10px] p-4 sm:p-[22px] mb-4">
-          <div className="text-base font-semibold mb-4 text-dim uppercase tracking-[0.05em]">가장 많이 읽은 저자</div>
+          <div className="text-base font-normal mb-4 uppercase tracking-[0.05em]">가장 많이 읽은 저자</div>
           <div className="flex flex-col gap-2">
             {topAuthors.map(([a, c]) => (
               <div key={a} className="flex justify-between items-center py-[7px] px-2.5 sm:py-2 sm:px-3 bg-bg rounded-md text-[13px]">
@@ -142,7 +144,7 @@ export default function StatsTab({ books, quotes, goal, onSetGoal }: Props) {
       )}
       {topQuoted.length > 0 && (
         <div className="bg-surface border border-border rounded-[10px] p-4 sm:p-[22px] mb-4">
-          <div className="text-base font-semibold mb-4 text-dim uppercase tracking-[0.05em]">문장을 많이 모은 책</div>
+          <div className="text-base font-normal mb-4 uppercase tracking-[0.05em]">문장을 많이 모은 책</div>
           <div className="flex flex-col gap-2">
             {topQuoted.map((t) => (
               <div key={t.title} className="flex justify-between items-center gap-3 py-[7px] px-2.5 sm:py-2 sm:px-3 bg-bg rounded-md text-[13px]">

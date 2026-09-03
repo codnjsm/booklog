@@ -4,6 +4,7 @@ import type { User } from 'firebase/auth'
 import type { UserProfile, FriendRequest, BookStatus, AppState } from '../types'
 import BookCard from './BookCard'
 import PageHeader from './layout/PageHeader'
+import { IconSearch } from './layout/icons'
 
 type StatusFilter = BookStatus | 'all'
 const STATUS_LABELS: { id: StatusFilter; label: string }[] = [
@@ -29,11 +30,29 @@ interface Props {
 
 const BTN_SM = "bg-ink text-bg border-none px-3 py-2.5 rounded-lg text-xs cursor-pointer transition-all duration-150 font-sans hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
 const BTN_SM_SECONDARY = "bg-surface text-ink border border-border px-3 py-2.5 rounded-lg text-xs cursor-pointer transition-all duration-150 font-sans hover:bg-surface2"
-const BTN_SM_DANGER = "bg-transparent text-danger border border-border px-3 py-2.5 rounded-lg text-xs cursor-pointer transition-all duration-150 font-sans hover:bg-danger/10"
+const BTN_SM_GHOST = "bg-transparent text-dim border-none px-3 py-2.5 rounded-lg text-xs cursor-pointer transition-all duration-150 font-sans hover:text-ink"
+const STATUS_PILL = "text-[11px] text-dim bg-bg border border-border rounded-full px-2.5 py-[3px] whitespace-nowrap flex-shrink-0"
 
 function chipClass(isActive: boolean) {
   const base = "px-3 py-[9px] border rounded-full text-xs cursor-pointer transition-all duration-150 font-sans"
   return isActive ? `${base} bg-accentsoft border-accent text-accent` : `${base} bg-surface border-border text-dim hover:text-ink`
+}
+
+const SECTION_LABEL = "text-xs text-dim mb-2"
+const LIST_CARD = "bg-surface border border-border rounded-xl"
+const LIST_ROW = "flex items-center gap-3 px-4 py-3 border-b border-surface2 last:border-b-0"
+
+/** 아바타 + 이름 + 이메일. 검색 결과·받은 요청·보낸 요청·친구 목록에서 같은 모양으로 쓴다. */
+function Person({ photoURL, displayName, email }: { photoURL?: string; displayName?: string; email?: string }) {
+  return (
+    <>
+      <Avatar url={photoURL} name={displayName || email || '?'} size="md" />
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-medium text-ink truncate">{displayName || '이름 없음'}</div>
+        <div className="text-xs text-dim truncate">{email}</div>
+      </div>
+    </>
+  )
 }
 
 function Avatar({ url, name, size }: { url?: string; name: string; size: 'sm' | 'md' }) {
@@ -144,39 +163,39 @@ export default function FriendsTab({ user, authLoading, friends, incoming, outgo
       <PageHeader title="친구" meta={friends.length > 0 ? `${friends.length}명` : undefined} />
       <div className="flex flex-col gap-6">
       {/* 검색 */}
-      <div className="bg-surface border border-border rounded-xl p-4">
-        <div className="flex gap-2">
+      <div className="flex flex-col gap-2.5">
+        <div className="flex items-center gap-2 px-3 rounded-lg bg-surface border border-border focus-within:border-accent">
+          <span className="text-dim flex-shrink-0"><IconSearch /></span>
           <input
             type="email"
             placeholder="친구의 이메일 주소 입력…"
             value={emailInput}
             onChange={(e) => { setEmailInput(e.target.value); setSearchResult(undefined) }}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            className="w-[85%] bg-bg border border-border text-ink px-3.5 py-[9px] rounded-lg text-base font-sans outline-none focus:border-accent"
+            className="flex-1 min-w-0 bg-transparent border-none text-ink py-[9px] text-base font-sans placeholder:text-dim focus:outline-none"
           />
-          <button className={BTN_SM} onClick={handleSearch} disabled={searching || !emailInput.trim()}>
+          <span className="w-px self-stretch my-1.5 bg-border flex-shrink-0" />
+          <button
+            className="flex-shrink-0 bg-transparent border-none px-1 py-[9px] text-xs font-medium text-accent cursor-pointer disabled:text-dim disabled:cursor-not-allowed"
+            onClick={handleSearch}
+            disabled={searching || !emailInput.trim()}
+          >
             {searching ? '검색중…' : '검색'}
           </button>
         </div>
 
         {searchResult === 'not-found' && (
-          <div className="mt-2.5 text-[13px] text-dim">해당 이메일로 가입된 계정을 찾을 수 없어요</div>
+          <div className="text-[13px] text-dim">해당 이메일로 가입된 계정을 찾을 수 없어요</div>
         )}
         {searchResult === 'self' && (
-          <div className="mt-2.5 text-[13px] text-dim">내 계정이에요</div>
+          <div className="text-[13px] text-dim">내 계정이에요</div>
         )}
         {searchResult && searchResult !== 'not-found' && searchResult !== 'self' && (
-          <div className="flex items-center justify-between gap-2.5 mt-3 px-3 py-2.5 bg-bg border border-border rounded-[10px]">
-            <div className="flex items-center gap-2.5 flex-1 min-w-0">
-              <Avatar url={searchResult.photoURL} name={searchResult.displayName || searchResult.email} size="md" />
-              <div>
-                <div className="text-sm font-medium text-ink whitespace-nowrap overflow-hidden text-ellipsis">{searchResult.displayName || '이름 없음'}</div>
-                <div className="text-xs text-dim whitespace-nowrap overflow-hidden text-ellipsis">{searchResult.email}</div>
-              </div>
-            </div>
-            {getRequestStatus(searchResult.uid) === 'friend' && <span className="text-[11px] text-dim bg-bg border border-border rounded-full px-2.5 py-[3px] whitespace-nowrap flex-shrink-0">친구</span>}
-            {getRequestStatus(searchResult.uid) === 'sent' && <span className="text-[11px] text-dim bg-bg border border-border rounded-full px-2.5 py-[3px] whitespace-nowrap flex-shrink-0">요청 보냄</span>}
-            {getRequestStatus(searchResult.uid) === 'incoming' && <span className="text-[11px] text-dim bg-bg border border-border rounded-full px-2.5 py-[3px] whitespace-nowrap flex-shrink-0">받은 요청 있음</span>}
+          <div className={`${LIST_CARD} ${LIST_ROW}`}>
+            <Person photoURL={searchResult.photoURL} displayName={searchResult.displayName} email={searchResult.email} />
+            {getRequestStatus(searchResult.uid) === 'friend' && <span className={STATUS_PILL}>친구</span>}
+            {getRequestStatus(searchResult.uid) === 'sent' && <span className={STATUS_PILL}>요청 보냄</span>}
+            {getRequestStatus(searchResult.uid) === 'incoming' && <span className={STATUS_PILL}>받은 요청 있음</span>}
             {getRequestStatus(searchResult.uid) === 'none' && (
               <button className={`${BTN_SM} flex-shrink-0`} onClick={() => sendRequestMutation.mutate(searchResult.uid)} disabled={sending}>
                 {sending ? '전송중…' : '친구 추가'}
@@ -188,66 +207,59 @@ export default function FriendsTab({ user, authLoading, friends, incoming, outgo
 
       {/* 받은 요청 */}
       {incoming.length > 0 && (
-        <div className="flex flex-col gap-2">
-          <div className="text-xs font-semibold text-dim uppercase tracking-[0.5px] pb-1 border-b border-border">받은 친구 요청 ({incoming.length})</div>
-          {incoming.map((req) => (
-            <div key={req.id} className="flex items-center justify-between gap-2.5 px-3 py-2.5 bg-surface border border-border rounded-[10px]">
-              <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                <Avatar url={req.profile?.photoURL} name={req.profile?.displayName || req.profile?.email || '?'} size="md" />
-                <div>
-                  <div className="text-sm font-medium text-ink whitespace-nowrap overflow-hidden text-ellipsis">{req.profile?.displayName || '이름 없음'}</div>
-                  <div className="text-xs text-dim whitespace-nowrap overflow-hidden text-ellipsis">{req.profile?.email}</div>
+        <div>
+          <div className={SECTION_LABEL}>받은 친구 요청 {incoming.length}</div>
+          <div className={LIST_CARD}>
+            {incoming.map((req) => (
+              <div key={req.id} className={LIST_ROW}>
+                <Person photoURL={req.profile?.photoURL} displayName={req.profile?.displayName} email={req.profile?.email} />
+                <div className="flex gap-1.5 flex-shrink-0">
+                  <button className={BTN_SM} onClick={() => onAcceptRequest(req.id)}>수락</button>
+                  <button className={BTN_SM_GHOST} onClick={() => onRejectRequest(req.id)}>거절</button>
                 </div>
               </div>
-              <div className="flex gap-1.5 flex-shrink-0">
-                <button className={BTN_SM} onClick={() => onAcceptRequest(req.id)}>수락</button>
-                <button className={BTN_SM_SECONDARY} onClick={() => onRejectRequest(req.id)}>거절</button>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 
       {/* 보낸 요청 대기중 */}
       {outgoing.length > 0 && (
-        <div className="flex flex-col gap-2">
-          <div className="text-xs font-semibold text-dim uppercase tracking-[0.5px] pb-1 border-b border-border">보낸 요청 대기중 ({outgoing.length})</div>
-          {outgoing.map((req) => (
-            <div key={req.id} className="flex items-center justify-between gap-2.5 px-3 py-2.5 bg-surface border border-border rounded-[10px]">
-              <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                <Avatar url={req.profile?.photoURL} name={req.profile?.displayName || req.profile?.email || '?'} size="md" />
-                <div>
-                  <div className="text-sm font-medium text-ink whitespace-nowrap overflow-hidden text-ellipsis">{req.profile?.displayName || '이름 없음'}</div>
-                  <div className="text-xs text-dim whitespace-nowrap overflow-hidden text-ellipsis">{req.profile?.email}</div>
-                </div>
+        <div>
+          <div className={SECTION_LABEL}>보낸 요청 대기중 {outgoing.length}</div>
+          <div className={LIST_CARD}>
+            {outgoing.map((req) => (
+              <div key={req.id} className={LIST_ROW}>
+                <Person photoURL={req.profile?.photoURL} displayName={req.profile?.displayName} email={req.profile?.email} />
+                <span className={STATUS_PILL}>대기중</span>
               </div>
-              <span className="text-[11px] text-dim bg-bg border border-border rounded-full px-2.5 py-[3px] whitespace-nowrap flex-shrink-0">대기중</span>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 
       {/* 친구 목록 */}
-      <div className="flex flex-col gap-2">
-        <div className="text-xs font-semibold text-dim uppercase tracking-[0.5px] pb-1 border-b border-border">친구 {friends.length > 0 ? `(${friends.length})` : ''}</div>
+      <div>
+        <div className={SECTION_LABEL}>친구</div>
         {friends.length === 0 ? (
-          <div className="text-sm text-dim py-2">아직 친구가 없어요. 이메일로 친구를 찾아보세요!</div>
+          <div className="rounded-xl border border-dashed border-border bg-bg px-5 py-8 text-center text-sm text-dim">
+            아직 친구가 없어요<br />위에서 이메일로 친구를 찾아보세요
+          </div>
         ) : (
-          friends.map((f) => (
-            <div key={f.uid} className="flex items-center justify-between gap-2.5 px-3 py-2.5 bg-surface border border-border rounded-[10px]">
-              <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                <Avatar url={f.photoURL} name={f.displayName || f.email} size="md" />
-                <div>
-                  <div className="text-sm font-medium text-ink whitespace-nowrap overflow-hidden text-ellipsis">{f.displayName || '이름 없음'}</div>
-                  <div className="text-xs text-dim whitespace-nowrap overflow-hidden text-ellipsis">{f.email}</div>
+          <div className={LIST_CARD}>
+            {friends.map((f) => (
+              <div key={f.uid} className={LIST_ROW}>
+                <Person photoURL={f.photoURL} displayName={f.displayName} email={f.email} />
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <button className={BTN_SM_SECONDARY} onClick={() => handleViewFriend(f)}>책장 보기</button>
+                  <button
+                    className="bg-transparent border-none px-2 py-2.5 rounded-lg text-xs text-dim cursor-pointer hover:text-danger"
+                    onClick={() => { if (confirm(`${f.displayName || f.email}님을 친구 목록에서 삭제할까요?`)) onRemoveFriend(f.uid) }}
+                  >삭제</button>
                 </div>
               </div>
-              <div className="flex gap-1.5 flex-shrink-0">
-                <button className={BTN_SM_SECONDARY} onClick={() => handleViewFriend(f)}>책장 보기</button>
-                <button className={BTN_SM_DANGER} onClick={() => { if (confirm(`${f.displayName || f.email}님을 친구 목록에서 삭제할까요?`)) onRemoveFriend(f.uid) }}>삭제</button>
-              </div>
-            </div>
-          ))
+            ))}
+          </div>
         )}
       </div>
       </div>

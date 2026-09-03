@@ -4,7 +4,7 @@ export default {
   theme: {
     extend: {
       screens: {
-        sm: '600px',
+        sm: '900px',
       },
       colors: {
         bg: 'var(--bg)',

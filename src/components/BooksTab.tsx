@@ -3,6 +3,7 @@ import type { Book, Quote, BookStatus } from '../types'
 import BookCard from './BookCard'
 import { useAppUI } from '../contexts/AppUIContext'
 import PageHeader from './layout/PageHeader'
+import { IconSearch } from './layout/icons'
 
 const STATUSES: { id: BookStatus | 'all'; label: string }[] = [
   { id: 'all', label: '전체' },
@@ -22,18 +23,16 @@ const SORTS: { id: SortKey; label: string }[] = [
 
 const CARET = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a8a29e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"
 
-function chipClass(isActive: boolean) {
-  const base = "px-3 py-[9px] border rounded-full text-xs cursor-pointer transition-all duration-150 font-sans"
-  return isActive
-    ? `${base} bg-accentsoft border-accent text-accent`
-    : `${base} bg-surface border-border text-dim hover:text-ink`
-}
-
 export default function BooksTab({ books, quotes }: { books: Book[]; quotes: Quote[] }) {
   const { openBookDetail, openAddBook } = useAppUI()
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<BookStatus | 'all'>('all')
   const [sort, setSort] = useState<SortKey>('newest')
+
+  // 필터가 걸리면 제목 옆 meta가 그 상태의 권수를 대신 보여준다 (칩에서 카운트를 뺀 자리)
+  const headerMeta = statusFilter === 'all'
+    ? `${books.length}권`
+    : `${STATUSES.find((s) => s.id === statusFilter)!.label} ${books.filter((b) => b.status === statusFilter).length}권`
 
   const filtered = books
     .filter((b) => {
@@ -54,35 +53,37 @@ export default function BooksTab({ books, quotes }: { books: Book[]; quotes: Quo
 
   return (
     <div>
-      <PageHeader title="서재" meta={`${books.length}권`}>
+      <PageHeader title="서재" meta={headerMeta}>
         <button onClick={openAddBook} className="text-xs sm:text-[13px] font-medium px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-ink text-bg border-none cursor-pointer hover:opacity-90">+ 책 추가</button>
       </PageHeader>
-      <div className="flex flex-col gap-3 mb-5 flex-wrap items-start w-full">
-        <div className="flex gap-1.5 flex-wrap">
-          {STATUSES.map((s) => {
-            const count = s.id === 'all' ? books.length : books.filter((b) => b.status === s.id).length
-            const isActive = statusFilter === s.id
-            return (
-              <button key={s.id} className={chipClass(isActive)} onClick={() => setStatusFilter(s.id)}>
-                {s.label} ({count})
-              </button>
-            )
-          })}
+
+      <div className="flex flex-col gap-2.5 mb-5">
+        <div className="flex gap-0.5 p-0.5 rounded-[9px] bg-surface2 border border-border sm:self-start">
+          {STATUSES.map((s) => (
+            <button
+              key={s.id}
+              onClick={() => setStatusFilter(s.id)}
+              className={`flex-1 sm:flex-none sm:px-6 py-1.5 rounded-md text-[13px] border-none cursor-pointer transition-colors duration-150 ${
+                statusFilter === s.id ? 'bg-surface text-ink font-medium shadow-card' : 'bg-transparent text-dim'
+              }`}
+            >{s.label}</button>
+          ))}
         </div>
-        <div className="flex gap-2 items-center w-full">
-          <div className="flex-1 w-full">
-            <input
-              type="text"
-              placeholder="제목 또는 저자 검색…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-surface border border-border text-ink px-3.5 py-[9px] rounded-lg text-base font-sans focus:outline-none focus:border-accent"
-            />
-          </div>
+
+        <div className="flex items-center gap-2 px-3 rounded-lg bg-surface border border-border focus-within:border-accent">
+          <span className="text-dim flex-shrink-0"><IconSearch /></span>
+          <input
+            type="text"
+            placeholder="제목 또는 저자 검색…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="flex-1 min-w-0 bg-transparent border-none text-ink py-[9px] text-base font-sans placeholder:text-dim focus:outline-none"
+          />
+          <span className="w-px self-stretch my-1.5 bg-border flex-shrink-0" />
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value as SortKey)}
-            className="w-[105px] flex-shrink-0 pl-3.5 pr-7 py-[9px] appearance-none bg-surface bg-no-repeat bg-[right_10px_center] border border-border rounded-full text-xs text-dim font-sans cursor-pointer outline-none"
+            className="flex-shrink-0 appearance-none bg-transparent bg-no-repeat bg-[right_center] border-none pr-4 py-[9px] text-xs text-dim font-sans cursor-pointer outline-none"
             style={{ backgroundImage: `url("${CARET}")` }}
           >
             {SORTS.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}

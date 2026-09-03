@@ -3,11 +3,39 @@ import type { Book, Quote, AppState } from '../types'
 import { useAppUI } from '../contexts/AppUIContext'
 import { goalPace, readingSince, daysSince, recordedDaysThisWeek, recentActivity, relativeDay } from '../lib/insights'
 import { IconCollection, IconRecords, IconRefresh } from './layout/icons'
+import HighlightedText from './HighlightedText'
 
 interface Props {
   state: AppState
   userName?: string
   onFinishBook: (id: string) => void
+}
+
+/**
+ * 인사말은 한 시간 단위로 돌아간다. 같은 시간대에는 늘 같은 문구가 나오고,
+ * 정시가 지나 화면이 다시 그려질 때 다음 문구로 넘어간다.
+ * 의문문은 이름이 앞("채채님, ~?"), 평서문은 이름이 뒤("~네요, 채채님 🙂")로 붙는다.
+ */
+const GREETINGS: { text: string; nameFirst: boolean; emoji?: string }[] = [
+  { text: '오늘도 읽으셨나요?', nameFirst: true },
+  { text: '좋은 문장 만나셨나요?', nameFirst: true },
+  { text: '오늘도 한 장 넘겨볼까요?', nameFirst: true },
+  { text: '무슨 이야기를 읽고 계세요?', nameFirst: true },
+  { text: '밑줄 그을 문장을 찾으셨나요?', nameFirst: true },
+  { text: '오늘도 책과 함께네요', nameFirst: false, emoji: '📚' },
+  { text: '한 문장이면 충분해요', nameFirst: false, emoji: '📚' },
+  { text: '오늘 만난 문장을 남겨두세요', nameFirst: false, emoji: '📚' },
+]
+
+function pickGreeting(name: string | undefined, now: Date) {
+  const hourBucket = Math.floor(now.getTime() / 3600000)
+  const g = GREETINGS[hourBucket % GREETINGS.length]
+  const text = !name
+    ? g.text
+    : g.nameFirst
+      ? `${name}님, ${g.text}`
+      : `${g.text}, ${name}님`
+  return { text, emoji: g.emoji }
 }
 
 const CARD = "bg-surface border border-border rounded-xl"
@@ -38,6 +66,8 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
   const reading = books.filter((b) => b.status === 'reading').sort((a, b) => readingSince(b).localeCompare(readingSince(a)))
   const activity = recentActivity({ books, quotes, words }, 5)
 
+  const greeting = pickGreeting(userName, now)
+
   const [quoteIdx, setQuoteIdx] = useState(() => Math.floor(Math.random() * Math.max(quotes.length, 1)))
   const todayQuote: Quote | undefined = quotes.length ? quotes[quoteIdx % quotes.length] : undefined
   const quoteBook = todayQuote ? books.find((b) => b.id === todayQuote.bookId) : undefined
@@ -54,10 +84,11 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
   return (
     <div className="flex flex-col gap-4">
 
-      <div className="flex flex-col gap-1 mb-1">
-        <h1 className="text-[19px] sm:text-[22px] font-semibold tracking-[-0.01em]">
-          {userName ? `오늘도 읽으셨나요, ${userName}님` : '오늘도 읽으셨나요'}
+      <div className="flex gap-2 items-end mb-1">
+        <h1 className="text-[19px] sm:text-[22px] font-semibold tracking-[-0.01em] bg-[linear-gradient(transparent_58%,var(--highlight)_58%)]">
+          {greeting.text}
         </h1>
+        {greeting.emoji && <span className="text-[17px] sm:text-[19px] leading-none pb-0.5">{greeting.emoji}</span>}
         <div className="font-mono text-xs text-dim">
           {thisYear}.{String(now.getMonth() + 1).padStart(2, '0')}.{String(now.getDate()).padStart(2, '0')}
         </div>
@@ -97,7 +128,7 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-[22px] sm:text-[25px] font-semibold leading-none">
-              {recordedDaysThisWeek({ books, quotes, words })}<span className="text-[15px] text-dim">/7</span>
+              {recordedDaysThisWeek({ books, quotes, words })}<span className="text-dim">/7</span>
             </span>
             <span className="font-mono text-[10px] text-dim">이번 주 기록한 날</span>
           </div>
@@ -162,7 +193,7 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
           {todayQuote ? (
             <>
               <div className="flex-1 flex items-center py-2">
-                <div className="font-serif text-[15px] leading-[1.85] text-ink">&ldquo;{todayQuote.text}&rdquo;</div>
+                <div className="font-serif text-[15px] leading-[1.85] text-ink">&ldquo;<HighlightedText text={todayQuote.text} highlights={todayQuote.highlights} />&rdquo;</div>
               </div>
               <button
                 onClick={() => quoteBook && openBookDetail(quoteBook.id)}
