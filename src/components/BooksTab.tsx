@@ -98,7 +98,7 @@ export default function BooksTab({ books, quotes }: { books: Book[]; quotes: Quo
           <p className="text-sm">{books.length === 0 ? '"+ 책 추가" 버튼으로 시작해보세요' : '다른 검색어를 시도해보세요'}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-2.5 sm:gap-[18px]">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5 sm:gap-[18px]">
           {filtered.map((b) => (
             <BookCard key={b.id} book={b} quoteCount={quotes.filter((q) => q.bookId === b.id).length} onClick={() => openBookDetail(b.id)} />
           ))}

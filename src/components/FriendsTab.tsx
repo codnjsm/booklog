@@ -147,7 +147,7 @@ export default function FriendsTab({ user, authLoading, friends, incoming, outgo
             <h3 className="font-sans text-ink mb-1.5 text-[15px]">{books.length === 0 ? '아직 책이 없어요' : '해당 상태의 책이 없어요'}</h3>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-2.5 sm:gap-[18px]">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5 sm:gap-[18px]">
             {filtered.map((b) => (
               <BookCard key={b.id} book={b} quoteCount={0} onClick={() => {}} />
             ))}
