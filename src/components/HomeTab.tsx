@@ -121,24 +121,24 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
           ) : (
             <div className="flex flex-col gap-4">
               {reading.slice(0, 2).map((book) => (
-                <div key={book.id} className="flex gap-4">
+                <div key={book.id} className="flex items-start gap-4">
                   <button onClick={() => openBookDetail(book.id)} className="bg-transparent border-none p-0 cursor-pointer flex-shrink-0">
-                    <Cover book={book} className="w-[76px] h-[112px]" />
+                    <Cover book={book} className="w-20 h-[120px]" />
                   </button>
-                  <div className="flex-1 min-w-0 flex flex-col gap-1">
-                    <div className="flex items-center gap-2">
+                  <div className="flex-1 min-w-0 flex flex-col">
+                    <div className="flex items-center gap-2 h-[22px]">
                       <span className="text-[10px] font-medium px-2 py-0.5 rounded border border-ink text-ink">읽는중</span>
-                      <span className="font-mono text-[11px] text-dim">{daysSince(readingSince(book))}일째</span>
+                      <span className="font-mono text-[11px] text-dim">
+                        {daysSince(readingSince(book))}일째 · 문장 {quotes.filter((q) => q.bookId === book.id).length}개
+                      </span>
                     </div>
-                    <button onClick={() => openBookDetail(book.id)} className="text-left bg-transparent border-none p-0 cursor-pointer text-[17px] font-semibold leading-snug tracking-[-0.01em] text-ink truncate">
+                    <button onClick={() => openBookDetail(book.id)} className="mt-2 text-left bg-transparent border-none p-0 cursor-pointer text-[17px] font-semibold leading-snug tracking-[-0.01em] text-ink truncate">
                       {book.title}
                     </button>
-                    <div className="text-xs text-dim truncate">{book.author || '저자 미상'}</div>
-                    <div className="flex-1" />
-                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <div className="mt-0.5 text-xs text-dim truncate">{book.author || '저자 미상'}</div>
+                    <div className="flex flex-wrap gap-2 mt-3">
                       <button onClick={() => openAddQuote(book.id)} className="text-xs font-medium px-3 py-2 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover">문장 저장</button>
                       <button onClick={() => onFinishBook(book.id)} className="text-xs px-3 py-2 rounded-lg bg-surface text-ink border border-border cursor-pointer hover:bg-surface2">완독 처리</button>
-                      <span className="font-mono text-[11px] text-dim">문장 {quotes.filter((q) => q.bookId === book.id).length}개</span>
                     </div>
                   </div>
                 </div>
