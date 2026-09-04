@@ -120,7 +120,7 @@ export default function WordsTab({ words, onAddWord, onDeleteWord }: Props) {
             return (
               <div key={w.id} className={`group bg-surface border rounded-[10px] px-4 py-3.5 flex flex-col gap-1.5 ${fresh ? 'border-highlight' : 'border-border'}`}>
                 <div className="flex items-start gap-2">
-                  <div className="font-serif text-base font-semibold leading-snug flex-1">
+                  <div className="font-serif text-[15px] sm:text-base font-semibold leading-snug flex-1">
                     {fresh ? <span className="bg-[linear-gradient(transparent_56%,var(--highlight)_56%)]">{w.term}</span> : w.term}
                   </div>
                   <button

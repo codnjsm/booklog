@@ -212,7 +212,7 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
           {todayQuote ? (
             <>
               <div className="flex-1 flex items-center py-2">
-                <div className="font-serif text-[15px] leading-[1.85] text-ink">&ldquo;<HighlightedText text={todayQuote.text} highlights={todayQuote.highlights} />&rdquo;</div>
+                <div className="font-serif text-sm sm:text-base leading-[1.85] text-ink">&ldquo;<HighlightedText text={todayQuote.text} highlights={todayQuote.highlights} />&rdquo;</div>
               </div>
               <button
                 onClick={() => quoteBook && openBookDetail(quoteBook.id)}

@@ -117,7 +117,7 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
                     : <span className="text-[11px] text-dim">칠할 부분을 드래그한 뒤 눌러주세요</span>}
                 </div>
                 {entry.highlights?.length && entry.text ? (
-                  <div className="mt-2 rounded-[7px] border border-border bg-bg px-3 py-2 font-serif text-sm leading-[1.8]">
+                  <div className="mt-2 rounded-[7px] border border-border bg-bg px-3 py-2 font-serif text-sm sm:text-base leading-[1.8]">
                     <HighlightedText text={entry.text} highlights={entry.highlights} />
                   </div>
                 ) : null}
