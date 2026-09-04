@@ -6,3 +6,7 @@ functions/lib/
 functions/node_modules/
 tsconfig.tsbuildinfo
 .DS_Store
+
+# Firebase 에뮬레이터 로그
+firestore-debug.log
+firebase-debug.log

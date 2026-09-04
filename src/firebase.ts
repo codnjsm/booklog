@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, type User } from 'firebase/auth'
-import { getFirestore, doc, getDoc, setDoc, collection, query, where, getDocs, updateDoc, deleteDoc, onSnapshot, type Unsubscribe } from 'firebase/firestore'
+import { getFirestore, doc, getDoc, setDoc, collection, query, where, updateDoc, deleteDoc, onSnapshot, type Unsubscribe } from 'firebase/firestore'
+import { getFunctions, httpsCallable } from 'firebase/functions'
 import type { AppState, UserProfile, FriendRequest } from './types'
 
 const firebaseConfig = {
@@ -15,6 +16,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig)
 export const auth = getAuth(app)
 export const db = getFirestore(app)
+const functions = getFunctions(app, 'asia-northeast3')
 const provider = new GoogleAuthProvider()
 provider.setCustomParameters({ prompt: 'select_account' })
 
@@ -32,7 +34,7 @@ export const saveUserData = async (userId: string, data: AppState): Promise<void
 }
 
 export const upsertUserProfile = async (uid: string, profile: { email: string; displayName: string; photoURL: string }): Promise<void> => {
-  await setDoc(doc(db, 'users', uid), profile, { merge: true })
+  await setDoc(doc(db, 'users', uid), { ...profile, email: profile.email.trim().toLowerCase() }, { merge: true })
 }
 
 export const getUserProfile = async (uid: string): Promise<UserProfile | null> => {
@@ -40,11 +42,11 @@ export const getUserProfile = async (uid: string): Promise<UserProfile | null> =
   return snap.exists() ? { uid: snap.id, ...(snap.data() as Omit<UserProfile, 'uid'>) } : null
 }
 
+/** 클라이언트가 users 컬렉션을 통째로 조회할 수 없도록, 이메일 검색은 서버 함수를 거친다. */
 export const getUserByEmail = async (email: string): Promise<UserProfile | null> => {
-  const snap = await getDocs(query(collection(db, 'users'), where('email', '==', email)))
-  if (snap.empty) return null
-  const d = snap.docs[0]
-  return { uid: d.id, ...(d.data() as Omit<UserProfile, 'uid'>) }
+  const call = httpsCallable<{ email: string }, UserProfile | null>(functions, 'findUserByEmail')
+  const res = await call({ email })
+  return res.data ?? null
 }
 
 export const sendFriendRequest = async (fromUid: string, toUid: string): Promise<void> => {

@@ -2,33 +2,81 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isFriend(uid1, uid2) {
-      let id1 = uid1 + '_' + uid2;
-      let id2 = uid2 + '_' + uid1;
-      return (exists(/databases/$(database)/documents/friendRequests/$(id1))
-              && get(/databases/$(database)/documents/friendRequests/$(id1)).data.status == 'accepted')
-          || (exists(/databases/$(database)/documents/friendRequests/$(id2))
-              && get(/databases/$(database)/documents/friendRequests/$(id2)).data.status == 'accepted');
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function requestId(a, b) {
+      return a + '_' + b;
+    }
+
+    // 두 사람 사이에 친구 요청 문서가 있는지 (상태 무관)
+    function hasRequestBetween(a, b) {
+      return exists(/databases/$(database)/documents/friendRequests/$(requestId(a, b)))
+          || exists(/databases/$(database)/documents/friendRequests/$(requestId(b, a)));
+    }
+
+    // 실제로 수락된 친구인지
+    function isFriend(a, b) {
+      return (exists(/databases/$(database)/documents/friendRequests/$(requestId(a, b)))
+              && get(/databases/$(database)/documents/friendRequests/$(requestId(a, b))).data.status == 'accepted')
+          || (exists(/databases/$(database)/documents/friendRequests/$(requestId(b, a)))
+              && get(/databases/$(database)/documents/friendRequests/$(requestId(b, a))).data.status == 'accepted');
     }
 
     match /users/{userId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth.uid == userId;
+      // 본인 프로필, 또는 나와 친구 요청이 오간 상대의 프로필만 조회 가능.
+      allow get: if signedIn() && (request.auth.uid == userId || hasRequestBetween(request.auth.uid, userId));
+
+      // 목록 조회는 전면 차단. 이메일 검색은 findUserByEmail 함수가 서버에서 처리한다.
+      // (허용하면 로그인한 누구나 전체 회원의 이메일을 덤프할 수 있음)
+      allow list: if false;
+
+      allow write: if signedIn() && request.auth.uid == userId;
     }
 
-    match /friendRequests/{requestId} {
-      allow read: if request.auth.uid == resource.data.fromUid
-                  || request.auth.uid == resource.data.toUid;
-      allow create: if request.auth.uid == request.resource.data.fromUid;
-      allow update: if request.auth.uid == resource.data.toUid
-                  || request.auth.uid == resource.data.fromUid;
-      allow delete: if request.auth.uid == resource.data.toUid
-                  || request.auth.uid == resource.data.fromUid;
+    match /friendRequests/{docId} {
+      function isParticipant() {
+        return signedIn()
+            && (request.auth.uid == resource.data.fromUid || request.auth.uid == resource.data.toUid);
+      }
+      function uidsUnchanged() {
+        return request.resource.data.fromUid == resource.data.fromUid
+            && request.resource.data.toUid == resource.data.toUid;
+      }
+
+      allow read: if isParticipant();
+
+      // 보내는 사람만 만들 수 있고, 반드시 pending 으로만 시작한다.
+      // 문서 ID를 {fromUid}_{toUid} 로 강제해서 남의 이름으로 만들지 못하게 한다.
+      allow create: if signedIn()
+                    && request.auth.uid == request.resource.data.fromUid
+                    && request.resource.data.toUid is string
+                    && request.resource.data.toUid != request.auth.uid
+                    && request.resource.data.status == 'pending'
+                    && docId == requestId(request.resource.data.fromUid, request.resource.data.toUid);
+
+      // 수락/거절은 '받는 사람'만 할 수 있다. 이게 없으면 보낸 사람이 스스로 수락해서
+      // 상대 동의 없이 서재를 열람할 수 있다.
+      allow update: if signedIn()
+                    && resource != null
+                    && uidsUnchanged()
+                    && (
+                      (request.auth.uid == resource.data.toUid
+                        && request.resource.data.status in ['accepted', 'rejected'])
+                      // 거절당한 뒤 다시 요청하는 경우만 보낸 사람도 pending 으로 되돌릴 수 있다.
+                      || (request.auth.uid == resource.data.fromUid
+                        && resource.data.status == 'rejected'
+                        && request.resource.data.status == 'pending')
+                    );
+
+      // 요청 취소 / 친구 끊기
+      allow delete: if isParticipant();
     }
 
     match /reading-notes/{userId} {
-      allow read, write: if request.auth.uid == userId;
-      allow read: if request.auth != null && isFriend(request.auth.uid, userId);
+      allow read, write: if signedIn() && request.auth.uid == userId;
+      allow read: if signedIn() && isFriend(request.auth.uid, userId);
     }
   }
 }
