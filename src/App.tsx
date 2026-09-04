@@ -42,11 +42,13 @@ function AppShell() {
 
   useEffect(() => {
     if (!user) return
-    upsertUserProfile(user.uid, {
-      email: user.email ?? '',
-      displayName: user.displayName ?? '',
-      photoURL: user.photoURL ?? '',
-    }).catch(() => {})
+    // 프로필이 마지막으로 동기화한 값과 같으면 매번 다시 쓰지 않는다 (앱 열 때마다 쓰기가 나가는 걸 방지)
+    const profile = { email: user.email ?? '', displayName: user.displayName ?? '', photoURL: user.photoURL ?? '' }
+    const cacheKey = `reading-notes-profile-synced-${user.uid}`
+    if (localStorage.getItem(cacheKey) === JSON.stringify(profile)) return
+    upsertUserProfile(user.uid, profile)
+      .then(() => localStorage.setItem(cacheKey, JSON.stringify(profile)))
+      .catch(() => {})
   }, [user])
 
   const handleExport = useCallback(() => { exportData(); showToast('데이터를 내보냈어요') }, [exportData, showToast])

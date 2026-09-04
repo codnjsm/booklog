@@ -1,4 +1,5 @@
 import { initializeApp } from 'firebase/app'
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check'
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, type User } from 'firebase/auth'
 import { getFirestore, doc, getDoc, setDoc, collection, query, where, updateDoc, deleteDoc, onSnapshot, type Unsubscribe } from 'firebase/firestore'
 import { getFunctions, httpsCallable } from 'firebase/functions'
@@ -13,7 +14,19 @@ const firebaseConfig = {
   appId: '1:459987300237:web:f0576b0978cca90b9457c4',
 }
 
+// reCAPTCHA Enterprise 사이트 키. Firebase Console > App Check 에 등록된 키와 같아야 한다.
+// 사이트 키는 클라이언트에 노출되는 공개 값이고, 실제 보호는 GCP 쪽 도메인 확인이 담당한다.
+// 주의: 이 키가 배포된 뒤에만 Console에서 Firestore/Functions enforcement를 켤 것.
+// 순서가 바뀌면(배포 전에 enforcement부터 켜면) 토큰 없는 사용자 요청이 전부 막힌다.
+const RECAPTCHA_SITE_KEY = '6LcNgqgtAAAAAOvUYZcS7lWnykuvGghuK3jauwQO'
+
 const app = initializeApp(firebaseConfig)
+if (RECAPTCHA_SITE_KEY) {
+  initializeAppCheck(app, {
+    provider: new ReCaptchaEnterpriseProvider(RECAPTCHA_SITE_KEY),
+    isTokenAutoRefreshEnabled: true,
+  })
+}
 export const auth = getAuth(app)
 export const db = getFirestore(app)
 const functions = getFunctions(app, 'asia-northeast3')
