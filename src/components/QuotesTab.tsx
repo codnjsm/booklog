@@ -12,6 +12,7 @@ interface Props {
 
 export default function QuotesTab({ quotes, books, onDeleteQuote }: Props) {
   const { openBookDetail, openAddQuote } = useAppUI()
+  // 문장 추가 버튼은 이제 상단(PageHeader)에 있다. 편집 진입은 여전히 이 훅을 쓴다.
   const [search, setSearch] = useState('')
 
 
@@ -29,18 +30,15 @@ export default function QuotesTab({ quotes, books, onDeleteQuote }: Props) {
 
   return (
     <div>
-      <div className="mb-5 w-full flex gap-2">
-        <div className="flex-1 min-w-0 flex items-center gap-2 px-3 rounded-lg bg-surface border border-border focus-within:border-accent">
-          <span className="text-dim flex-shrink-0"><IconSearch /></span>
-          <input
-            type="text"
-            placeholder="문장 · 책 · 저자 검색…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 min-w-0 bg-transparent border-none text-ink py-[9px] text-base font-sans placeholder:text-dim focus:outline-none"
-          />
-        </div>
-        <button onClick={() => openAddQuote()} className="flex-shrink-0 text-xs sm:text-[13px] font-medium px-3 sm:px-4 rounded-lg bg-ink text-bg border-none cursor-pointer hover:opacity-90">+ 문장 저장</button>
+      <div className="mb-5 flex items-center gap-2 px-3 rounded-lg bg-surface border border-border focus-within:border-accent">
+        <span className="text-dim flex-shrink-0"><IconSearch /></span>
+        <input
+          type="text"
+          placeholder="문장 · 책 · 저자 검색…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="flex-1 min-w-0 bg-transparent border-none text-ink py-[9px] text-base font-sans placeholder:text-dim focus:outline-none"
+        />
       </div>
       {filtered.length === 0 ? (
         <div className="text-center py-[60px] px-5 text-dim bg-surface border border-dashed border-border rounded-[10px]">

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import type { Word } from '../types'
 import { isThisWeek, relativeDay } from '../lib/insights'
 import { IconSearch } from './layout/icons'
+import { fetchWithAppCheck } from '../firebase'
 
 interface DictSense { definition: string; pos?: string }
 interface DictItem { word: string; sense?: DictSense[] }
@@ -15,7 +16,7 @@ interface Props {
 }
 
 async function searchDict(q: string): Promise<DictItem[]> {
-  const res = await fetch(`/api/koreanDictSearch?query=${encodeURIComponent(q)}`)
+  const res = await fetchWithAppCheck(`/api/koreanDictSearch?query=${encodeURIComponent(q)}`)
   if (!res.ok) throw new Error('search failed')
   const data = await res.json() as DictResponse
   return data.channel?.item || []
@@ -46,19 +47,19 @@ export default function WordsTab({ words, onAddWord, onDeleteWord }: Props) {
   return (
     <div className="flex flex-col gap-4">
 
-      <div className={`bg-surface border rounded-xl overflow-hidden ${debouncedQuery ? 'border-accent' : 'border-border'}`}>
-        <div className="flex items-center gap-2.5 px-4 py-3.5">
-          <span className={debouncedQuery ? 'text-accent' : 'text-dim'}><IconSearch size={17} /></span>
+      <div className="bg-surface border border-border rounded-lg overflow-hidden focus-within:border-accent">
+        <div className="flex items-center gap-2 px-3">
+          <span className="text-dim flex-shrink-0"><IconSearch /></span>
           <input
             type="text"
             placeholder="뜻을 찾을 단어 입력"
             value={query}
             onChange={(e) => handleInput(e.target.value)}
             autoComplete="off"
-            className="flex-1 min-w-0 bg-transparent border-none text-ink text-[15px] font-sans outline-none placeholder:text-dim placeholder:opacity-60"
+            className="flex-1 min-w-0 bg-transparent border-none text-ink py-[9px] text-base font-sans placeholder:text-dim focus:outline-none"
           />
-          {loading && <span className="font-mono text-[11px] text-dim">검색중…</span>}
-          {!loading && isSuccess && <span className="font-mono text-[11px] text-dim">우리말샘 · {results.length}건</span>}
+          {loading && <span className="font-mono text-[11px] text-dim flex-shrink-0">검색중…</span>}
+          {!loading && isSuccess && <span className="font-mono text-[11px] text-dim flex-shrink-0">우리말샘 · {results.length}건</span>}
         </div>
 
         {error && (

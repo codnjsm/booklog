@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import Modal from './Modal'
 import type { BookPrefill } from '../../types'
+import { fetchWithAppCheck } from '../../firebase'
 
 interface KakaoItem {
   title: string
@@ -22,7 +23,7 @@ const BTN_SECONDARY = "bg-surface text-ink border border-border px-3 py-2 sm:px-
 interface Props { onClose: () => void; onSelectBook: (p: BookPrefill) => void; onManualEntry: () => void }
 
 async function searchKakaoBooks(q: string): Promise<KakaoItem[]> {
-  const res = await fetch(`/api/kakaoBookSearch?query=${encodeURIComponent(q)}`)
+  const res = await fetchWithAppCheck(`/api/kakaoBookSearch?query=${encodeURIComponent(q)}`)
   if (!res.ok) throw new Error('search failed')
   const data = await res.json() as { documents?: KakaoItem[] }
   return data.documents || []

@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app'
-import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check'
+import { initializeAppCheck, ReCaptchaEnterpriseProvider, getToken, type AppCheck } from 'firebase/app-check'
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, type User } from 'firebase/auth'
 import { getFirestore, doc, getDoc, setDoc, collection, query, where, updateDoc, deleteDoc, onSnapshot, type Unsubscribe } from 'firebase/firestore'
 import { getFunctions, httpsCallable } from 'firebase/functions'
@@ -21,8 +21,9 @@ const firebaseConfig = {
 const RECAPTCHA_SITE_KEY = '6LcNgqgtAAAAAOvUYZcS7lWnykuvGghuK3jauwQO'
 
 const app = initializeApp(firebaseConfig)
+let appCheck: AppCheck | undefined
 if (RECAPTCHA_SITE_KEY) {
-  initializeAppCheck(app, {
+  appCheck = initializeAppCheck(app, {
     provider: new ReCaptchaEnterpriseProvider(RECAPTCHA_SITE_KEY),
     isTokenAutoRefreshEnabled: true,
   })
@@ -97,4 +98,21 @@ export const subscribeUserProfile = (uid: string, cb: (profile: UserProfile | nu
   return onSnapshot(doc(db, 'users', uid), (snap) => {
     cb(snap.exists() ? { uid: snap.id, ...(snap.data() as Omit<UserProfile, 'uid'>) } : null)
   })
+}
+
+/**
+ * 카카오/사전 검색 프록시는 Firestore와 달리 Firebase SDK를 안 거치는 일반 fetch라
+ * App Check 토큰이 자동으로 안 실린다. 여기서 직접 헤더에 넣어준다.
+ */
+export async function fetchWithAppCheck(url: string): Promise<Response> {
+  const headers: Record<string, string> = {}
+  if (appCheck) {
+    try {
+      const { token } = await getToken(appCheck, false)
+      headers['X-Firebase-AppCheck'] = token
+    } catch {
+      // 토큰 발급 실패해도 요청은 보낸다. 서버가 verifyToken 실패로 거부할지 판단한다.
+    }
+  }
+  return fetch(url, { headers })
 }

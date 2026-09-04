@@ -160,9 +160,9 @@ export default function CalendarTab({ books }: Props) {
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-5">
-        <button className="bg-surface border border-border text-ink w-[30px] h-[30px] sm:w-9 sm:h-9 rounded-lg cursor-pointer text-base sm:text-xl leading-none flex items-center justify-center transition-all duration-150 flex-shrink-0 hover:bg-surface2" onClick={prevMonth}>‹</button>
+        <button className="bg-transparent border-none text-dim w-[30px] h-[30px] sm:w-9 sm:h-9 rounded-lg cursor-pointer text-lg sm:text-2xl leading-none flex items-center justify-center transition-colors duration-150 flex-shrink-0 hover:text-ink" onClick={prevMonth}>‹</button>
         <span className="font-sans text-base font-bold text-center flex-1">{year}년 {MONTH_NAMES[month]}</span>
-        <button className="bg-surface border border-border text-ink w-[30px] h-[30px] sm:w-9 sm:h-9 rounded-lg cursor-pointer text-base sm:text-xl leading-none flex items-center justify-center transition-all duration-150 flex-shrink-0 hover:bg-surface2" onClick={nextMonth}>›</button>
+        <button className="bg-transparent border-none text-dim w-[30px] h-[30px] sm:w-9 sm:h-9 rounded-lg cursor-pointer text-lg sm:text-2xl leading-none flex items-center justify-center transition-colors duration-150 flex-shrink-0 hover:text-ink" onClick={nextMonth}>›</button>
       </div>
 
       <div className="border border-border rounded-[10px] overflow-hidden bg-surface w-full [container-type:inline-size]">

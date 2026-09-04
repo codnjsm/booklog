@@ -13,8 +13,8 @@ const STATUS = {
 
 const PANEL = "bg-surface border border-border rounded-t-2xl sm:rounded-[14px] w-full max-w-full sm:max-w-[620px] max-h-[92vh] sm:max-h-[90vh] overflow-y-auto shadow-card"
 const LABEL = "font-mono text-[10px] tracking-[0.09em] text-dim"
-const BTN = "text-[13px] font-medium px-4 py-2.5 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover"
-const BTN_2 = "text-[13px] px-4 py-2.5 rounded-lg bg-surface text-ink border border-border cursor-pointer hover:bg-surface2"
+const BTN = "text-xs sm:text-[13px] font-medium px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover"
+const BTN_2 = "text-xs sm:text-[13px] px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-surface text-ink border border-border cursor-pointer hover:bg-surface2"
 const BTN_SM = "text-xs px-3 py-1.5 rounded-md bg-surface text-ink border border-border cursor-pointer hover:bg-surface2"
 
 function fmt(iso?: string) {
@@ -153,7 +153,7 @@ export default function BookDetailModal({ bookId, books, quotes, onClose, onEdit
         </div>
 
         <div className="flex items-center gap-2 px-5 sm:px-6 py-3.5 border-t border-border bg-bg pb-[max(14px,env(safe-area-inset-bottom))] sm:pb-3.5">
-          <button onClick={() => onDelete(bookId)} className="text-[13px] px-3 py-2.5 rounded-lg bg-transparent border border-border text-danger cursor-pointer hover:bg-danger/10">책 삭제</button>
+          <button onClick={() => onDelete(bookId)} className="text-xs sm:text-[13px] px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg bg-transparent border border-border text-danger cursor-pointer hover:bg-danger/10">책 삭제</button>
           <span className="flex-1" />
           <button className={BTN_2} onClick={() => onEdit(bookId)}>책 정보 편집</button>
         </div>
