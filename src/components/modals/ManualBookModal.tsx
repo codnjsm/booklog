@@ -62,7 +62,7 @@ export default function ManualBookModal({ prefill, editId, books, onClose, onSav
       <div className={MODAL_PANEL}>
         <div className={MODAL_HEADER}><h3 className="font-sans text-base font-semibold">{editId ? '책 편집' : '책 추가'}</h3><button className={MODAL_CLOSE} onClick={onClose} aria-label="닫기">×</button></div>
         <div className={MODAL_BODY}>
-          <div className={FORM_GROUP}><label className={FORM_LABEL}>제목 <span className="text-danger">*</span></label><input type="text" placeholder="책 제목" value={title} onChange={(e) => setTitle(e.target.value)} autoFocus={!prefill?.title} className={FORM_INPUT} /></div>
+          <div className={FORM_GROUP}><label className={FORM_LABEL}>제목 <span className="text-danger">*</span></label><input type="text" placeholder="책 제목" value={title} onChange={(e) => setTitle(e.target.value)} className={FORM_INPUT} /></div>
           <div className={FORM_GROUP}><label className={FORM_LABEL}>저자</label><input type="text" placeholder="저자명" value={author} onChange={(e) => setAuthor(e.target.value)} className={FORM_INPUT} /></div>
           <div className={FORM_GROUP}><label className={FORM_LABEL}>표지 이미지 URL</label><input type="text" placeholder="https://..." value={cover} onChange={(e) => setCover(e.target.value)} className={FORM_INPUT} /></div>
           <div className={FORM_GROUP}><label className={FORM_LABEL}>출판 연도</label><input type="number" placeholder="2024" value={year} onChange={(e) => setYear(e.target.value)} className={FORM_INPUT} /></div>

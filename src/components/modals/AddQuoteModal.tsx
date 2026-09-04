@@ -97,7 +97,6 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
                   placeholder="간직하고 싶은 문장을 적어보세요…"
                   value={entry.text}
                   onChange={(e) => updateEntry(i, 'text', e.target.value)}
-                  autoFocus={i === 0}
                   className={`${FORM_TEXTAREA} mb-0`}
                 />
                 <div className="flex items-center gap-2 mt-1.5">
