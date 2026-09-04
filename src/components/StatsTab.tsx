@@ -65,7 +65,7 @@ export default function StatsTab({ books, quotes, goal, onSetGoal }: Props) {
             <div className="flex-1" />
             <input type="number" value={input} onChange={(e) => setInput(e.target.value)} placeholder="목표 권수 입력" min={1}
               className={`${FORM_INPUT} w-[140px] h-[42px] box-border`}
-              onKeyDown={(e) => e.key === 'Enter' && handleSaveGoal()} autoFocus />
+              onKeyDown={(e) => e.key === 'Enter' && handleSaveGoal()} />
             <button className={`${BTN} whitespace-nowrap h-[42px]`} onClick={handleSaveGoal}>저장</button>
             <button className={`${BTN_SECONDARY} whitespace-nowrap h-[42px]`} onClick={() => setEditing(false)}>취소</button>
           </div>
