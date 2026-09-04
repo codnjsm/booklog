@@ -120,7 +120,7 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
           {readingGoal ? (
             <>
               <div className="flex items-baseline gap-1.5">
-                <span className="text-[38px] font-semibold leading-none tracking-[-0.02em]">{doneThisYear}</span>
+                <span className="text-[30px] sm:text-[38px] font-semibold leading-none tracking-[-0.02em]">{doneThisYear}</span>
                 <span className="text-[15px] text-dim">/ {readingGoal}권</span>
                 <span className="flex-1" />
                 <span className="font-mono text-[13px] font-bold text-accent">{pct}%</span>

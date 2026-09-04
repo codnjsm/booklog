@@ -46,7 +46,7 @@ export default function AppLayout({ user, syncStatus, bookCount, collectionCount
   return (
     <div className="min-h-screen flex bg-bg">
 
-      <aside className="hidden sm:flex w-[220px] flex-shrink-0 flex-col gap-7 bg-surface border-r border-border px-3.5 py-6 fixed inset-y-0 left-0">
+      <aside className="hidden sm:flex w-[var(--sidebar-w)] flex-shrink-0 flex-col gap-7 bg-surface border-r border-border px-3.5 py-6 fixed inset-y-0 left-0">
         <button className="font-mono text-xl font-bold tracking-[-0.02em] text-[var(--logo)] px-2.5 text-left bg-transparent border-none cursor-pointer" onClick={() => changeTab('home')}>
           Booklog
         </button>
@@ -98,7 +98,7 @@ export default function AppLayout({ user, syncStatus, bookCount, collectionCount
         </div>
       </aside>
 
-      <main className="flex-1 min-w-0 sm:ml-[220px] px-5 pt-4 pb-[calc(76px+env(safe-area-inset-bottom))] sm:pt-20 sm:pb-10">
+      <main className="flex-1 min-w-0 sm:ml-[var(--sidebar-w)] px-5 pt-4 pb-[calc(76px+env(safe-area-inset-bottom))] sm:pt-20 sm:pb-10">
         <div className="max-w-[1200px] mx-auto">
           <div className="sm:hidden mb-3 font-mono text-[15px] font-bold tracking-[-0.02em] text-[var(--logo)]">Booklog</div>
           {children}

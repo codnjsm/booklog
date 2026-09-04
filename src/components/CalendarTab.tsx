@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { Book } from '../types'
 import { useAppUI } from '../contexts/AppUIContext'
+import { IconBooks } from './layout/icons'
 
 interface Props { books: Book[] }
 
@@ -182,7 +183,7 @@ export default function CalendarTab({ books }: Props) {
 
       {!hasBooks && (
         <div className="text-center py-[60px] px-5 text-dim bg-surface border border-dashed border-border rounded-[10px] mt-6">
-          <div className="text-[40px] mb-3 opacity-60">📅</div>
+          <div className="w-11 h-11 mx-auto mb-3 rounded-full bg-surface2 flex items-center justify-center text-dim"><IconBooks size={22} /></div>
           <h3 className="font-sans text-ink mb-1.5 text-[15px]">읽은 책이 없어요</h3>
           <p className="mt-2 text-sm">책을 추가하고 시작 날짜를 등록하면 달력에 표시돼요</p>
         </div>
