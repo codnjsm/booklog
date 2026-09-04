@@ -35,7 +35,7 @@ export default function App() {
 }
 
 function AppShell() {
-  const { user, loading, signIn, signOut } = useAuth()
+  const { user, loading, signIn, signOut, cachedName } = useAuth()
   const { state, syncStatus, addBook, updateBook, deleteBook, addQuote, updateQuote, deleteQuote, addWord, deleteWord, exportData, setGoal } = useData(user)
   const { friends, incoming, outgoing, searchUser, sendRequest, acceptRequest, rejectRequest, removeRequest, loadFriendBooks } = useFriends(user)
   const { tab, modal, showToast, loginDismissed, dismissLogin, openManualBook, openAddQuote, closeModal } = useAppUI()
@@ -76,7 +76,7 @@ function AppShell() {
       onExport={handleExport}
     >
       {tab === 'home' && (
-        <HomeTab state={state} userName={user?.displayName?.split(' ')[0]} onFinishBook={handleFinishBook} />
+        <HomeTab state={state} userName={cachedName} onFinishBook={handleFinishBook} />
       )}
       {tab === 'books' && <BooksTab books={state.books} quotes={state.quotes} />}
       {tab === 'collection' && (

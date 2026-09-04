@@ -12,24 +12,43 @@ interface Props {
 }
 
 /**
- * 인사말은 한 시간 단위로 돌아간다. 같은 시간대에는 늘 같은 문구가 나오고,
- * 정시가 지나 화면이 다시 그려질 때 다음 문구로 넘어간다.
+ * 인사말은 브라우저 세션마다 하나 랜덤으로 뽑혀 고정된다.
+ * 같은 세션에서는 새로고침(강력 새로고침 포함)해도 안 바뀌고,
+ * 탭/브라우저를 완전히 닫았다 다시 열면(sessionStorage가 비므로) 새로 뽑힌다.
  * 의문문은 이름이 앞("채채님, ~?"), 평서문은 이름이 뒤("~네요, 채채님 🙂")로 붙는다.
  */
 const GREETINGS: { text: string; nameFirst: boolean; emoji?: string }[] = [
-  { text: '오늘도 읽으셨나요?', nameFirst: true },
-  { text: '좋은 문장 만나셨나요?', nameFirst: true },
-  { text: '오늘도 한 장 넘겨볼까요?', nameFirst: true },
-  { text: '무슨 이야기를 읽고 계세요?', nameFirst: true },
-  { text: '밑줄 그을 문장을 찾으셨나요?', nameFirst: true },
+  { text: '오늘도 읽으셨나요?', nameFirst: true, emoji: '📖' },
+  { text: '좋은 문장 만나셨나요?', nameFirst: true, emoji: '✨' },
+  { text: '오늘도 한 장 넘겨볼까요?', nameFirst: true, emoji: '📄' },
+  { text: '무슨 이야기를 읽고 계세요?', nameFirst: true, emoji: '🧐' },
+  { text: '밑줄 그을 문장을 찾으셨나요?', nameFirst: true, emoji: '🖍️' },
   { text: '오늘도 책과 함께네요', nameFirst: false, emoji: '📚' },
-  { text: '한 문장이면 충분해요', nameFirst: false, emoji: '📚' },
-  { text: '오늘 만난 문장을 남겨두세요', nameFirst: false, emoji: '📚' },
+  { text: '한 문장이면 충분해요', nameFirst: false, emoji: '🌿' },
+  { text: '오늘 만난 문장을 남겨두세요', nameFirst: false, emoji: '🔖' },
 ]
 
-function pickGreeting(name: string | undefined, now: Date) {
-  const hourBucket = Math.floor(now.getTime() / 3600000)
-  const g = GREETINGS[hourBucket % GREETINGS.length]
+const GREETING_SESSION_KEY = 'reading-notes-greeting'
+const GREETING_STALE_MS = 60 * 60 * 1000 // 뽑은 지 1시간 넘으면 다시 뽑는다
+
+function getGreetingIndex() {
+  const raw = sessionStorage.getItem(GREETING_SESSION_KEY)
+  if (raw !== null) {
+    try {
+      const { idx, pickedAt } = JSON.parse(raw)
+      const fresh = Date.now() - pickedAt < GREETING_STALE_MS
+      if (fresh && Number.isInteger(idx) && idx >= 0 && idx < GREETINGS.length) return idx
+    } catch {
+      // 저장된 형식이 깨져있으면 새로 뽑는다
+    }
+  }
+  const idx = Math.floor(Math.random() * GREETINGS.length)
+  sessionStorage.setItem(GREETING_SESSION_KEY, JSON.stringify({ idx, pickedAt: Date.now() }))
+  return idx
+}
+
+function pickGreeting(name: string | undefined) {
+  const g = GREETINGS[getGreetingIndex()]
   const text = !name
     ? g.text
     : g.nameFirst
@@ -66,7 +85,7 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
   const reading = books.filter((b) => b.status === 'reading').sort((a, b) => readingSince(b).localeCompare(readingSince(a)))
   const activity = recentActivity({ books, quotes, words }, 5)
 
-  const greeting = pickGreeting(userName, now)
+  const greeting = pickGreeting(userName)
 
   const [quoteIdx, setQuoteIdx] = useState(() => Math.floor(Math.random() * Math.max(quotes.length, 1)))
   const todayQuote: Quote | undefined = quotes.length ? quotes[quoteIdx % quotes.length] : undefined
