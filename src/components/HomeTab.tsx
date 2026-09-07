@@ -20,13 +20,13 @@ interface Props {
  */
 const GREETINGS: { text: string; nameFirst: boolean; emoji?: string }[] = [
   { text: '오늘도 읽으셨나요?', nameFirst: true, emoji: '📖' },
-  { text: '문장 만나셨나요?', nameFirst: true, emoji: '✨' },
+  { text: '오늘의 문장 만나셨나요?', nameFirst: true, emoji: '✨' },
   { text: '몇 장 읽으셨어요?', nameFirst: true, emoji: '📄' },
   { text: '무슨 책 읽어요?', nameFirst: true, emoji: '🧐' },
   { text: '밑줄 찾으셨나요?', nameFirst: true, emoji: '🖍️' },
   { text: '오늘도 책과 함께네요', nameFirst: false, emoji: '📚' },
   { text: '한 문장이면 충분해요', nameFirst: false, emoji: '🌿' },
-  { text: '문장을 남겨보세요', nameFirst: false, emoji: '🔖' },
+  { text: '오늘의 문장을 남겨보세요', nameFirst: false, emoji: '🔖' },
 ]
 
 const GREETING_SESSION_KEY = 'reading-notes-greeting'

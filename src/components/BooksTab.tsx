@@ -22,6 +22,13 @@ const SORTS: { id: SortKey; label: string }[] = [
   { id: 'finishedAt', label: '완독일순' },
 ]
 
+// 상태 칩만 눌렀는데 그 상태에 책이 없을 때 — 검색 얘기 대신 상태에 맞는 문구를 보여준다
+const EMPTY_BY_STATUS: Record<BookStatus, { title: string; desc: string }> = {
+  wishlist: { title: '읽고 싶은 책이 아직 없어요', desc: '관심 가는 책을 담아두세요' },
+  reading: { title: '읽는 중인 책이 없어요', desc: '책을 골라 읽기 시작해보세요' },
+  done: { title: '완독한 책이 아직 없어요', desc: '다 읽은 책을 완독 처리해보세요' },
+}
+
 const CARET = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a8a29e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"
 
 export default function BooksTab({ books, quotes }: { books: Book[]; quotes: Quote[] }) {
@@ -51,6 +58,14 @@ export default function BooksTab({ books, quotes }: { books: Book[]; quotes: Quo
       if (sort === 'finishedAt') return (b.finishedAt ?? '').localeCompare(a.finishedAt ?? '')
       return 0
     })
+
+  // 빈 상태 세 가지: 책이 아예 없음 / 상태 필터에 해당하는 책이 없음 / 검색 결과가 없음
+  const empty =
+    books.length === 0
+      ? { title: '아직 책이 없어요', desc: '"+ 책 추가" 버튼으로 시작해보세요' }
+      : !search && statusFilter !== 'all'
+        ? EMPTY_BY_STATUS[statusFilter]
+        : { title: '검색 결과가 없어요', desc: '다른 검색어를 시도해보세요' }
 
   return (
     <div>
@@ -94,8 +109,8 @@ export default function BooksTab({ books, quotes }: { books: Book[]; quotes: Quo
       {filtered.length === 0 ? (
         <div className="text-center py-[60px] px-5 text-dim bg-surface border border-dashed border-border rounded-[10px]">
           <div className="w-11 h-11 mx-auto mb-3 rounded-full bg-surface2 flex items-center justify-center text-dim"><IconBooks size={22} /></div>
-          <h3 className="font-sans text-ink mb-1.5 text-[15px]">{books.length === 0 ? '아직 책이 없어요' : '검색 결과가 없어요'}</h3>
-          <p className="text-sm">{books.length === 0 ? '"+ 책 추가" 버튼으로 시작해보세요' : '다른 검색어를 시도해보세요'}</p>
+          <h3 className="font-sans text-ink mb-1.5 text-[15px]">{empty.title}</h3>
+          <p className="text-sm">{empty.desc}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5 sm:gap-[18px]">
