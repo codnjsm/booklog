@@ -96,3 +96,8 @@ npm run build
 firebase deploy --only hosting     # 프로젝트는 .firebaserc의 default 사용
 firebase deploy --only functions
 ```
+
+## 커밋 주의
+IDE 저장 시 자동 포맷터가 파일 전체를 재포맷하는 경우가 있다(작은따옴표→큰따옴표, 세미콜론 추가 등).
+이 저장소 스타일은 **작은따옴표 + 세미콜론 없음**이다. 커밋 전 `git diff --stat`으로 변경 범위가
+의도한 만큼인지 확인할 것 — 몇 줄 수정이 수백 줄 변경으로 커밋된 적이 있다.
