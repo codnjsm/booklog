@@ -1,10 +1,18 @@
 import { useState } from 'react'
 import type { Book, Quote, AppState } from '../types'
 import { useAppUI } from '../contexts/AppUIContext'
-import { goalPace, readingSince, daysSince, recordedDaysThisWeek, recentActivity, relativeDay } from '../lib/insights'
+import {
+  goalPace,
+  readingSince,
+  readDaysCount,
+  recordedDaysThisWeek,
+  recentActivity,
+  relativeDay,
+} from '../lib/insights'
 import { IconCollection, IconRecords, IconRefresh } from './layout/icons'
 import HighlightedText from './HighlightedText'
 import HomeFab from './HomeFab'
+import Stars from './Stars'
 
 interface Props {
   state: AppState
@@ -217,7 +225,7 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
                         <div className="mt-0.5 text-xs text-dim truncate">{book.author || '저자 미상'}</div>
                       </div>
                       <span className="mt-1 font-mono text-[11px] text-dim whitespace-nowrap flex-shrink-0">
-                        {daysSince(readingSince(book))}일째 · 문장 {quotes.filter((q) => q.bookId === book.id).length}개
+                        {readDaysCount(book)}일째 · 문장 {quotes.filter((q) => q.bookId === book.id).length}개
                       </span>
                     </div>
                     <div className="flex-1" />
@@ -327,7 +335,9 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
                     )}
                   </div>
                   {a.kind === 'finished' && a.rating ? (
-                    <span className="text-[11px] text-dim tracking-[1px] flex-shrink-0">{'★'.repeat(a.rating)}</span>
+                    <span className="text-dim flex-shrink-0">
+                      <Stars rating={a.rating} size={11} />
+                    </span>
                   ) : null}
                   <span className="font-mono text-[11px] text-dim text-right whitespace-nowrap flex-shrink-0">
                     {relativeDay(a.at)}

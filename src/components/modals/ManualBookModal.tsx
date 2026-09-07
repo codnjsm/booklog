@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import Modal from './Modal'
 import type { Book, BookPrefill, BookStatus } from '../../types'
-import DatePicker from '../DatePicker'
+import DateMultiPicker from '../DateMultiPicker'
+import { IconStar } from '../layout/icons'
 
 const STATUSES: { id: BookStatus; label: string }[] = [
   { id: 'wishlist', label: '읽고싶음' },
@@ -18,9 +19,26 @@ function toISOFromInput(val: string) {
   return val ? val + 'T12:00:00.000Z' : undefined
 }
 
-function defaultStartDate(status: BookStatus, existingDate?: string) {
-  if (existingDate) return toInputDate(existingDate)
-  return status === 'reading' || status === 'done' ? today : ''
+function initialReadDates(existing: Book | null | undefined, status: BookStatus): string[] {
+  if (existing?.readDates?.length) return [...existing.readDates].sort()
+  const boundary = Array.from(
+    new Set([existing?.startedAt, existing?.finishedAt].filter((iso): iso is string => !!iso).map(toInputDate)),
+  ).sort()
+  if (boundary.length) return boundary
+  return status === 'reading' || status === 'done' ? [today] : []
+}
+
+function fmtDot(dateStr: string) {
+  const [y, m, d] = dateStr.split('-')
+  return `${y}.${m}.${d}`
+}
+
+function readDatesSummary(dates: string[]) {
+  const sorted = [...dates].sort()
+  const first = sorted[0]
+  const last = sorted[sorted.length - 1]
+  const range = first === last ? fmtDot(first) : `${fmtDot(first)} ~ ${fmtDot(last)}`
+  return `${range} · ${dates.length}일`
 }
 
 const MODAL_PANEL =
@@ -60,12 +78,11 @@ export default function ManualBookModal({ prefill, editId, books, onClose, onSav
   const [rating, setRating] = useState(existing?.rating ?? 0)
   const [review, setReview] = useState(existing?.review ?? '')
   const [isPrivate, setIsPrivate] = useState(existing?.isPrivate ?? false)
-  const [startedAt, setStartedAt] = useState(() => defaultStartDate(initStatus, existing?.startedAt))
-  const [finishedAt, setFinishedAt] = useState(toInputDate(existing?.finishedAt))
+  const [readDates, setReadDates] = useState<string[]>(() => initialReadDates(existing, initStatus))
 
   const handleStatusChange = (s: BookStatus) => {
     setStatus(s)
-    if ((s === 'reading' || s === 'done') && !startedAt) setStartedAt(today)
+    if ((s === 'reading' || s === 'done') && readDates.length === 0) setReadDates([today])
   }
 
   return (
@@ -138,27 +155,28 @@ export default function ManualBookModal({ prefill, editId, books, onClose, onSav
           </div>
           {(status === 'reading' || status === 'done') && (
             <div className={FORM_GROUP}>
-              <label className={FORM_LABEL}>시작 날짜</label>
-              <DatePicker value={startedAt} max={today} onChange={setStartedAt} />
-            </div>
-          )}
-          {status === 'done' && (
-            <div className={FORM_GROUP}>
-              <label className={FORM_LABEL}>완독 날짜</label>
-              <DatePicker value={finishedAt} max={today} onChange={setFinishedAt} />
+              <label className={FORM_LABEL}>읽은 날짜</label>
+              <DateMultiPicker selected={readDates} onChange={setReadDates} max={today} />
+              {readDates.length > 0 ? (
+                <p className="mt-1.5 text-xs text-dim">{readDatesSummary(readDates)}</p>
+              ) : (
+                <p className="mt-1.5 text-xs text-danger">읽은 날짜를 하나 이상 선택해주세요</p>
+              )}
             </div>
           )}
           <div className={FORM_GROUP}>
             <label className={FORM_LABEL}>별점</label>
-            <div className="flex gap-1 text-2xl cursor-pointer">
+            <div className="flex gap-1.5">
               {[1, 2, 3, 4, 5].map((n) => (
-                <span
+                <button
                   key={n}
-                  className={`transition-colors duration-100 ${rating >= n ? 'text-accent' : 'text-border'}`}
+                  type="button"
+                  aria-label={`별점 ${n}점`}
+                  className={`bg-transparent border-none p-0 cursor-pointer transition-colors duration-100 ${rating >= n ? 'text-accent' : 'text-border'}`}
                   onClick={() => setRating(rating === n ? 0 : n)}
                 >
-                  ★
-                </span>
+                  <IconStar size={26} filled={rating >= n} />
+                </button>
               ))}
             </div>
           </div>
@@ -190,7 +208,9 @@ export default function ManualBookModal({ prefill, editId, books, onClose, onSav
           <button
             className={BTN}
             onClick={() => {
-              if (!title.trim()) return
+              const needsDates = status === 'reading' || status === 'done'
+              if (!title.trim() || (needsDates && readDates.length === 0)) return
+              const sortedDates = [...readDates].sort()
               onSave(
                 {
                   title: title.trim(),
@@ -200,14 +220,15 @@ export default function ManualBookModal({ prefill, editId, books, onClose, onSav
                   status,
                   rating,
                   review: review.trim(),
-                  startedAt: status === 'reading' || status === 'done' ? toISOFromInput(startedAt) : undefined,
-                  finishedAt: status === 'done' ? toISOFromInput(finishedAt) : undefined,
+                  readDates: needsDates ? sortedDates : undefined,
+                  startedAt: needsDates ? toISOFromInput(sortedDates[0]) : undefined,
+                  finishedAt: status === 'done' ? toISOFromInput(sortedDates[sortedDates.length - 1]) : undefined,
                   isPrivate: isPrivate || undefined,
                 },
                 editId,
               )
             }}
-            disabled={!title.trim()}
+            disabled={!title.trim() || ((status === 'reading' || status === 'done') && readDates.length === 0)}
           >
             저장
           </button>

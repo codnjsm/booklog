@@ -25,6 +25,12 @@ export function daysSince(iso: string, now = new Date()): number {
   return Math.max(1, Math.round((today.getTime() - start.getTime()) / 86400000) + 1)
 }
 
+/** 실제로 선택한 읽은 날짜 수. 선택 기록이 없는 과거 데이터는 시작~종료(혹은 오늘) 기간 일수로 폴백한다. */
+export function readDaysCount(book: Book, now = new Date()): number {
+  if (book.readDates && book.readDates.length > 0) return book.readDates.length
+  return daysSince(readingSince(book), book.finishedAt ? new Date(book.finishedAt) : now)
+}
+
 /** 기록을 남긴 날(책 추가·완독, 문장·단어 저장)의 날짜 집합 */
 function recordedDays(state: AppState): Set<string> {
   const days = new Set<string>()

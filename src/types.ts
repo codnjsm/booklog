@@ -12,6 +12,8 @@ export interface Book {
   createdAt: string
   startedAt?: string
   finishedAt?: string
+  /** 실제로 읽은 날짜(YYYY-MM-DD, 오름차순). startedAt/finishedAt은 이 중 첫날/마지막날로 파생된다. */
+  readDates?: string[]
   isPrivate?: boolean
 }
 

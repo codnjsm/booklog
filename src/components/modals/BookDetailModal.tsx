@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import Modal from './Modal'
 import type { Book, Quote } from '../../types'
-import { readingSince, daysSince } from '../../lib/insights'
+import { readingSince, readDaysCount } from '../../lib/insights'
 import HighlightedText from '../HighlightedText'
 import { IconLock } from '../layout/icons'
+import Stars from '../Stars'
 
 const STATUS = {
   wishlist: { label: '읽고싶음', cls: 'border border-border text-dim' },
@@ -65,12 +66,12 @@ export default function BookDetailModal({
       ? [
           { label: 'STARTED', value: fmt(readingSince(book)) },
           { label: 'FINISHED', value: fmt(book.finishedAt) },
-          { label: 'ELAPSED', value: `${daysSince(readingSince(book), new Date(book.finishedAt))}일` },
+          { label: 'ELAPSED', value: `${readDaysCount(book)}일` },
         ]
       : book.status === 'reading'
         ? [
             { label: 'STARTED', value: fmt(readingSince(book)) },
-            { label: 'ELAPSED', value: `${daysSince(readingSince(book))}일째` },
+            { label: 'ELAPSED', value: `${readDaysCount(book)}일째` },
           ]
         : []
 
@@ -135,9 +136,8 @@ export default function BookDetailModal({
               <div className="flex-1 min-w-0 flex flex-col gap-1.5">
                 <div className="flex items-center gap-2">
                   {book.rating > 0 && (
-                    <span className="text-[13px] tracking-[1px] text-ink">
-                      {'★'.repeat(book.rating)}
-                      <span className="text-border">{'☆'.repeat(5 - book.rating)}</span>
+                    <span className="text-ink">
+                      <Stars rating={book.rating} size={14} showEmpty />
                     </span>
                   )}
                   {/* 별점이 없어도 뱃지는 항상 오른쪽 끝에 붙는다 */}

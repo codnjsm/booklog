@@ -172,8 +172,16 @@ export function useData(user: User | null) {
           const next = { ...b, ...patch }
           if ((patch.status === 'reading' || patch.status === 'done') && !next.startedAt)
             next.startedAt = new Date().toISOString()
-          if (b.status !== 'done' && patch.status === 'done' && !patch.finishedAt)
-            next.finishedAt = new Date().toISOString()
+          if (b.status !== 'done' && patch.status === 'done' && !patch.finishedAt) {
+            if (b.readDates && b.readDates.length > 0) {
+              const todayStr = new Date().toISOString().slice(0, 10)
+              const readDates = b.readDates.includes(todayStr) ? b.readDates : [...b.readDates, todayStr].sort()
+              next.readDates = readDates
+              next.finishedAt = readDates[readDates.length - 1] + 'T12:00:00.000Z'
+            } else {
+              next.finishedAt = new Date().toISOString()
+            }
+          }
           return next
         }),
       }))

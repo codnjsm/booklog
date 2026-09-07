@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { Book } from '../types'
 import { IconBooks, IconCollection, IconLock } from './layout/icons'
+import Stars from './Stars'
 
 const STATUS_INFO = {
   wishlist: { label: '읽고싶음' },
@@ -58,9 +59,8 @@ export default function BookCard({ book, quoteCount, onClick }: Props) {
       </div>
       <div className="flex-1 sm:flex-none px-3.5 py-3 sm:pt-3 sm:pb-4 flex flex-col justify-start">
         <div className="flex justify-between items-center text-[11px] text-dim mb-2 sm:mb-[15px]">
-          <span className="tracking-[1px]">
-            <span className="text-ink">{'★'.repeat(book.rating || 0)}</span>
-            <span className="text-dim opacity-40">{'☆'.repeat(5 - (book.rating || 0))}</span>
+          <span className="text-ink">
+            <Stars rating={book.rating || 0} size={11} showEmpty />
           </span>
           {quoteCount > 0 && (
             <span className="bg-surface2 px-1.5 py-0.5 rounded inline-flex items-center gap-1">
