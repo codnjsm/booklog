@@ -47,7 +47,7 @@ export default function HomeFab() {
       {open && (
         <div onClick={close} className="fixed inset-0 bg-black/60 z-[90]" />
       )}
-      <div className="fixed z-[95] bottom-[calc(88px+env(safe-area-inset-bottom))] right-4 flex flex-col items-end gap-4">
+      <div className="fixed z-[95] bottom-[calc(75px+env(safe-area-inset-bottom))] right-4 flex flex-col items-end gap-4">
         {open && (
           <>
             <FabAction icon={<IconBooks />} label="책 추가" onClick={() => run(openAddBook)} />
