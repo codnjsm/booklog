@@ -44,12 +44,35 @@ export default function BookDetailModal({ bookId, books, quotes, onClose, onEdit
   const status = STATUS[book.status]
   const isPrivate = !!book.isPrivate
 
-  const period =
+  // 상태 뱃지가 이미 상태를 보여주므로 그리드에는 날짜/기간만 넣는다.
+  // 위시리스트는 정보가 하나뿐이라 그리드 대신 아래 period 한 줄로 둔다.
+  const stats: { label: string; value: string }[] =
     book.status === 'done' && book.finishedAt
-      ? `${fmt(readingSince(book))} → ${fmt(book.finishedAt)} · ${daysSince(readingSince(book), new Date(book.finishedAt))}일 만에 완독`
+      ? [
+          { label: 'STARTED', value: fmt(readingSince(book)) },
+          { label: 'FINISHED', value: fmt(book.finishedAt) },
+          { label: 'ELAPSED', value: `${daysSince(readingSince(book), new Date(book.finishedAt))}일` },
+        ]
       : book.status === 'reading'
-        ? `${fmt(readingSince(book))} 시작 · ${daysSince(readingSince(book))}일째 읽는 중`
-        : `${fmt(book.createdAt)} 담아둠`
+        ? [
+            { label: 'STARTED', value: fmt(readingSince(book)) },
+            { label: 'ELAPSED', value: `${daysSince(readingSince(book))}일째` },
+          ]
+        : []
+
+  const period = `${fmt(book.createdAt)} 담아둠`
+
+  // 표지 옆 세로 공간을 채운다. 모바일은 칼럼이 좁아 3칸이 겹치므로 2칸으로 접는다.
+  const statsGrid = stats.length > 0 ? (
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 py-3 border-y border-border">
+      {stats.map((s) => (
+        <div key={s.label} className="flex flex-col gap-1">
+          <span className={LABEL}>{s.label}</span>
+          <span className="font-mono text-[13px] text-ink">{s.value}</span>
+        </div>
+      ))}
+    </div>
+  ) : null
 
   return (
     <Modal onClose={onClose}>
@@ -63,30 +86,35 @@ export default function BookDetailModal({ bookId, books, quotes, onClose, onEdit
 
         <div className="p-5 sm:p-6 flex flex-col gap-5">
 
-          <div className="flex gap-4 sm:gap-5">
-            <div className="w-[104px] sm:w-[124px] flex-shrink-0">
-              {book.cover && !coverError ? (
-                <img src={book.cover} alt="" onError={() => setCoverError(true)} className="w-full aspect-[2/3] object-cover rounded-md border border-border" />
-              ) : (
-                <div className="w-full aspect-[2/3] rounded-md bg-surface2 border border-border flex items-center justify-center p-3">
-                  <span className="text-xs font-semibold leading-snug text-center text-ink/70">{book.title}</span>
+          <div className="flex flex-col gap-4">
+            <div className="flex gap-4 sm:gap-5">
+              <div className="w-[104px] sm:w-[124px] flex-shrink-0">
+                {book.cover && !coverError ? (
+                  <img src={book.cover} alt="" onError={() => setCoverError(true)} className="w-full aspect-[2/3] object-cover rounded-md border border-border" />
+                ) : (
+                  <div className="w-full aspect-[2/3] rounded-md bg-surface2 border border-border flex items-center justify-center p-3">
+                    <span className="text-xs font-semibold leading-snug text-center text-ink/70">{book.title}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+                <div className="flex items-center gap-2">
+                  {book.rating > 0 && <span className="text-[13px] tracking-[1px] text-ink">{'★'.repeat(book.rating)}<span className="text-border">{'☆'.repeat(5 - book.rating)}</span></span>}
+                  {/* 별점이 없어도 뱃지는 항상 오른쪽 끝에 붙는다 */}
+                  <span className={`ml-auto text-[10px] font-medium px-2 py-0.5 rounded ${status.cls}`}>{status.label}</span>
                 </div>
-              )}
+                <h3 className="text-lg sm:text-[22px] font-semibold leading-snug tracking-[-0.01em]">{book.title}</h3>
+                <div className="text-[13px] text-dim">{book.author || '저자 미상'}{book.year ? ` · ${book.year}` : ''}</div>
+                {!statsGrid && <div className="font-mono text-[11px] text-dim mt-0.5">{period}</div>}
+                <div className="flex-1" />
+                {statsGrid}
+              </div>
             </div>
 
-            <div className="flex-1 min-w-0 flex flex-col gap-1.5">
-              <div className="flex items-center gap-2">
-                <span className={`text-[10px] font-medium px-2 py-0.5 rounded ${status.cls}`}>{status.label}</span>
-                {book.rating > 0 && <span className="text-[13px] tracking-[1px] text-ink">{'★'.repeat(book.rating)}<span className="text-border">{'☆'.repeat(5 - book.rating)}</span></span>}
-              </div>
-              <h3 className="text-lg sm:text-[22px] font-semibold leading-snug tracking-[-0.01em]">{book.title}</h3>
-              <div className="text-[13px] text-dim">{book.author || '저자 미상'}{book.year ? ` · ${book.year}` : ''}</div>
-              <div className="font-mono text-[11px] text-dim mt-0.5">{period}</div>
-              <div className="flex-1" />
-              <div className="flex flex-wrap gap-2 pt-2">
-                <button className={BTN} onClick={() => onAddQuote(bookId)}>+ 문장 저장</button>
-                <button className={BTN_2} onClick={() => onEdit(bookId)}>기록 수정</button>
-              </div>
+            <div className="flex gap-2">
+              <button className={`${BTN} flex-1`} onClick={() => onAddQuote(bookId)}>+ 문장 저장</button>
+              <button className={`${BTN_2} flex-1`} onClick={() => onEdit(bookId)}>기록 수정</button>
             </div>
           </div>
 
