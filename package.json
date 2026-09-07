@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test:rules": "firebase emulators:exec --only firestore \"node --test tests/*.test.mjs\""
+    "test:rules": "firebase emulators:exec --only firestore \"node --test tests/*.test.mjs\"",
+    "pretest:rules": "npm --prefix functions run build"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.102.8",

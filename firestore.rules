@@ -76,5 +76,13 @@ service cloud.firestore {
       // 배경: .forge/adr/260907-132332-friend-data-behind-callable.md
       allow read, write: if signedIn() && request.auth.uid == userId;
     }
+
+    match /posts/{postId} {
+      // 발행(게시물)은 createPost/getFriendFeed/deletePost 콜러블을 통해서만 만들고 읽고 지운다.
+      // 클라이언트가 직접 쓰면 스냅샷에 화이트리스트 밖 필드를 넣어 친구에게 그대로 노출시킬
+      // 수 있어서, 규칙 없는 컬렉션의 기본 거부에 기대지 않고 명시적으로 전면 차단해둔다.
+      // 배경: .forge/adr/260907-144119-post-snapshot-server-only-write.md
+      allow read, write: if false;
+    }
   }
 }

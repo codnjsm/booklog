@@ -6,7 +6,7 @@
 import { readFileSync } from 'node:fs'
 import { after, before, describe, it } from 'node:test'
 import { initializeTestEnvironment, assertFails, assertSucceeds } from '@firebase/rules-unit-testing'
-import { doc, getDoc, setDoc } from 'firebase/firestore'
+import { collection, doc, addDoc, getDoc, getDocs, setDoc } from 'firebase/firestore'
 
 const ALICE = 'alice'
 const BOB = 'bob' // ALICE의 친구
@@ -44,6 +44,13 @@ before(async () => {
       words: [],
       readingGoal: 30,
     })
+    // 이미 존재하는 게시물 하나 (직접 읽기 차단 테스트용)
+    await setDoc(doc(db, 'posts', 'p1'), {
+      authorUid: ALICE,
+      createdAt: new Date().toISOString(),
+      caption: '좋은 문장이었어요',
+      attachment: { kind: 'quote', quoteText: '사적인 인용구' },
+    })
   })
 })
 
@@ -73,5 +80,36 @@ describe('reading-notes 읽기 권한', () => {
   it('로그인하지 않으면 읽지 못한다', async () => {
     const db = testEnv.unauthenticatedContext().firestore()
     await assertFails(getDoc(doc(db, 'reading-notes', ALICE)))
+  })
+})
+
+describe('posts 직접 접근 차단', () => {
+  // 게시물은 createPost/getFriendFeed/deletePost 콜러블을 통해서만 만들고 읽고 지운다.
+  // 클라이언트가 직접 만지면 스냅샷 화이트리스트를 우회할 수 있으므로 전면 차단한다.
+  it('친구여도 게시물을 클라이언트로 직접 읽지 못한다', async () => {
+    const db = testEnv.authenticatedContext(BOB).firestore()
+    await assertFails(getDoc(doc(db, 'posts', 'p1')))
+  })
+
+  it('작성자 본인도 게시물을 클라이언트로 직접 읽지 못한다', async () => {
+    const db = testEnv.authenticatedContext(ALICE).firestore()
+    await assertFails(getDoc(doc(db, 'posts', 'p1')))
+  })
+
+  it('로그인한 사용자도 게시물 목록을 클라이언트로 직접 조회하지 못한다', async () => {
+    const db = testEnv.authenticatedContext(ALICE).firestore()
+    await assertFails(getDocs(collection(db, 'posts')))
+  })
+
+  it('게시물을 클라이언트로 직접 쓰지 못한다', async () => {
+    const db = testEnv.authenticatedContext(ALICE).firestore()
+    await assertFails(
+      addDoc(collection(db, 'posts'), {
+        authorUid: ALICE,
+        createdAt: new Date().toISOString(),
+        caption: '직접 써봄',
+        attachment: { kind: 'quote', quoteText: '아무거나' },
+      }),
+    )
   })
 })

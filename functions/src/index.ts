@@ -7,6 +7,11 @@ import type { Request, Response } from 'express'
 
 initializeApp()
 
+/** 테스트가 handler와 같은 firebase-admin 인스턴스(같은 기본 앱)를 쓰기 위한 통로. */
+export function getDb() {
+  return getFirestore()
+}
+
 const kakaoRestApiKey = defineSecret('KAKAO_REST_API_KEY')
 const opendictApiKey = defineSecret('OPENDICT_API_KEY')
 
@@ -154,4 +159,160 @@ export const getFriendShelf = onCall({ region: 'asia-northeast3', enforceAppChec
       })),
     readingGoal: data.readingGoal ?? 0,
   }
+})
+
+/**
+ * createPost의 실제 로직. onCall 래퍼가 인증만 확인하고 이 함수를 부른다.
+ * 이렇게 분리해두면 App Check/Auth 에뮬레이터 없이 firebase-admin으로 Firestore
+ * 에뮬레이터에 연결해 이 함수를 직접 테스트할 수 있다.
+ *
+ * 클라이언트는 {kind, refId, caption}만 보낸다 — 스냅샷에 정확히 뭐가 들어가는지는
+ * 여기서 서버가 정한다. 배경: .forge/adr/260907-144119-post-snapshot-server-only-write.md
+ */
+export async function createPostHandler(
+  uid: string,
+  data: { kind?: unknown; refId?: unknown; caption?: unknown },
+): Promise<{ id: string }> {
+  const kind = data?.kind
+  if (kind !== 'quote' && kind !== 'book') {
+    throw new HttpsError('invalid-argument', 'kind는 quote 또는 book이어야 합니다')
+  }
+  const refId = String(data?.refId ?? '').trim()
+  if (!refId) {
+    throw new HttpsError('invalid-argument', 'refId가 필요합니다')
+  }
+  const caption = String(data?.caption ?? '').trim()
+  if (!caption || caption.length > 300) {
+    throw new HttpsError('invalid-argument', '한마디는 1~300자여야 합니다')
+  }
+
+  const db = getFirestore()
+  const notesSnap = await db.collection('reading-notes').doc(uid).get()
+  const notes = notesSnap.data() ?? {}
+  const books: Record<string, unknown>[] = Array.isArray(notes.books) ? notes.books : []
+  const quotes: Record<string, unknown>[] = Array.isArray(notes.quotes) ? notes.quotes : []
+
+  let attachment: Record<string, unknown>
+
+  if (kind === 'book') {
+    const book = books.find((b) => b.id === refId)
+    if (!book) {
+      throw new HttpsError('invalid-argument', '책을 찾을 수 없습니다')
+    }
+    if (book.isPrivate) {
+      throw new HttpsError('invalid-argument', '비공개 책은 발행할 수 없습니다')
+    }
+    attachment = {
+      kind: 'book',
+      bookTitle: book.title ?? '',
+      bookAuthor: book.author ?? '',
+      bookCover: book.cover ?? '',
+      bookStatus: book.status ?? 'wishlist',
+      bookRating: book.rating ?? 0,
+    }
+  } else {
+    const quote = quotes.find((q) => q.id === refId)
+    if (!quote) {
+      throw new HttpsError('invalid-argument', '인용구를 찾을 수 없습니다')
+    }
+    const linkedBook = quote.bookId ? books.find((b) => b.id === quote.bookId) : undefined
+    if (linkedBook?.isPrivate) {
+      throw new HttpsError('invalid-argument', '비공개 책의 인용구는 발행할 수 없습니다')
+    }
+    attachment = {
+      kind: 'quote',
+      quoteText: quote.text ?? '',
+      quoteHighlights: quote.highlights ?? null,
+      bookTitle: linkedBook?.title ?? null,
+      bookAuthor: linkedBook?.author ?? null,
+    }
+  }
+
+  const doc = await db.collection('posts').add({
+    authorUid: uid,
+    createdAt: new Date().toISOString(),
+    caption,
+    attachment,
+  })
+  return { id: doc.id }
+}
+
+export const createPost = onCall({ region: 'asia-northeast3', enforceAppCheck: true }, async (req) => {
+  if (!req.auth) {
+    throw new HttpsError('unauthenticated', '로그인이 필요합니다')
+  }
+  return createPostHandler(req.auth.uid, req.data)
+})
+
+/**
+ * getFriendFeed의 실제 로직. 본인 글 + 수락된 친구들의 글을 최신순으로 모은다.
+ * 각 글에 작성자 표시정보(displayName/photoURL)를 동봉해 클라이언트가 추가 조회 없이
+ * 렌더링할 수 있게 한다.
+ *
+ * Firestore 'in' 쿼리는 최대 30개까지만 지원한다. 지금 친구 수 규모에서는 문제 없고,
+ * 넘는 경우의 처리는 이번 범위 밖이다.
+ */
+export async function getFriendFeedHandler(uid: string): Promise<Record<string, unknown>[]> {
+  const db = getFirestore()
+
+  const [outgoing, incoming] = await Promise.all([
+    db.collection('friendRequests').where('fromUid', '==', uid).where('status', '==', 'accepted').get(),
+    db.collection('friendRequests').where('toUid', '==', uid).where('status', '==', 'accepted').get(),
+  ])
+  const friendUids = new Set<string>()
+  outgoing.docs.forEach((d) => friendUids.add(d.data().toUid))
+  incoming.docs.forEach((d) => friendUids.add(d.data().fromUid))
+  const authorUids = [uid, ...friendUids].slice(0, 30)
+
+  const postsSnap = await db.collection('posts').where('authorUid', 'in', authorUids).get()
+  const posts = postsSnap.docs.map((d) => ({ id: d.id, ...d.data() }) as Record<string, unknown>)
+  posts.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))
+  const top = posts.slice(0, 50)
+
+  const uniqueAuthors = [...new Set(top.map((p) => p.authorUid as string))]
+  const profileDocs = await Promise.all(uniqueAuthors.map((u) => db.collection('users').doc(u).get()))
+  const profiles = new Map(profileDocs.map((d) => [d.id, d.data()]))
+
+  return top.map((p) => ({
+    ...p,
+    authorDisplayName: profiles.get(p.authorUid as string)?.displayName ?? '',
+    authorPhotoURL: profiles.get(p.authorUid as string)?.photoURL ?? '',
+  }))
+}
+
+export const getFriendFeed = onCall({ region: 'asia-northeast3', enforceAppCheck: true }, async (req) => {
+  if (!req.auth) {
+    throw new HttpsError('unauthenticated', '로그인이 필요합니다')
+  }
+  return getFriendFeedHandler(req.auth.uid)
+})
+
+/**
+ * deletePost의 실제 로직. 작성자 본인만 지울 수 있다.
+ * 남의 게시물을 지울 수 있으면 안 된다 — 이게 이번 발행 기능에서 가장 중요하게
+ * 지켜야 할 지점이다.
+ */
+export async function deletePostHandler(uid: string, postId: string): Promise<{ ok: true }> {
+  const db = getFirestore()
+  const ref = db.collection('posts').doc(postId)
+  const snap = await ref.get()
+  if (!snap.exists) {
+    throw new HttpsError('not-found', '게시물을 찾을 수 없습니다')
+  }
+  if (snap.data()?.authorUid !== uid) {
+    throw new HttpsError('permission-denied', '본인 게시물만 삭제할 수 있습니다')
+  }
+  await ref.delete()
+  return { ok: true }
+}
+
+export const deletePost = onCall({ region: 'asia-northeast3', enforceAppCheck: true }, async (req) => {
+  if (!req.auth) {
+    throw new HttpsError('unauthenticated', '로그인이 필요합니다')
+  }
+  const postId = String(req.data?.postId ?? '').trim()
+  if (!postId) {
+    throw new HttpsError('invalid-argument', 'postId가 필요합니다')
+  }
+  return deletePostHandler(req.auth.uid, postId)
 })
