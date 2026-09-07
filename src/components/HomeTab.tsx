@@ -102,7 +102,7 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
           : ''
 
   return (
-    <div className="flex flex-col gap-4 pb-[75px] sm:pb-0">
+    <div className="flex flex-col gap-4 pb-[55px] sm:pb-0">
 
       <div className="flex gap-2 items-end mb-1">
         <h1 className="text-[19px] sm:text-[22px] font-semibold tracking-[-0.01em]">
