@@ -80,3 +80,17 @@ export const IconRefresh = ({ size = 18 }: Props) => (
 export const IconLock = ({ size = 16 }: Props) => (
   <svg {...base(size)}><rect x="4" y="10" width="16" height="11" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>
 )
+
+export const IconQuote = ({ size = 18 }: Props) => (
+  <svg {...base(size)}>
+    <path d="M6 8c-1.5 1-2.2 2.6-2.2 4.3 0 1.5.9 2.4 2 2.4s2-.9 2-2.2c0-.9-.5-1.6-1.3-1.9.2-1 .9-1.8 1.8-2.3z" />
+    <path d="M15 8c-1.5 1-2.2 2.6-2.2 4.3 0 1.5.9 2.4 2 2.4s2-.9 2-2.2c0-.9-.5-1.6-1.3-1.9.2-1 .9-1.8 1.8-2.3z" />
+  </svg>
+)
+
+export const IconWord = ({ size = 18 }: Props) => (
+  <svg {...base(size)}>
+    <path d="M4 4h6.2a1 1 0 0 1 .7.3l8 8a1 1 0 0 1 0 1.4l-5 5a1 1 0 0 1-1.4 0l-8-8A1 1 0 0 1 4 10.2z" />
+    <circle cx="8" cy="8" r="1.3" />
+  </svg>
+)

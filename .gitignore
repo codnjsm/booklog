@@ -10,3 +10,5 @@ tsconfig.tsbuildinfo
 # Firebase 에뮬레이터 로그
 firestore-debug.log
 firebase-debug.log
+
+.forge/

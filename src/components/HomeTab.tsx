@@ -4,6 +4,7 @@ import { useAppUI } from '../contexts/AppUIContext'
 import { goalPace, readingSince, daysSince, recordedDaysThisWeek, recentActivity, relativeDay } from '../lib/insights'
 import { IconCollection, IconRecords, IconRefresh } from './layout/icons'
 import HighlightedText from './HighlightedText'
+import HomeFab from './HomeFab'
 
 interface Props {
   state: AppState
@@ -101,7 +102,7 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
           : ''
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 pb-[75px] sm:pb-0">
 
       <div className="flex gap-2 items-end mb-1">
         <h1 className="text-[19px] sm:text-[22px] font-semibold tracking-[-0.01em]">
@@ -257,6 +258,8 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
           )}
         </div>
       </div>
+
+      <HomeFab />
     </div>
   )
 }

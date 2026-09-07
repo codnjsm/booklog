@@ -10,6 +10,7 @@ export type Modal =
   | { type: 'manualBook'; prefill?: BookPrefill | Partial<Book>; editId?: string }
   | { type: 'bookDetail'; bookId: string }
   | { type: 'addQuote'; bookId?: string | null; editId?: string }
+  | { type: 'addWord' }
 
 // Modals that aren't worth a shareable URL (transient create/edit flows) stay in local state.
 type LocalModal = Exclude<Modal, { type: 'bookDetail' }>
@@ -25,6 +26,7 @@ interface AppUIValue {
   openManualBook: (prefill?: BookPrefill | Partial<Book>, editId?: string) => void
   openBookDetail: (bookId: string) => void
   openAddQuote: (bookId?: string | null, editId?: string) => void
+  openAddWord: () => void
   closeModal: () => void
 
   theme: 'dark' | 'light'
@@ -116,6 +118,7 @@ export function AppUIProvider({ children }: { children: ReactNode }) {
     clearBookParam()
     setLocalModal({ type: 'addQuote', bookId, editId })
   }, [clearBookParam])
+  const openAddWord = useCallback(() => { clearBookParam(); setLocalModal({ type: 'addWord' }) }, [clearBookParam])
 
   const toggleTheme = useCallback(() => setTheme((t) => t === 'light' ? 'dark' : 'light'), [])
   const showToast = useCallback((msg: string) => setToast({ msg, key: Date.now() }), [])
@@ -125,12 +128,12 @@ export function AppUIProvider({ children }: { children: ReactNode }) {
 
   const value: AppUIValue = useMemo(() => ({
     tab, changeTab,
-    modal, openAddBook, openManualBook, openBookDetail, openAddQuote, closeModal,
+    modal, openAddBook, openManualBook, openBookDetail, openAddQuote, openAddWord, closeModal,
     theme, toggleTheme,
     toast, showToast,
     loginDismissed, dismissLogin,
     userMenuOpen, toggleUserMenu, closeUserMenu,
-  }), [tab, changeTab, modal, openAddBook, openManualBook, openBookDetail, openAddQuote, closeModal, theme, toggleTheme, toast, showToast, loginDismissed, dismissLogin, userMenuOpen, toggleUserMenu, closeUserMenu])
+  }), [tab, changeTab, modal, openAddBook, openManualBook, openBookDetail, openAddQuote, openAddWord, closeModal, theme, toggleTheme, toast, showToast, loginDismissed, dismissLogin, userMenuOpen, toggleUserMenu, closeUserMenu])
 
   return <AppUIContext.Provider value={value}>{children}</AppUIContext.Provider>
 }

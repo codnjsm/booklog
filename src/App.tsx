@@ -19,6 +19,7 @@ import AddBookModal from './components/modals/AddBookModal'
 import ManualBookModal from './components/modals/ManualBookModal'
 import BookDetailModal from './components/modals/BookDetailModal'
 import AddQuoteModal from './components/modals/AddQuoteModal'
+import AddWordModal from './components/modals/AddWordModal'
 
 const queryClient = new QueryClient()
 
@@ -144,6 +145,11 @@ function AppShell() {
         <AddQuoteModal books={state.books} quotes={state.quotes} bookId={modal.bookId} editId={modal.editId} onClose={closeModal}
           onSave={(data, editId) => { if (editId) { updateQuote(editId, data); showToast('문장이 수정됐어요') } else { addQuote(data); showToast('문장이 추가됐어요') }; closeModal() }}
           onDelete={(id) => { deleteQuote(id); closeModal(); showToast('문장이 삭제됐어요') }}
+        />
+      )}
+      {modal.type === 'addWord' && (
+        <AddWordModal words={state.words} onClose={closeModal}
+          onAddWord={(data) => { addWord(data); showToast('단어가 저장됐어요') }}
         />
       )}
 
