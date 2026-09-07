@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import type { User } from 'firebase/auth'
-import type { UserProfile, FriendRequest, BookStatus, AppState } from '../types'
+import type { UserProfile, FriendRequest, BookStatus, FriendShelf } from '../types'
 import BookCard from './BookCard'
 import PageHeader from './layout/PageHeader'
 import { IconSearch, IconBooks, IconFriends } from './layout/icons'
@@ -25,7 +25,7 @@ interface Props {
   onAcceptRequest: (requestId: string) => void
   onRejectRequest: (requestId: string) => void
   onRemoveFriend: (friendUid: string) => void
-  onLoadFriendBooks: (uid: string) => Promise<AppState | null>
+  onLoadFriendBooks: (uid: string) => Promise<FriendShelf>
 }
 
 const BTN_SM =
@@ -150,7 +150,8 @@ export default function FriendsTab({
   }
 
   if (viewingFriend) {
-    const books = (friendData?.books ?? []).filter((b) => !b.isPrivate)
+    // 비공개 책은 서버(getFriendShelf)가 이미 걸러서 준다
+    const books = friendData?.books ?? []
     const filtered = books.filter((b) => statusFilter === 'all' || b.status === statusFilter)
     return (
       <div>

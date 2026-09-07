@@ -97,3 +97,61 @@ export const findUserByEmail = onCall({ region: 'asia-northeast3', enforceAppChe
     photoURL: data.photoURL ?? '',
   }
 })
+
+/**
+ * 친구의 책장을 가져온다.
+ *
+ * 보안 규칙은 문서 단위로만 읽기를 제어할 수 있어서, reading-notes 문서를 친구에게
+ * 열어주면 비공개 책과 인용구·독후감까지 함께 나간다. 그래서 규칙에서는 본인만 읽게
+ * 막아두고, 공개해도 되는 범위를 여기서 서버가 골라 반환한다.
+ * 배경: .forge/adr/260907-132332-friend-data-behind-callable.md
+ *
+ * 공개 범위: 공개 책(isPrivate이 아닌 책)의 id·title·author·cover·status·rating·
+ * startedAt·finishedAt, 그리고 readingGoal. 독후감(review)과 인용구·단어는 내보내지 않는다.
+ */
+export const getFriendShelf = onCall({ region: 'asia-northeast3', enforceAppCheck: true }, async (req) => {
+  if (!req.auth) {
+    throw new HttpsError('unauthenticated', '로그인이 필요합니다')
+  }
+  const viewerUid = req.auth.uid
+  const targetUid = String(req.data?.uid ?? '').trim()
+  if (!targetUid) {
+    throw new HttpsError('invalid-argument', '대상 uid가 필요합니다')
+  }
+  if (targetUid === viewerUid) {
+    throw new HttpsError('invalid-argument', '자기 자신은 친구 책장으로 열 수 없습니다')
+  }
+
+  // 수락된 친구인지 서버에서 확인한다. 문서 ID가 {fromUid}_{toUid}라 양방향 모두 본다.
+  const db = getFirestore()
+  const [a, b] = await Promise.all([
+    db.collection('friendRequests').doc(`${viewerUid}_${targetUid}`).get(),
+    db.collection('friendRequests').doc(`${targetUid}_${viewerUid}`).get(),
+  ])
+  const isFriend = [a, b].some((d) => d.exists && d.data()?.status === 'accepted')
+  if (!isFriend) {
+    throw new HttpsError('permission-denied', '친구가 아닙니다')
+  }
+
+  const snap = await db.collection('reading-notes').doc(targetUid).get()
+  if (!snap.exists) return { books: [], readingGoal: 0 }
+
+  const data = snap.data() ?? {}
+  const books = Array.isArray(data.books) ? data.books : []
+
+  return {
+    books: books
+      .filter((b: Record<string, unknown>) => !b.isPrivate)
+      .map((b: Record<string, unknown>) => ({
+        id: b.id ?? '',
+        title: b.title ?? '',
+        author: b.author ?? '',
+        cover: b.cover ?? '',
+        status: b.status ?? 'wishlist',
+        rating: b.rating ?? 0,
+        startedAt: b.startedAt ?? null,
+        finishedAt: b.finishedAt ?? null,
+      })),
+    readingGoal: data.readingGoal ?? 0,
+  }
+})

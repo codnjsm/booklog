@@ -8,8 +8,17 @@ const STATUS_INFO = {
   done: { label: '완독' },
 }
 
+/**
+ * 내 책(Book)과 친구 책(FriendBook) 양쪽에서 쓴다.
+ * 카드가 실제로 그리는 필드만 요구하도록 좁혀둔다 — 이러면 친구 책장에
+ * 독후감 같은 걸 넘기려 해도 타입에서 걸린다.
+ */
+type CardBook = Pick<Book, 'title' | 'author' | 'cover' | 'status' | 'rating'> & {
+  isPrivate?: boolean
+}
+
 interface Props {
-  book: Book
+  book: CardBook
   quoteCount: number
   onClick: () => void
 }

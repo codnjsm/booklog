@@ -9,9 +9,9 @@ import {
   acceptFriendRequest,
   rejectFriendRequest,
   deleteFriendRequest,
-  loadUserData,
+  getFriendShelf,
 } from '../firebase'
-import type { FriendRequest, UserProfile, AppState } from '../types'
+import type { FriendRequest, UserProfile, FriendShelf } from '../types'
 
 export function useFriends(user: User | null) {
   const [incoming, setIncoming] = useState<FriendRequest[]>([])
@@ -80,7 +80,8 @@ export function useFriends(user: User | null) {
     if (req) return deleteFriendRequest(req.id)
   }, [])
 
-  const loadFriendBooks = useCallback((uid: string): Promise<AppState | null> => loadUserData(uid), [])
+  // 친구 책장은 서버가 공개 범위만 골라 준다 (규칙은 남의 문서 직접 읽기를 막아둠)
+  const loadFriendBooks = useCallback((uid: string): Promise<FriendShelf> => getFriendShelf(uid), [])
 
   return {
     friends,

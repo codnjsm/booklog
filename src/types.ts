@@ -64,3 +64,23 @@ export interface FriendRequest {
   createdAt: string
   profile?: UserProfile
 }
+
+/**
+ * 친구 책장. 서버(getFriendShelf)가 공개 범위만 골라 준 것이라
+ * Book보다 좁다 — 독후감(review)·연도는 오지 않고, 비공개 책은 아예 빠져 있다.
+ */
+export interface FriendBook {
+  id: string
+  title: string
+  author: string
+  cover: string
+  status: BookStatus
+  rating: number
+  startedAt: string | null
+  finishedAt: string | null
+}
+
+export interface FriendShelf {
+  books: FriendBook[]
+  readingGoal: number
+}

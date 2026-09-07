@@ -15,7 +15,7 @@ import {
   type Unsubscribe,
 } from 'firebase/firestore'
 import { getFunctions, httpsCallable } from 'firebase/functions'
-import type { AppState, UserProfile, FriendRequest } from './types'
+import type { AppState, UserProfile, FriendRequest, FriendShelf } from './types'
 
 const firebaseConfig = {
   apiKey: 'AIzaSyAZtjU5A1ay8ZlWf63spiwEzHjxvZCqSUk',
@@ -57,6 +57,17 @@ export const loadUserData = async (userId: string): Promise<AppState | null> => 
 
 export const saveUserData = async (userId: string, data: AppState): Promise<void> => {
   await setDoc(doc(db, 'reading-notes', userId), data)
+}
+
+/**
+ * 친구 책장. 보안 규칙은 남의 reading-notes 문서를 직접 못 읽게 막아두었고,
+ * 공개해도 되는 범위만 서버가 골라서 돌려준다.
+ * 배경: .forge/adr/260907-132332-friend-data-behind-callable.md
+ */
+export const getFriendShelf = async (uid: string): Promise<FriendShelf> => {
+  const call = httpsCallable<{ uid: string }, FriendShelf>(functions, 'getFriendShelf')
+  const res = await call({ uid })
+  return res.data
 }
 
 export const upsertUserProfile = async (

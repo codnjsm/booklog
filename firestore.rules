@@ -16,14 +16,6 @@ service cloud.firestore {
           || exists(/databases/$(database)/documents/friendRequests/$(requestId(b, a)));
     }
 
-    // 실제로 수락된 친구인지
-    function isFriend(a, b) {
-      return (exists(/databases/$(database)/documents/friendRequests/$(requestId(a, b)))
-              && get(/databases/$(database)/documents/friendRequests/$(requestId(a, b))).data.status == 'accepted')
-          || (exists(/databases/$(database)/documents/friendRequests/$(requestId(b, a)))
-              && get(/databases/$(database)/documents/friendRequests/$(requestId(b, a))).data.status == 'accepted');
-    }
-
     match /users/{userId} {
       // 본인 프로필, 또는 나와 친구 요청이 오간 상대의 프로필만 조회 가능.
       allow get: if signedIn() && (request.auth.uid == userId || hasRequestBetween(request.auth.uid, userId));
@@ -75,8 +67,14 @@ service cloud.firestore {
     }
 
     match /reading-notes/{userId} {
+      // 본인만 읽고 쓴다.
+      //
+      // 친구에게 문서 전체 읽기를 열어주면 비공개 책(isPrivate)과 인용구·독후감까지
+      // 함께 나간다. 보안 규칙은 문서 단위로만 읽기를 제어할 수 있어서 일부 필드만
+      // 가려서 내보낼 방법이 없다. 그래서 친구에게 보여줄 공개 범위는 getFriendShelf
+      // 콜러블이 서버에서 골라 반환한다.
+      // 배경: .forge/adr/260907-132332-friend-data-behind-callable.md
       allow read, write: if signedIn() && request.auth.uid == userId;
-      allow read: if signedIn() && isFriend(request.auth.uid, userId);
     }
   }
 }
