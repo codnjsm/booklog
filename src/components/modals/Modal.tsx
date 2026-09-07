@@ -1,6 +1,9 @@
 import { useEffect, useRef, type ReactNode } from 'react'
 
-interface Props { onClose: () => void; children: ReactNode }
+interface Props {
+  onClose: () => void
+  children: ReactNode
+}
 
 export default function Modal({ onClose, children }: Props) {
   const backdropRef = useRef<HTMLDivElement>(null)
@@ -60,7 +63,9 @@ export default function Modal({ onClose, children }: Props) {
       // backdrop 자체는 touch-none으로 스크롤 제스처를 아예 무시한다.
       // 실제 스크롤 가능한 모달 패널 쪽에서 touch-auto로 다시 열어준다(각 모달의 MODAL_PANEL에 있음).
       className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-[100] p-0 sm:p-5 backdrop-blur-sm touch-none"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose()
+      }}
     >
       {children}
     </div>

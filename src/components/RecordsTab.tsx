@@ -21,7 +21,9 @@ export default function RecordsTab({ books, quotes, goal, onSetGoal }: Props) {
       className={`flex-1 py-1.5 rounded-md text-[13px] border-none cursor-pointer transition-colors duration-150 ${
         view === id ? 'bg-surface text-ink font-medium shadow-card' : 'bg-transparent text-dim'
       }`}
-    >{label}</button>
+    >
+      {label}
+    </button>
   )
 
   return (

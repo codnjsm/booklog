@@ -1,7 +1,16 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import type { User } from 'firebase/auth'
 import { collection, query, where, onSnapshot } from 'firebase/firestore'
-import { db, getUserByEmail, getUserProfile, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, deleteFriendRequest, loadUserData } from '../firebase'
+import {
+  db,
+  getUserByEmail,
+  getUserProfile,
+  sendFriendRequest,
+  acceptFriendRequest,
+  rejectFriendRequest,
+  deleteFriendRequest,
+  loadUserData,
+} from '../firebase'
 import type { FriendRequest, UserProfile, AppState } from '../types'
 
 export function useFriends(user: User | null) {
@@ -18,10 +27,7 @@ export function useFriends(user: User | null) {
 
     const pendingIn = allIn.filter((r) => r.status === 'pending')
     const pendingOut = allOut.filter((r) => r.status === 'pending')
-    const accepted = [
-      ...allIn.filter((r) => r.status === 'accepted'),
-      ...allOut.filter((r) => r.status === 'accepted'),
-    ]
+    const accepted = [...allIn.filter((r) => r.status === 'accepted'), ...allOut.filter((r) => r.status === 'accepted')]
 
     const [inWithProfiles, outWithProfiles, friendProfiles] = await Promise.all([
       Promise.all(pendingIn.map(async (r) => ({ ...r, profile: (await getUserProfile(r.fromUid)) ?? undefined }))),
@@ -48,34 +54,43 @@ export function useFriends(user: User | null) {
       refresh(uid)
     })
 
-    return () => { unsub1(); unsub2() }
+    return () => {
+      unsub1()
+      unsub2()
+    }
   }, [user, refresh])
 
   const searchUser = useCallback((email: string) => getUserByEmail(email), [])
 
   const sendRequest = useCallback(
-    (toUid: string) => { if (user) return sendFriendRequest(user.uid, toUid) },
+    (toUid: string) => {
+      if (user) return sendFriendRequest(user.uid, toUid)
+    },
     [user],
   )
 
-  const acceptRequest = useCallback(
-    (requestId: string) => acceptFriendRequest(requestId),
-    [],
-  )
+  const acceptRequest = useCallback((requestId: string) => acceptFriendRequest(requestId), [])
 
   const rejectRequest = useCallback((requestId: string) => rejectFriendRequest(requestId), [])
 
-  const removeRequest = useCallback(
-    (friendUid: string) => {
-      const req = [...incomingRef.current, ...outgoingRef.current].find(
-        (r) => r.status === 'accepted' && (r.fromUid === friendUid || r.toUid === friendUid),
-      )
-      if (req) return deleteFriendRequest(req.id)
-    },
-    [],
-  )
+  const removeRequest = useCallback((friendUid: string) => {
+    const req = [...incomingRef.current, ...outgoingRef.current].find(
+      (r) => r.status === 'accepted' && (r.fromUid === friendUid || r.toUid === friendUid),
+    )
+    if (req) return deleteFriendRequest(req.id)
+  }, [])
 
   const loadFriendBooks = useCallback((uid: string): Promise<AppState | null> => loadUserData(uid), [])
 
-  return { friends, incoming, outgoing, searchUser, sendRequest, acceptRequest, rejectRequest, removeRequest, loadFriendBooks }
+  return {
+    friends,
+    incoming,
+    outgoing,
+    searchUser,
+    sendRequest,
+    acceptRequest,
+    rejectRequest,
+    removeRequest,
+    loadFriendBooks,
+  }
 }

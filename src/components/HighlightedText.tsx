@@ -14,7 +14,10 @@ export function mergeRanges(ranges: Range[]): Range[] {
   return merged
 }
 
-interface Props { text: string; highlights?: Quote['highlights'] }
+interface Props {
+  text: string
+  highlights?: Quote['highlights']
+}
 
 // 문장 중 사용자가 표시한 구간에만 형광펜을 칠한다.
 // 문장을 나중에 고쳐도 깨지지 않도록 인덱스는 항상 현재 길이에 맞춰 자른다.
@@ -23,7 +26,7 @@ export default function HighlightedText({ text, highlights }: Props) {
     (highlights ?? []).map((r) => {
       const start = Math.max(0, Math.min(r.start, text.length))
       return { start, end: Math.max(start, Math.min(r.end, text.length)) }
-    })
+    }),
   )
   if (ranges.length === 0) return <>{text}</>
 
@@ -32,7 +35,9 @@ export default function HighlightedText({ text, highlights }: Props) {
   ranges.forEach((r, i) => {
     if (r.start > cursor) parts.push(text.slice(cursor, r.start))
     parts.push(
-      <span key={i} className="bg-[linear-gradient(transparent_56%,var(--highlight)_56%)]">{text.slice(r.start, r.end)}</span>
+      <span key={i} className="bg-[linear-gradient(transparent_56%,var(--highlight)_56%)]">
+        {text.slice(r.start, r.end)}
+      </span>,
     )
     cursor = r.end
   })

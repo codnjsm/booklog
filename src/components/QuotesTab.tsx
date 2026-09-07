@@ -15,7 +15,6 @@ export default function QuotesTab({ quotes, books, onDeleteQuote }: Props) {
   // 문장 추가 버튼은 이제 상단(PageHeader)에 있다. 편집 진입은 여전히 이 훅을 쓴다.
   const [search, setSearch] = useState('')
 
-
   const filtered = [...quotes]
     .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
     .filter((q) => {
@@ -31,7 +30,9 @@ export default function QuotesTab({ quotes, books, onDeleteQuote }: Props) {
   return (
     <div>
       <div className="mb-5 flex items-center gap-2 px-3 rounded-lg bg-surface border border-border focus-within:border-accent">
-        <span className="text-dim flex-shrink-0"><IconSearch /></span>
+        <span className="text-dim flex-shrink-0">
+          <IconSearch />
+        </span>
         <input
           type="text"
           placeholder="문장 · 책 · 저자 검색…"
@@ -42,14 +43,27 @@ export default function QuotesTab({ quotes, books, onDeleteQuote }: Props) {
       </div>
       {filtered.length === 0 ? (
         <div className="text-center py-[60px] px-5 text-dim bg-surface border border-dashed border-border rounded-[10px]">
-          <div className="w-11 h-11 mx-auto mb-3 rounded-full bg-surface2 flex items-center justify-center text-dim"><IconCollection size={20} /></div>
-          <h3 className="font-sans text-ink mb-1.5 text-[15px]">{quotes.length === 0 ? '아직 모은 문장이 없어요' : '검색 결과가 없어요'}</h3>
-          <p className="text-sm">{quotes.length === 0 ? '책 상세 페이지에서 문장을 추가할 수 있어요' : '다른 조건으로 검색해보세요'}</p>
+          <div className="w-11 h-11 mx-auto mb-3 rounded-full bg-surface2 flex items-center justify-center text-dim">
+            <IconCollection size={20} />
+          </div>
+          <h3 className="font-sans text-ink mb-1.5 text-[15px]">
+            {quotes.length === 0 ? '아직 모은 문장이 없어요' : '검색 결과가 없어요'}
+          </h3>
+          <p className="text-sm">
+            {quotes.length === 0 ? '책 상세 페이지에서 문장을 추가할 수 있어요' : '다른 조건으로 검색해보세요'}
+          </p>
         </div>
       ) : (
         <div className="grid gap-3.5">
           {filtered.map((q) => (
-            <QuoteCard key={q.id} quote={q} book={books.find((b) => b.id === q.bookId)} onBookClick={openBookDetail} onEdit={() => openAddQuote(undefined, q.id)} onDelete={() => onDeleteQuote(q.id)} />
+            <QuoteCard
+              key={q.id}
+              quote={q}
+              book={books.find((b) => b.id === q.bookId)}
+              onBookClick={openBookDetail}
+              onEdit={() => openAddQuote(undefined, q.id)}
+              onDelete={() => onDeleteQuote(q.id)}
+            />
           ))}
         </div>
       )}

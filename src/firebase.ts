@@ -1,7 +1,19 @@
 import { initializeApp } from 'firebase/app'
 import { initializeAppCheck, ReCaptchaEnterpriseProvider, getToken, type AppCheck } from 'firebase/app-check'
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, type User } from 'firebase/auth'
-import { getFirestore, doc, getDoc, setDoc, collection, query, where, updateDoc, deleteDoc, onSnapshot, type Unsubscribe } from 'firebase/firestore'
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  collection,
+  query,
+  where,
+  updateDoc,
+  deleteDoc,
+  onSnapshot,
+  type Unsubscribe,
+} from 'firebase/firestore'
 import { getFunctions, httpsCallable } from 'firebase/functions'
 import type { AppState, UserProfile, FriendRequest } from './types'
 
@@ -47,7 +59,10 @@ export const saveUserData = async (userId: string, data: AppState): Promise<void
   await setDoc(doc(db, 'reading-notes', userId), data)
 }
 
-export const upsertUserProfile = async (uid: string, profile: { email: string; displayName: string; photoURL: string }): Promise<void> => {
+export const upsertUserProfile = async (
+  uid: string,
+  profile: { email: string; displayName: string; photoURL: string },
+): Promise<void> => {
   await setDoc(doc(db, 'users', uid), { ...profile, email: profile.email.trim().toLowerCase() }, { merge: true })
 }
 
@@ -65,7 +80,12 @@ export const getUserByEmail = async (email: string): Promise<UserProfile | null>
 
 export const sendFriendRequest = async (fromUid: string, toUid: string): Promise<void> => {
   const id = `${fromUid}_${toUid}`
-  await setDoc(doc(db, 'friendRequests', id), { fromUid, toUid, status: 'pending', createdAt: new Date().toISOString() })
+  await setDoc(doc(db, 'friendRequests', id), {
+    fromUid,
+    toUid,
+    status: 'pending',
+    createdAt: new Date().toISOString(),
+  })
 }
 
 export const acceptFriendRequest = async (requestId: string): Promise<void> => {
@@ -91,7 +111,10 @@ export const subscribeFriendRequests = (
   const unsub2 = onSnapshot(query(collection(db, 'friendRequests'), where('fromUid', '==', uid)), (snap) => {
     onOutgoing(snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<FriendRequest, 'id'>) })))
   })
-  return () => { unsub1(); unsub2() }
+  return () => {
+    unsub1()
+    unsub2()
+  }
 }
 
 export const subscribeUserProfile = (uid: string, cb: (profile: UserProfile | null) => void): Unsubscribe => {

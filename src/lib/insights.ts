@@ -28,8 +28,13 @@ export function daysSince(iso: string, now = new Date()): number {
 /** 기록을 남긴 날(책 추가·완독, 문장·단어 저장)의 날짜 집합 */
 function recordedDays(state: AppState): Set<string> {
   const days = new Set<string>()
-  const add = (iso?: string) => { if (iso) days.add(iso.slice(0, 10)) }
-  state.books.forEach((b) => { add(b.createdAt); add(b.finishedAt) })
+  const add = (iso?: string) => {
+    if (iso) days.add(iso.slice(0, 10))
+  }
+  state.books.forEach((b) => {
+    add(b.createdAt)
+    add(b.finishedAt)
+  })
   state.quotes.forEach((q) => add(q.createdAt))
   state.words.forEach((w) => add(w.createdAt))
   return days
@@ -86,7 +91,8 @@ export function recentActivity(state: AppState, limit = 5): ActivityItem[] {
   const items: ActivityItem[] = []
 
   state.books.forEach((b) => {
-    if (b.finishedAt) items.push({ kind: 'finished', at: b.finishedAt, title: b.title, sub: b.author || undefined, rating: b.rating })
+    if (b.finishedAt)
+      items.push({ kind: 'finished', at: b.finishedAt, title: b.title, sub: b.author || undefined, rating: b.rating })
     items.push({ kind: 'book', at: b.createdAt, title: b.title, sub: b.author || undefined })
   })
 
@@ -95,8 +101,10 @@ export function recentActivity(state: AppState, limit = 5): ActivityItem[] {
     const key = q.createdAt.slice(0, 10) + '|' + (q.bookId ?? '')
     const book = state.books.find((b) => b.id === q.bookId)
     const cur = byDayBook.get(key)
-    if (cur) { cur.count += 1; if (q.createdAt > cur.at) cur.at = q.createdAt }
-    else byDayBook.set(key, { at: q.createdAt, count: 1, title: book?.title ?? '출처 미상' })
+    if (cur) {
+      cur.count += 1
+      if (q.createdAt > cur.at) cur.at = q.createdAt
+    } else byDayBook.set(key, { at: q.createdAt, count: 1, title: book?.title ?? '출처 미상' })
   })
   byDayBook.forEach(({ at, count, title }) => {
     items.push({ kind: 'quote', at, title: count > 1 ? `문장 ${count}개 저장` : '문장 저장', sub: title })
@@ -106,11 +114,18 @@ export function recentActivity(state: AppState, limit = 5): ActivityItem[] {
   state.words.forEach((w) => {
     const key = w.createdAt.slice(0, 10)
     const cur = wordsByDay.get(key)
-    if (cur) { cur.count += 1; if (w.createdAt > cur.at) cur.at = w.createdAt }
-    else wordsByDay.set(key, { at: w.createdAt, count: 1, term: w.term })
+    if (cur) {
+      cur.count += 1
+      if (w.createdAt > cur.at) cur.at = w.createdAt
+    } else wordsByDay.set(key, { at: w.createdAt, count: 1, term: w.term })
   })
   wordsByDay.forEach(({ at, count, term }) => {
-    items.push({ kind: 'word', at, title: count > 1 ? `단어 ${count}개 저장` : `단어 저장`, sub: count > 1 ? `${term} 외 ${count - 1}개` : term })
+    items.push({
+      kind: 'word',
+      at,
+      title: count > 1 ? `단어 ${count}개 저장` : `단어 저장`,
+      sub: count > 1 ? `${term} 외 ${count - 1}개` : term,
+    })
   })
 
   return items.sort((a, b) => b.at.localeCompare(a.at)).slice(0, limit)

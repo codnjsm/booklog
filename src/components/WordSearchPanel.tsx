@@ -4,9 +4,17 @@ import type { Word } from '../types'
 import { IconSearch } from './layout/icons'
 import { fetchWithAppCheck } from '../firebase'
 
-interface DictSense { definition: string; pos?: string }
-interface DictItem { word: string; sense?: DictSense[] }
-interface DictResponse { channel?: { item?: DictItem[] } }
+interface DictSense {
+  definition: string
+  pos?: string
+}
+interface DictItem {
+  word: string
+  sense?: DictSense[]
+}
+interface DictResponse {
+  channel?: { item?: DictItem[] }
+}
 
 interface Props {
   words: Word[]
@@ -16,7 +24,7 @@ interface Props {
 async function searchDict(q: string): Promise<DictItem[]> {
   const res = await fetchWithAppCheck(`/api/koreanDictSearch?query=${encodeURIComponent(q)}`)
   if (!res.ok) throw new Error('search failed')
-  const data = await res.json() as DictResponse
+  const data = (await res.json()) as DictResponse
   return data.channel?.item || []
 }
 
@@ -31,7 +39,12 @@ export default function WordSearchPanel({ words, onAddWord }: Props) {
     timerRef.current = setTimeout(() => setDebouncedQuery(v), 400)
   }
 
-  const { data: results = [], isFetching: loading, isError: error, isSuccess } = useQuery({
+  const {
+    data: results = [],
+    isFetching: loading,
+    isError: error,
+    isSuccess,
+  } = useQuery({
     queryKey: ['koreanDict', debouncedQuery],
     queryFn: () => searchDict(debouncedQuery),
     enabled: debouncedQuery.length >= 1,
@@ -44,7 +57,9 @@ export default function WordSearchPanel({ words, onAddWord }: Props) {
   return (
     <div className="bg-surface border border-border rounded-lg overflow-hidden focus-within:border-accent">
       <div className="flex items-center gap-2 px-3">
-        <span className="text-dim flex-shrink-0"><IconSearch /></span>
+        <span className="text-dim flex-shrink-0">
+          <IconSearch />
+        </span>
         <input
           type="text"
           placeholder="뜻을 찾을 단어 입력"
@@ -54,7 +69,9 @@ export default function WordSearchPanel({ words, onAddWord }: Props) {
           className="flex-1 min-w-0 bg-transparent border-none text-ink py-[9px] text-base font-sans placeholder:text-dim focus:outline-none"
         />
         {loading && <span className="font-mono text-[11px] text-dim flex-shrink-0">검색중…</span>}
-        {!loading && isSuccess && <span className="font-mono text-[11px] text-dim flex-shrink-0">우리말샘 · {results.length}건</span>}
+        {!loading && isSuccess && (
+          <span className="font-mono text-[11px] text-dim flex-shrink-0">우리말샘 · {results.length}건</span>
+        )}
       </div>
 
       {error && (
@@ -84,7 +101,9 @@ export default function WordSearchPanel({ words, onAddWord }: Props) {
                       <button
                         onClick={() => onAddWord({ term: item.word, meaning: s.definition })}
                         className="flex-shrink-0 text-xs font-medium px-3.5 py-1.5 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover"
-                      >저장</button>
+                      >
+                        저장
+                      </button>
                     )}
                   </div>
                 )

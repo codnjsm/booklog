@@ -15,7 +15,10 @@ export type Modal =
 // Modals that aren't worth a shareable URL (transient create/edit flows) stay in local state.
 type LocalModal = Exclude<Modal, { type: 'bookDetail' }>
 
-interface ToastState { msg: string; key: number }
+interface ToastState {
+  msg: string
+  key: number
+}
 
 interface AppUIValue {
   tab: Tab
@@ -65,7 +68,9 @@ export function AppUIProvider({ children }: { children: ReactNode }) {
   const [searchParams, setSearchParams] = useSearchParams()
 
   const [localModal, setLocalModal] = useState<LocalModal>({ type: 'none' })
-  const [theme, setTheme] = useState<'dark' | 'light'>(() => (localStorage.getItem(THEME_KEY) as 'dark' | 'light') || 'light')
+  const [theme, setTheme] = useState<'dark' | 'light'>(
+    () => (localStorage.getItem(THEME_KEY) as 'dark' | 'light') || 'light',
+  )
   const [toast, setToast] = useState<ToastState | null>(null)
   const [loginDismissed, setLoginDismissed] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
@@ -73,9 +78,8 @@ export function AppUIProvider({ children }: { children: ReactNode }) {
   const tab: Tab = PATH_TABS[location.pathname] ?? 'home'
 
   const bookDetailId = searchParams.get('book')
-  const modal: Modal = bookDetailId && localModal.type === 'none'
-    ? { type: 'bookDetail', bookId: bookDetailId }
-    : localModal
+  const modal: Modal =
+    bookDetailId && localModal.type === 'none' ? { type: 'bookDetail', bookId: bookDetailId } : localModal
 
   useEffect(() => {
     if (theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark')
@@ -83,12 +87,15 @@ export function AppUIProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(THEME_KEY, theme)
   }, [theme])
 
-  const clearBookParam = useCallback((opts?: { replace?: boolean }) => {
-    if (!searchParams.has('book')) return
-    const next = new URLSearchParams(searchParams)
-    next.delete('book')
-    setSearchParams(next, opts)
-  }, [searchParams, setSearchParams])
+  const clearBookParam = useCallback(
+    (opts?: { replace?: boolean }) => {
+      if (!searchParams.has('book')) return
+      const next = new URLSearchParams(searchParams)
+      next.delete('book')
+      setSearchParams(next, opts)
+    },
+    [searchParams, setSearchParams],
+  )
 
   const changeTab = useCallback((t: Tab) => navigate(TAB_PATHS[t]), [navigate])
 
@@ -98,42 +105,93 @@ export function AppUIProvider({ children }: { children: ReactNode }) {
   }, [clearBookParam])
 
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') closeModal() }
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeModal()
+    }
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
   }, [closeModal])
 
-  const openAddBook = useCallback(() => { clearBookParam(); setLocalModal({ type: 'addBook' }) }, [clearBookParam])
-  const openManualBook = useCallback((prefill?: BookPrefill | Partial<Book>, editId?: string) => {
+  const openAddBook = useCallback(() => {
     clearBookParam()
-    setLocalModal({ type: 'manualBook', prefill, editId })
+    setLocalModal({ type: 'addBook' })
   }, [clearBookParam])
-  const openBookDetail = useCallback((bookId: string) => {
-    setLocalModal({ type: 'none' })
-    const next = new URLSearchParams(searchParams)
-    next.set('book', bookId)
-    setSearchParams(next)
-  }, [searchParams, setSearchParams])
-  const openAddQuote = useCallback((bookId?: string | null, editId?: string) => {
+  const openManualBook = useCallback(
+    (prefill?: BookPrefill | Partial<Book>, editId?: string) => {
+      clearBookParam()
+      setLocalModal({ type: 'manualBook', prefill, editId })
+    },
+    [clearBookParam],
+  )
+  const openBookDetail = useCallback(
+    (bookId: string) => {
+      setLocalModal({ type: 'none' })
+      const next = new URLSearchParams(searchParams)
+      next.set('book', bookId)
+      setSearchParams(next)
+    },
+    [searchParams, setSearchParams],
+  )
+  const openAddQuote = useCallback(
+    (bookId?: string | null, editId?: string) => {
+      clearBookParam()
+      setLocalModal({ type: 'addQuote', bookId, editId })
+    },
+    [clearBookParam],
+  )
+  const openAddWord = useCallback(() => {
     clearBookParam()
-    setLocalModal({ type: 'addQuote', bookId, editId })
+    setLocalModal({ type: 'addWord' })
   }, [clearBookParam])
-  const openAddWord = useCallback(() => { clearBookParam(); setLocalModal({ type: 'addWord' }) }, [clearBookParam])
 
-  const toggleTheme = useCallback(() => setTheme((t) => t === 'light' ? 'dark' : 'light'), [])
+  const toggleTheme = useCallback(() => setTheme((t) => (t === 'light' ? 'dark' : 'light')), [])
   const showToast = useCallback((msg: string) => setToast({ msg, key: Date.now() }), [])
   const dismissLogin = useCallback(() => setLoginDismissed(true), [])
   const toggleUserMenu = useCallback(() => setUserMenuOpen((o) => !o), [])
   const closeUserMenu = useCallback(() => setUserMenuOpen(false), [])
 
-  const value: AppUIValue = useMemo(() => ({
-    tab, changeTab,
-    modal, openAddBook, openManualBook, openBookDetail, openAddQuote, openAddWord, closeModal,
-    theme, toggleTheme,
-    toast, showToast,
-    loginDismissed, dismissLogin,
-    userMenuOpen, toggleUserMenu, closeUserMenu,
-  }), [tab, changeTab, modal, openAddBook, openManualBook, openBookDetail, openAddQuote, openAddWord, closeModal, theme, toggleTheme, toast, showToast, loginDismissed, dismissLogin, userMenuOpen, toggleUserMenu, closeUserMenu])
+  const value: AppUIValue = useMemo(
+    () => ({
+      tab,
+      changeTab,
+      modal,
+      openAddBook,
+      openManualBook,
+      openBookDetail,
+      openAddQuote,
+      openAddWord,
+      closeModal,
+      theme,
+      toggleTheme,
+      toast,
+      showToast,
+      loginDismissed,
+      dismissLogin,
+      userMenuOpen,
+      toggleUserMenu,
+      closeUserMenu,
+    }),
+    [
+      tab,
+      changeTab,
+      modal,
+      openAddBook,
+      openManualBook,
+      openBookDetail,
+      openAddQuote,
+      openAddWord,
+      closeModal,
+      theme,
+      toggleTheme,
+      toast,
+      showToast,
+      loginDismissed,
+      dismissLogin,
+      userMenuOpen,
+      toggleUserMenu,
+      closeUserMenu,
+    ],
+  )
 
   return <AppUIContext.Provider value={value}>{children}</AppUIContext.Provider>
 }

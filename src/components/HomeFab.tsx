@@ -5,8 +5,12 @@ import { IconBooks, IconQuote, IconWord } from './layout/icons'
 function FabAction({ icon, label, onClick }: { icon: ReactNode; label: string; onClick: () => void }) {
   return (
     <button onClick={onClick} className="flex items-center gap-2.5 bg-transparent border-none cursor-pointer p-0">
-      <span className="text-white text-sm font-medium whitespace-nowrap [text-shadow:0_1px_3px_rgba(0,0,0,0.4)]">{label}</span>
-      <span className="w-11 h-11 rounded-full bg-accent text-white flex items-center justify-center shadow-card flex-shrink-0">{icon}</span>
+      <span className="text-white text-sm font-medium whitespace-nowrap [text-shadow:0_1px_3px_rgba(0,0,0,0.4)]">
+        {label}
+      </span>
+      <span className="w-11 h-11 rounded-full bg-accent text-white flex items-center justify-center shadow-card flex-shrink-0">
+        {icon}
+      </span>
     </button>
   )
 }
@@ -16,7 +20,10 @@ export default function HomeFab() {
   const { openAddBook, openAddQuote, openAddWord } = useAppUI()
 
   const close = () => setOpen(false)
-  const run = (fn: () => void) => { close(); fn() }
+  const run = (fn: () => void) => {
+    close()
+    fn()
+  }
 
   useEffect(() => {
     if (!open) return
@@ -44,9 +51,7 @@ export default function HomeFab() {
 
   return (
     <div className="sm:hidden">
-      {open && (
-        <div onClick={close} className="fixed inset-0 bg-black/60 z-[90]" />
-      )}
+      {open && <div onClick={close} className="fixed inset-0 bg-black/60 z-[90]" />}
       <div className="fixed z-[95] bottom-[calc(75px+env(safe-area-inset-bottom))] right-4 flex flex-col items-end gap-4">
         {open && (
           <>

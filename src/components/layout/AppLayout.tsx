@@ -2,7 +2,17 @@ import type { ReactNode } from 'react'
 import type { User } from 'firebase/auth'
 import { useAppUI, type Tab } from '../../contexts/AppUIContext'
 import type { SyncStatus } from '../../hooks/useData'
-import { IconHome, IconBooks, IconCollection, IconRecords, IconFriends, IconMore, IconExport, IconSun, IconMoon } from './icons'
+import {
+  IconHome,
+  IconBooks,
+  IconCollection,
+  IconRecords,
+  IconFriends,
+  IconMore,
+  IconExport,
+  IconSun,
+  IconMoon,
+} from './icons'
 
 interface Props {
   user: User | null
@@ -36,7 +46,15 @@ function Badge({ count }: { count: number }) {
   )
 }
 
-export default function AppLayout({ user, syncStatus, bookCount, collectionCount, incomingCount, onExport, children }: Props) {
+export default function AppLayout({
+  user,
+  syncStatus,
+  bookCount,
+  collectionCount,
+  incomingCount,
+  onExport,
+  children,
+}: Props) {
   const { tab, changeTab, theme, toggleTheme } = useAppUI()
 
   const counts: Partial<Record<Tab, number>> = { books: bookCount, collection: collectionCount }
@@ -45,9 +63,11 @@ export default function AppLayout({ user, syncStatus, bookCount, collectionCount
 
   return (
     <div className="min-h-screen flex bg-bg">
-
       <aside className="hidden sm:flex w-[var(--sidebar-w)] flex-shrink-0 flex-col gap-7 bg-surface border-r border-border px-3.5 py-6 fixed inset-y-0 left-0">
-        <button className="font-mono text-xl font-bold tracking-[-0.02em] text-[var(--logo)] px-2.5 text-left bg-transparent border-none cursor-pointer" onClick={() => changeTab('home')}>
+        <button
+          className="font-mono text-xl font-bold tracking-[-0.02em] text-[var(--logo)] px-2.5 text-left bg-transparent border-none cursor-pointer"
+          onClick={() => changeTab('home')}
+        >
           Booklog
         </button>
 
@@ -63,9 +83,11 @@ export default function AppLayout({ user, syncStatus, bookCount, collectionCount
                 <Icon />
                 <span>{label}</span>
                 <span className="flex-1" />
-                {id === 'friends' && incomingCount > 0
-                  ? <Badge count={incomingCount} />
-                  : counts[id] !== undefined && <span className="font-mono text-[11px] text-dim">{counts[id]}</span>}
+                {id === 'friends' && incomingCount > 0 ? (
+                  <Badge count={incomingCount} />
+                ) : (
+                  counts[id] !== undefined && <span className="font-mono text-[11px] text-dim">{counts[id]}</span>
+                )}
               </button>
             )
           })}
@@ -74,18 +96,37 @@ export default function AppLayout({ user, syncStatus, bookCount, collectionCount
         <div className="flex-1" />
 
         <div className="flex flex-col gap-0.5 pt-3.5 border-t border-border">
-          <button onClick={onExport} className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] text-dim bg-transparent border-none cursor-pointer text-left hover:text-ink">
-            <IconExport /><span>기록 내보내기</span>
+          <button
+            onClick={onExport}
+            className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] text-dim bg-transparent border-none cursor-pointer text-left hover:text-ink"
+          >
+            <IconExport />
+            <span>기록 내보내기</span>
           </button>
-          <button onClick={toggleTheme} className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] text-dim bg-transparent border-none cursor-pointer text-left hover:text-ink">
+          <button
+            onClick={toggleTheme}
+            className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] text-dim bg-transparent border-none cursor-pointer text-left hover:text-ink"
+          >
             {theme === 'light' ? <IconSun /> : <IconMoon />}
             <span>{theme === 'light' ? '라이트 모드' : '다크 모드'}</span>
           </button>
           {user && (
-            <button onClick={() => changeTab('more')} className="flex items-center gap-2.5 p-2.5 mt-1.5 rounded-lg bg-surface2 border-none cursor-pointer text-left w-full">
-              {user.photoURL
-                ? <img src={user.photoURL} referrerPolicy="no-referrer" alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
-                : <span className="w-7 h-7 rounded-full bg-accent text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">{(user.displayName || user.email || '?')[0].toUpperCase()}</span>}
+            <button
+              onClick={() => changeTab('more')}
+              className="flex items-center gap-2.5 p-2.5 mt-1.5 rounded-lg bg-surface2 border-none cursor-pointer text-left w-full"
+            >
+              {user.photoURL ? (
+                <img
+                  src={user.photoURL}
+                  referrerPolicy="no-referrer"
+                  alt=""
+                  className="w-7 h-7 rounded-full object-cover flex-shrink-0"
+                />
+              ) : (
+                <span className="w-7 h-7 rounded-full bg-accent text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
+                  {(user.displayName || user.email || '?')[0].toUpperCase()}
+                </span>
+              )}
               <span className="flex flex-col gap-px min-w-0">
                 <span className="text-xs font-medium text-ink truncate">{user.displayName || '사용자'}</span>
                 <span className="flex items-center gap-1.5">
@@ -100,7 +141,9 @@ export default function AppLayout({ user, syncStatus, bookCount, collectionCount
 
       <main className="flex-1 min-w-0 sm:ml-[var(--sidebar-w)] px-5 pt-4 pb-[calc(76px+env(safe-area-inset-bottom))] sm:pt-20 sm:pb-10">
         <div className="max-w-[1200px] mx-auto">
-          <div className="sm:hidden mb-3 font-mono text-[15px] font-bold tracking-[-0.02em] text-[var(--logo)]">Booklog</div>
+          <div className="sm:hidden mb-3 font-mono text-[15px] font-bold tracking-[-0.02em] text-[var(--logo)]">
+            Booklog
+          </div>
           {children}
         </div>
       </main>
