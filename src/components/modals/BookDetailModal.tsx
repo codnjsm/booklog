@@ -12,7 +12,7 @@ const STATUS = {
 }
 
 const PANEL =
-  'bg-surface border border-border rounded-t-2xl sm:rounded-[14px] w-full max-w-full sm:max-w-[620px] max-h-[92%] sm:max-h-[90%] overflow-y-auto overscroll-contain touch-auto shadow-card'
+  'bg-surface border border-border rounded-2xl sm:rounded-[14px] w-full max-w-full sm:max-w-[620px] max-h-[92%] sm:max-h-[90%] overflow-y-auto overscroll-contain touch-auto shadow-card'
 const LABEL = 'font-mono text-[10px] tracking-[0.09em] text-dim'
 const BTN =
   'text-xs sm:text-[13px] font-medium px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover'
@@ -283,7 +283,7 @@ export default function BookDetailModal({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 px-5 sm:px-6 py-3.5 border-t border-border bg-bg pb-[max(14px,env(safe-area-inset-bottom))] sm:pb-3.5">
+        <div className="flex items-center gap-2 px-5 sm:px-6 py-3.5 border-t border-border bg-bg">
           <button
             onClick={() => onDelete(bookId)}
             className="text-xs sm:text-[13px] px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg bg-transparent border border-border text-danger cursor-pointer hover:bg-danger/10"
