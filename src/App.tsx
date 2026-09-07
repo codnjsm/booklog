@@ -21,6 +21,7 @@ import BookDetailModal from './components/modals/BookDetailModal'
 import AddQuoteModal from './components/modals/AddQuoteModal'
 import AddWordModal from './components/modals/AddWordModal'
 import PublishPostModal from './components/modals/PublishPostModal'
+import AddFriendModal from './components/modals/AddFriendModal'
 
 const queryClient = new QueryClient()
 
@@ -146,8 +147,6 @@ function AppShell() {
           friends={friends}
           incoming={incoming}
           outgoing={outgoing}
-          onSearch={searchUser}
-          onSendRequest={sendRequest}
           onAcceptRequest={acceptRequest}
           onRejectRequest={rejectRequest}
           onRemoveFriend={removeRequest}
@@ -269,6 +268,17 @@ function AppShell() {
           onClose={closeModal}
           onPublish={publishPost}
           onPublished={() => queryClient.invalidateQueries({ queryKey: ['friendFeed'] })}
+        />
+      )}
+      {modal.type === 'addFriend' && (
+        <AddFriendModal
+          user={user}
+          friends={friends}
+          incoming={incoming}
+          outgoing={outgoing}
+          onSearch={searchUser}
+          onSendRequest={sendRequest}
+          onClose={closeModal}
         />
       )}
 

@@ -22,8 +22,6 @@ interface Props {
   friends: UserProfile[]
   incoming: FriendRequest[]
   outgoing: FriendRequest[]
-  onSearch: (email: string) => Promise<UserProfile | null>
-  onSendRequest: (toUid: string) => void
   onAcceptRequest: (requestId: string) => void
   onRejectRequest: (requestId: string) => void
   onRemoveFriend: (friendUid: string) => void
@@ -99,8 +97,6 @@ export default function FriendsTab({
   friends,
   incoming,
   outgoing,
-  onSearch,
-  onSendRequest,
   onAcceptRequest,
   onRejectRequest,
   onRemoveFriend,
@@ -108,7 +104,7 @@ export default function FriendsTab({
   onLoadFriendFeed,
   onDeletePost,
 }: Props) {
-  const { openPublishPost, showToast } = useAppUI()
+  const { openPublishPost, openAddFriend, showToast } = useAppUI()
   const queryClient = useQueryClient()
   const [view, setView] = useState<MainView>('feed')
 
@@ -127,40 +123,14 @@ export default function FriendsTab({
     },
   })
 
-  const [emailInput, setEmailInput] = useState('')
-  const [searchResult, setSearchResult] = useState<UserProfile | null | 'not-found' | 'self'>()
+  const [friendFilter, setFriendFilter] = useState('')
 
   const [viewingFriend, setViewingFriend] = useState<UserProfile | null>(null)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
 
-  const searchMutation = useMutation({
-    mutationFn: onSearch,
-    onSuccess: (result) => setSearchResult(result ?? 'not-found'),
-  })
-  const searching = searchMutation.isPending
-
-  const sendRequestMutation = useMutation({
-    mutationFn: (toUid: string) => Promise.resolve(onSendRequest(toUid)),
-    onSuccess: () => {
-      setSearchResult(undefined)
-      setEmailInput('')
-    },
-  })
-  const sending = sendRequestMutation.isPending
-
   const friendBooksQuery = useMutation({ mutationFn: onLoadFriendBooks })
   const loadingBooks = friendBooksQuery.isPending
   const friendData = friendBooksQuery.data ?? null
-
-  const handleSearch = () => {
-    const email = emailInput.trim().toLowerCase()
-    if (!email) return
-    if (email === user?.email?.toLowerCase()) {
-      setSearchResult('self')
-      return
-    }
-    searchMutation.mutate(email)
-  }
 
   const handleViewFriend = (friend: UserProfile) => {
     setViewingFriend(friend)
@@ -168,12 +138,11 @@ export default function FriendsTab({
     friendBooksQuery.mutate(friend.uid)
   }
 
-  const getRequestStatus = (uid: string) => {
-    if (friends.some((f) => f.uid === uid)) return 'friend'
-    if (outgoing.some((r) => r.toUid === uid)) return 'sent'
-    if (incoming.some((r) => r.fromUid === uid)) return 'incoming'
-    return 'none'
-  }
+  const filteredFriends = friends.filter((f) => {
+    const q = friendFilter.trim().toLowerCase()
+    if (!q) return true
+    return (f.displayName || '').toLowerCase().includes(q) || (f.email || '').toLowerCase().includes(q)
+  })
 
   if (authLoading) return null
 
@@ -257,6 +226,14 @@ export default function FriendsTab({
             + 발행
           </button>
         )}
+        {view === 'friends' && (
+          <button
+            onClick={openAddFriend}
+            className="text-xs sm:text-[13px] font-medium px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-ink text-bg border-none cursor-pointer hover:opacity-90"
+          >
+            + 친구 추가
+          </button>
+        )}
       </PageHeader>
 
       <div className="flex gap-0.5 p-0.5 mb-5 rounded-[9px] bg-surface2 border border-border sm:w-fit">
@@ -294,62 +271,6 @@ export default function FriendsTab({
 
       {view === 'friends' && (
         <div className="flex flex-col gap-6">
-          {/* 검색 */}
-          <div className="flex flex-col gap-2.5">
-            <div className="flex items-center gap-2 px-3 rounded-lg bg-surface border border-border focus-within:border-accent">
-              <span className="text-dim flex-shrink-0">
-                <IconSearch />
-              </span>
-              <input
-                type="email"
-                placeholder="친구의 이메일 주소 입력…"
-                value={emailInput}
-                onChange={(e) => {
-                  setEmailInput(e.target.value)
-                  setSearchResult(undefined)
-                }}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                className="flex-1 min-w-0 bg-transparent border-none text-ink py-[9px] text-base font-sans placeholder:text-dim focus:outline-none"
-              />
-              <span className="w-px self-stretch my-1.5 bg-border flex-shrink-0" />
-              <button
-                className="flex-shrink-0 bg-transparent border-none px-1 py-[9px] text-xs font-medium text-accent cursor-pointer disabled:text-dim disabled:cursor-not-allowed"
-                onClick={handleSearch}
-                disabled={searching || !emailInput.trim()}
-              >
-                {searching ? '검색중…' : '검색'}
-              </button>
-            </div>
-
-            {searchResult === 'not-found' && (
-              <div className="text-[13px] text-dim">해당 이메일로 가입된 계정을 찾을 수 없어요</div>
-            )}
-            {searchResult === 'self' && <div className="text-[13px] text-dim">내 계정이에요</div>}
-            {searchResult && searchResult !== 'not-found' && searchResult !== 'self' && (
-              <div className={`${LIST_CARD} ${LIST_ROW}`}>
-                <Person
-                  photoURL={searchResult.photoURL}
-                  displayName={searchResult.displayName}
-                  email={searchResult.email}
-                />
-                {getRequestStatus(searchResult.uid) === 'friend' && <span className={STATUS_PILL}>친구</span>}
-                {getRequestStatus(searchResult.uid) === 'sent' && <span className={STATUS_PILL}>요청 보냄</span>}
-                {getRequestStatus(searchResult.uid) === 'incoming' && (
-                  <span className={STATUS_PILL}>받은 요청 있음</span>
-                )}
-                {getRequestStatus(searchResult.uid) === 'none' && (
-                  <button
-                    className={`${BTN_SM} flex-shrink-0`}
-                    onClick={() => sendRequestMutation.mutate(searchResult.uid)}
-                    disabled={sending}
-                  >
-                    {sending ? '전송중…' : '친구 추가'}
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-
           {/* 받은 요청 */}
           {incoming.length > 0 && (
             <div>
@@ -405,30 +326,50 @@ export default function FriendsTab({
               <div className="rounded-xl border border-dashed border-border bg-bg px-5 py-8 text-center text-sm text-dim">
                 아직 친구가 없어요
                 <br />
-                위에서 이메일로 친구를 찾아보세요
+                "+ 친구 추가"로 이메일을 검색해보세요
               </div>
             ) : (
-              <div className={LIST_CARD}>
-                {friends.map((f) => (
-                  <div key={f.uid} className={LIST_ROW}>
-                    <Person photoURL={f.photoURL} displayName={f.displayName} email={f.email} />
-                    <div className="flex items-center gap-1 flex-shrink-0">
-                      <button className={BTN_SM_SECONDARY} onClick={() => handleViewFriend(f)}>
-                        책장 보기
-                      </button>
-                      <button
-                        className="bg-transparent text-danger border border-border px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-[13px] cursor-pointer transition-all duration-150 font-sans hover:bg-danger/10"
-                        onClick={() => {
-                          if (confirm(`${f.displayName || f.email}님을 친구 목록에서 삭제할까요?`))
-                            onRemoveFriend(f.uid)
-                        }}
-                      >
-                        삭제
-                      </button>
-                    </div>
+              <>
+                <div className="flex items-center gap-2 px-3 mb-2.5 rounded-lg bg-surface border border-border focus-within:border-accent">
+                  <span className="text-dim flex-shrink-0">
+                    <IconSearch />
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="이름 또는 이메일로 찾기…"
+                    value={friendFilter}
+                    onChange={(e) => setFriendFilter(e.target.value)}
+                    className="flex-1 min-w-0 bg-transparent border-none text-ink py-[9px] text-base font-sans placeholder:text-dim focus:outline-none"
+                  />
+                </div>
+                {filteredFriends.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-border bg-bg px-5 py-8 text-center text-sm text-dim">
+                    일치하는 친구가 없어요
                   </div>
-                ))}
-              </div>
+                ) : (
+                  <div className={LIST_CARD}>
+                    {filteredFriends.map((f) => (
+                      <div key={f.uid} className={LIST_ROW}>
+                        <Person photoURL={f.photoURL} displayName={f.displayName} email={f.email} />
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <button className={BTN_SM_SECONDARY} onClick={() => handleViewFriend(f)}>
+                            책장 보기
+                          </button>
+                          <button
+                            className="bg-transparent text-danger border border-border px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-[13px] cursor-pointer transition-all duration-150 font-sans hover:bg-danger/10"
+                            onClick={() => {
+                              if (confirm(`${f.displayName || f.email}님을 친구 목록에서 삭제할까요?`))
+                                onRemoveFriend(f.uid)
+                            }}
+                          >
+                            삭제
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
