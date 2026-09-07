@@ -84,3 +84,32 @@ export interface FriendShelf {
   books: FriendBook[]
   readingGoal: number
 }
+
+/** 발행(게시물)의 첨부 — createPost 호출 시 서버가 만들어주는 스냅샷 모양과 같다. */
+export type PostAttachment =
+  | {
+      kind: 'quote'
+      quoteText: string
+      quoteHighlights: { start: number; end: number }[] | null
+      bookTitle: string | null
+      bookAuthor: string | null
+    }
+  | {
+      kind: 'book'
+      bookTitle: string
+      bookAuthor: string
+      bookCover: string
+      bookStatus: BookStatus
+      bookRating: number
+    }
+
+/** 친구 피드에 뜨는 게시물 한 건. getFriendFeed가 작성자 표시정보를 동봉해서 돌려준다. */
+export interface Post {
+  id: string
+  authorUid: string
+  createdAt: string
+  caption: string
+  attachment: PostAttachment
+  authorDisplayName: string
+  authorPhotoURL: string
+}

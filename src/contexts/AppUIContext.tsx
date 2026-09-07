@@ -11,6 +11,7 @@ export type Modal =
   | { type: 'bookDetail'; bookId: string }
   | { type: 'addQuote'; bookId?: string | null; editId?: string }
   | { type: 'addWord' }
+  | { type: 'publishPost' }
 
 // Modals that aren't worth a shareable URL (transient create/edit flows) stay in local state.
 type LocalModal = Exclude<Modal, { type: 'bookDetail' }>
@@ -30,6 +31,7 @@ interface AppUIValue {
   openBookDetail: (bookId: string) => void
   openAddQuote: (bookId?: string | null, editId?: string) => void
   openAddWord: () => void
+  openPublishPost: () => void
   closeModal: () => void
 
   theme: 'dark' | 'light'
@@ -143,6 +145,10 @@ export function AppUIProvider({ children }: { children: ReactNode }) {
     clearBookParam()
     setLocalModal({ type: 'addWord' })
   }, [clearBookParam])
+  const openPublishPost = useCallback(() => {
+    clearBookParam()
+    setLocalModal({ type: 'publishPost' })
+  }, [clearBookParam])
 
   const toggleTheme = useCallback(() => setTheme((t) => (t === 'light' ? 'dark' : 'light')), [])
   const showToast = useCallback((msg: string) => setToast({ msg, key: Date.now() }), [])
@@ -160,6 +166,7 @@ export function AppUIProvider({ children }: { children: ReactNode }) {
       openBookDetail,
       openAddQuote,
       openAddWord,
+      openPublishPost,
       closeModal,
       theme,
       toggleTheme,
@@ -180,6 +187,7 @@ export function AppUIProvider({ children }: { children: ReactNode }) {
       openBookDetail,
       openAddQuote,
       openAddWord,
+      openPublishPost,
       closeModal,
       theme,
       toggleTheme,

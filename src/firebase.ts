@@ -15,7 +15,7 @@ import {
   type Unsubscribe,
 } from 'firebase/firestore'
 import { getFunctions, httpsCallable } from 'firebase/functions'
-import type { AppState, UserProfile, FriendRequest, FriendShelf } from './types'
+import type { AppState, UserProfile, FriendRequest, FriendShelf, Post } from './types'
 
 const firebaseConfig = {
   apiKey: 'AIzaSyAZtjU5A1ay8ZlWf63spiwEzHjxvZCqSUk',
@@ -68,6 +68,30 @@ export const getFriendShelf = async (uid: string): Promise<FriendShelf> => {
   const call = httpsCallable<{ uid: string }, FriendShelf>(functions, 'getFriendShelf')
   const res = await call({ uid })
   return res.data
+}
+
+/** 본인 + 친구들의 발행(게시물)을 최신순으로 가져온다. 서버(getFriendFeed)가 작성자 표시정보를 동봉한다. */
+export const getFriendFeed = async (): Promise<Post[]> => {
+  const call = httpsCallable<void, Post[]>(functions, 'getFriendFeed')
+  const res = await call()
+  return res.data
+}
+
+/** 문장(quote) 또는 책(book) 하나를 골라 한마디를 붙여 발행한다. 스냅샷은 서버가 만든다. */
+export const createPost = async (data: {
+  kind: 'quote' | 'book'
+  refId: string
+  caption: string
+}): Promise<{ id: string }> => {
+  const call = httpsCallable<typeof data, { id: string }>(functions, 'createPost')
+  const res = await call(data)
+  return res.data
+}
+
+/** 본인 게시물만 지울 수 있다 — 서버가 작성자를 확인한다. */
+export const deletePost = async (postId: string): Promise<void> => {
+  const call = httpsCallable<{ postId: string }, { ok: true }>(functions, 'deletePost')
+  await call({ postId })
 }
 
 export const upsertUserProfile = async (

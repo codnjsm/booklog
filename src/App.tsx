@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from 'react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query'
 import { BrowserRouter } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
 import { useData } from './hooks/useData'
@@ -20,6 +20,7 @@ import ManualBookModal from './components/modals/ManualBookModal'
 import BookDetailModal from './components/modals/BookDetailModal'
 import AddQuoteModal from './components/modals/AddQuoteModal'
 import AddWordModal from './components/modals/AddWordModal'
+import PublishPostModal from './components/modals/PublishPostModal'
 
 const queryClient = new QueryClient()
 
@@ -61,8 +62,12 @@ function AppShell() {
     rejectRequest,
     removeRequest,
     loadFriendBooks,
+    loadFriendFeed,
+    publishPost,
+    removePost,
   } = useFriends(user)
   const { tab, modal, showToast, loginDismissed, dismissLogin, openManualBook, openAddQuote, closeModal } = useAppUI()
+  const queryClient = useQueryClient()
 
   useEffect(() => {
     if (!user) return
@@ -147,6 +152,8 @@ function AppShell() {
           onRejectRequest={rejectRequest}
           onRemoveFriend={removeRequest}
           onLoadFriendBooks={loadFriendBooks}
+          onLoadFriendFeed={loadFriendFeed}
+          onDeletePost={removePost}
         />
       )}
       {tab === 'more' && (
@@ -253,6 +260,15 @@ function AppShell() {
             addWord(data)
             showToast('단어가 저장됐어요')
           }}
+        />
+      )}
+      {modal.type === 'publishPost' && (
+        <PublishPostModal
+          books={state.books}
+          quotes={state.quotes}
+          onClose={closeModal}
+          onPublish={publishPost}
+          onPublished={() => queryClient.invalidateQueries({ queryKey: ['friendFeed'] })}
         />
       )}
 

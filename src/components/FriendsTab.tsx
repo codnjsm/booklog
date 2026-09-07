@@ -1,10 +1,12 @@
 import { useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { User } from 'firebase/auth'
-import type { UserProfile, FriendRequest, BookStatus, FriendShelf } from '../types'
+import type { UserProfile, FriendRequest, BookStatus, FriendShelf, Post } from '../types'
 import BookCard from './BookCard'
 import PageHeader from './layout/PageHeader'
 import { IconSearch, IconBooks, IconFriends } from './layout/icons'
+import { useAppUI } from '../contexts/AppUIContext'
+import PostCard from './PostCard'
 
 type StatusFilter = BookStatus | 'all'
 const STATUS_LABELS: { id: StatusFilter; label: string }[] = [
@@ -26,6 +28,8 @@ interface Props {
   onRejectRequest: (requestId: string) => void
   onRemoveFriend: (friendUid: string) => void
   onLoadFriendBooks: (uid: string) => Promise<FriendShelf>
+  onLoadFriendFeed: () => Promise<Post[]>
+  onDeletePost: (postId: string) => Promise<void>
 }
 
 const BTN_SM =
@@ -74,6 +78,21 @@ function Avatar({ url, name, size }: { url?: string; name: string; size: 'sm' | 
   )
 }
 
+type MainView = 'feed' | 'friends'
+
+function seg(view: MainView, active: MainView, onClick: () => void, label: string) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex-1 sm:flex-none sm:px-6 py-1.5 rounded-md text-[13px] border-none cursor-pointer transition-colors duration-150 ${
+        active === view ? 'bg-surface text-ink font-medium shadow-card' : 'bg-transparent text-dim'
+      }`}
+    >
+      {label}
+    </button>
+  )
+}
+
 export default function FriendsTab({
   user,
   authLoading,
@@ -86,7 +105,28 @@ export default function FriendsTab({
   onRejectRequest,
   onRemoveFriend,
   onLoadFriendBooks,
+  onLoadFriendFeed,
+  onDeletePost,
 }: Props) {
+  const { openPublishPost, showToast } = useAppUI()
+  const queryClient = useQueryClient()
+  const [view, setView] = useState<MainView>('feed')
+
+  const feedQuery = useQuery({
+    queryKey: ['friendFeed'],
+    queryFn: onLoadFriendFeed,
+    enabled: view === 'feed' && !!user,
+  })
+  const feedPosts = feedQuery.data ?? []
+
+  const deletePostMutation = useMutation({
+    mutationFn: onDeletePost,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['friendFeed'] })
+      showToast('게시물이 삭제됐어요')
+    },
+  })
+
   const [emailInput, setEmailInput] = useState('')
   const [searchResult, setSearchResult] = useState<UserProfile | null | 'not-found' | 'self'>()
 
@@ -208,143 +248,191 @@ export default function FriendsTab({
 
   return (
     <div>
-      <PageHeader title="친구" meta={friends.length > 0 ? `${friends.length}명` : undefined} />
-      <div className="flex flex-col gap-6">
-        {/* 검색 */}
-        <div className="flex flex-col gap-2.5">
-          <div className="flex items-center gap-2 px-3 rounded-lg bg-surface border border-border focus-within:border-accent">
-            <span className="text-dim flex-shrink-0">
-              <IconSearch />
-            </span>
-            <input
-              type="email"
-              placeholder="친구의 이메일 주소 입력…"
-              value={emailInput}
-              onChange={(e) => {
-                setEmailInput(e.target.value)
-                setSearchResult(undefined)
-              }}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              className="flex-1 min-w-0 bg-transparent border-none text-ink py-[9px] text-base font-sans placeholder:text-dim focus:outline-none"
-            />
-            <span className="w-px self-stretch my-1.5 bg-border flex-shrink-0" />
-            <button
-              className="flex-shrink-0 bg-transparent border-none px-1 py-[9px] text-xs font-medium text-accent cursor-pointer disabled:text-dim disabled:cursor-not-allowed"
-              onClick={handleSearch}
-              disabled={searching || !emailInput.trim()}
-            >
-              {searching ? '검색중…' : '검색'}
-            </button>
-          </div>
-
-          {searchResult === 'not-found' && (
-            <div className="text-[13px] text-dim">해당 이메일로 가입된 계정을 찾을 수 없어요</div>
-          )}
-          {searchResult === 'self' && <div className="text-[13px] text-dim">내 계정이에요</div>}
-          {searchResult && searchResult !== 'not-found' && searchResult !== 'self' && (
-            <div className={`${LIST_CARD} ${LIST_ROW}`}>
-              <Person
-                photoURL={searchResult.photoURL}
-                displayName={searchResult.displayName}
-                email={searchResult.email}
-              />
-              {getRequestStatus(searchResult.uid) === 'friend' && <span className={STATUS_PILL}>친구</span>}
-              {getRequestStatus(searchResult.uid) === 'sent' && <span className={STATUS_PILL}>요청 보냄</span>}
-              {getRequestStatus(searchResult.uid) === 'incoming' && <span className={STATUS_PILL}>받은 요청 있음</span>}
-              {getRequestStatus(searchResult.uid) === 'none' && (
-                <button
-                  className={`${BTN_SM} flex-shrink-0`}
-                  onClick={() => sendRequestMutation.mutate(searchResult.uid)}
-                  disabled={sending}
-                >
-                  {sending ? '전송중…' : '친구 추가'}
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* 받은 요청 */}
-        {incoming.length > 0 && (
-          <div>
-            <div className={SECTION_LABEL}>받은 친구 요청 {incoming.length}</div>
-            <div className={LIST_CARD}>
-              {incoming.map((req) => (
-                <div key={req.id} className={LIST_ROW}>
-                  <Person
-                    photoURL={req.profile?.photoURL}
-                    displayName={req.profile?.displayName}
-                    email={req.profile?.email}
-                  />
-                  <div className="flex gap-1.5 flex-shrink-0">
-                    <button className={BTN_SM} onClick={() => onAcceptRequest(req.id)}>
-                      수락
-                    </button>
-                    <button
-                      className="bg-transparent text-danger border border-border px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-[13px] cursor-pointer transition-all duration-150 font-sans hover:bg-danger/10"
-                      onClick={() => onRejectRequest(req.id)}
-                    >
-                      거절
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+      <PageHeader title="친구" meta={view === 'friends' && friends.length > 0 ? `${friends.length}명` : undefined}>
+        {view === 'feed' && (
+          <button
+            onClick={openPublishPost}
+            className="text-xs sm:text-[13px] font-medium px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-ink text-bg border-none cursor-pointer hover:opacity-90"
+          >
+            + 발행
+          </button>
         )}
+      </PageHeader>
 
-        {/* 보낸 요청 대기중 */}
-        {outgoing.length > 0 && (
-          <div>
-            <div className={SECTION_LABEL}>보낸 요청 대기중 {outgoing.length}</div>
-            <div className={LIST_CARD}>
-              {outgoing.map((req) => (
-                <div key={req.id} className={LIST_ROW}>
-                  <Person
-                    photoURL={req.profile?.photoURL}
-                    displayName={req.profile?.displayName}
-                    email={req.profile?.email}
-                  />
-                  <span className={STATUS_PILL}>대기중</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* 친구 목록 */}
-        <div>
-          <div className={SECTION_LABEL}>친구</div>
-          {friends.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border bg-bg px-5 py-8 text-center text-sm text-dim">
-              아직 친구가 없어요
-              <br />
-              위에서 이메일로 친구를 찾아보세요
-            </div>
-          ) : (
-            <div className={LIST_CARD}>
-              {friends.map((f) => (
-                <div key={f.uid} className={LIST_ROW}>
-                  <Person photoURL={f.photoURL} displayName={f.displayName} email={f.email} />
-                  <div className="flex items-center gap-1 flex-shrink-0">
-                    <button className={BTN_SM_SECONDARY} onClick={() => handleViewFriend(f)}>
-                      책장 보기
-                    </button>
-                    <button
-                      className="bg-transparent text-danger border border-border px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-[13px] cursor-pointer transition-all duration-150 font-sans hover:bg-danger/10"
-                      onClick={() => {
-                        if (confirm(`${f.displayName || f.email}님을 친구 목록에서 삭제할까요?`)) onRemoveFriend(f.uid)
-                      }}
-                    >
-                      삭제
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+      <div className="flex gap-0.5 p-0.5 mb-5 rounded-[9px] bg-surface2 border border-border sm:w-fit">
+        {seg('feed', view, () => setView('feed'), '피드')}
+        {seg('friends', view, () => setView('friends'), '친구')}
       </div>
+
+      {view === 'feed' &&
+        (feedQuery.isPending ? (
+          <div className="text-center py-[60px] px-5 text-dim bg-surface border border-dashed border-border rounded-[10px]">
+            <p className="text-sm">불러오는 중…</p>
+          </div>
+        ) : feedPosts.length === 0 ? (
+          <div className="text-center py-[60px] px-5 text-dim bg-surface border border-dashed border-border rounded-[10px]">
+            <div className="w-11 h-11 mx-auto mb-3 rounded-full bg-surface2 flex items-center justify-center text-dim">
+              <IconFriends size={22} />
+            </div>
+            <h3 className="font-sans text-ink mb-1.5 text-[15px]">아직 발행된 게 없어요</h3>
+            <p className="text-sm">"+ 발행"으로 문장이나 책을 나눠보세요</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {feedPosts.map((post) => (
+              <PostCard
+                key={post.id}
+                post={post}
+                isOwn={post.authorUid === user.uid}
+                onDelete={() => {
+                  if (confirm('이 게시물을 삭제할까요?')) deletePostMutation.mutate(post.id)
+                }}
+              />
+            ))}
+          </div>
+        ))}
+
+      {view === 'friends' && (
+        <div className="flex flex-col gap-6">
+          {/* 검색 */}
+          <div className="flex flex-col gap-2.5">
+            <div className="flex items-center gap-2 px-3 rounded-lg bg-surface border border-border focus-within:border-accent">
+              <span className="text-dim flex-shrink-0">
+                <IconSearch />
+              </span>
+              <input
+                type="email"
+                placeholder="친구의 이메일 주소 입력…"
+                value={emailInput}
+                onChange={(e) => {
+                  setEmailInput(e.target.value)
+                  setSearchResult(undefined)
+                }}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                className="flex-1 min-w-0 bg-transparent border-none text-ink py-[9px] text-base font-sans placeholder:text-dim focus:outline-none"
+              />
+              <span className="w-px self-stretch my-1.5 bg-border flex-shrink-0" />
+              <button
+                className="flex-shrink-0 bg-transparent border-none px-1 py-[9px] text-xs font-medium text-accent cursor-pointer disabled:text-dim disabled:cursor-not-allowed"
+                onClick={handleSearch}
+                disabled={searching || !emailInput.trim()}
+              >
+                {searching ? '검색중…' : '검색'}
+              </button>
+            </div>
+
+            {searchResult === 'not-found' && (
+              <div className="text-[13px] text-dim">해당 이메일로 가입된 계정을 찾을 수 없어요</div>
+            )}
+            {searchResult === 'self' && <div className="text-[13px] text-dim">내 계정이에요</div>}
+            {searchResult && searchResult !== 'not-found' && searchResult !== 'self' && (
+              <div className={`${LIST_CARD} ${LIST_ROW}`}>
+                <Person
+                  photoURL={searchResult.photoURL}
+                  displayName={searchResult.displayName}
+                  email={searchResult.email}
+                />
+                {getRequestStatus(searchResult.uid) === 'friend' && <span className={STATUS_PILL}>친구</span>}
+                {getRequestStatus(searchResult.uid) === 'sent' && <span className={STATUS_PILL}>요청 보냄</span>}
+                {getRequestStatus(searchResult.uid) === 'incoming' && (
+                  <span className={STATUS_PILL}>받은 요청 있음</span>
+                )}
+                {getRequestStatus(searchResult.uid) === 'none' && (
+                  <button
+                    className={`${BTN_SM} flex-shrink-0`}
+                    onClick={() => sendRequestMutation.mutate(searchResult.uid)}
+                    disabled={sending}
+                  >
+                    {sending ? '전송중…' : '친구 추가'}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* 받은 요청 */}
+          {incoming.length > 0 && (
+            <div>
+              <div className={SECTION_LABEL}>받은 친구 요청 {incoming.length}</div>
+              <div className={LIST_CARD}>
+                {incoming.map((req) => (
+                  <div key={req.id} className={LIST_ROW}>
+                    <Person
+                      photoURL={req.profile?.photoURL}
+                      displayName={req.profile?.displayName}
+                      email={req.profile?.email}
+                    />
+                    <div className="flex gap-1.5 flex-shrink-0">
+                      <button className={BTN_SM} onClick={() => onAcceptRequest(req.id)}>
+                        수락
+                      </button>
+                      <button
+                        className="bg-transparent text-danger border border-border px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-[13px] cursor-pointer transition-all duration-150 font-sans hover:bg-danger/10"
+                        onClick={() => onRejectRequest(req.id)}
+                      >
+                        거절
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 보낸 요청 대기중 */}
+          {outgoing.length > 0 && (
+            <div>
+              <div className={SECTION_LABEL}>보낸 요청 대기중 {outgoing.length}</div>
+              <div className={LIST_CARD}>
+                {outgoing.map((req) => (
+                  <div key={req.id} className={LIST_ROW}>
+                    <Person
+                      photoURL={req.profile?.photoURL}
+                      displayName={req.profile?.displayName}
+                      email={req.profile?.email}
+                    />
+                    <span className={STATUS_PILL}>대기중</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 친구 목록 */}
+          <div>
+            <div className={SECTION_LABEL}>친구</div>
+            {friends.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-border bg-bg px-5 py-8 text-center text-sm text-dim">
+                아직 친구가 없어요
+                <br />
+                위에서 이메일로 친구를 찾아보세요
+              </div>
+            ) : (
+              <div className={LIST_CARD}>
+                {friends.map((f) => (
+                  <div key={f.uid} className={LIST_ROW}>
+                    <Person photoURL={f.photoURL} displayName={f.displayName} email={f.email} />
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <button className={BTN_SM_SECONDARY} onClick={() => handleViewFriend(f)}>
+                        책장 보기
+                      </button>
+                      <button
+                        className="bg-transparent text-danger border border-border px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-[13px] cursor-pointer transition-all duration-150 font-sans hover:bg-danger/10"
+                        onClick={() => {
+                          if (confirm(`${f.displayName || f.email}님을 친구 목록에서 삭제할까요?`))
+                            onRemoveFriend(f.uid)
+                        }}
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
