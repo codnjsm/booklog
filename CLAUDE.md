@@ -112,8 +112,16 @@ firebase deploy --only hosting     # 프로젝트는 .firebaserc의 default 사�
 firebase deploy --only functions
 ```
 
-## 커밋 주의
+## 코드 포맷
 
-IDE 저장 시 자동 포맷터가 파일 전체를 재포맷하는 경우가 있다(작은따옴표→큰따옴표, 세미콜론 추가 등).
-이 저장소 스타일은 **작은따옴표 + 세미콜론 없음**이다. 커밋 전 `git diff --stat`으로 변경 범위가
-의도한 만큼인지 확인할 것 — 몇 줄 수정이 수백 줄 변경으로 커밋된 적이 있다.
+Prettier가 포맷 기준이다 (`.prettierrc`: 작은따옴표, 세미콜론 없음, printWidth 120).
+편집기의 자동 포맷도 이 설정을 따르므로 저장할 때마다 스타일이 뒤집히지 않는다.
+
+```bash
+npm run format         # 전체 포맷
+npm run format:check   # 포맷 위반만 확인
+```
+
+이전에는 설정이 없어서 편집기가 파일 전체를 재포맷했고, 5줄 수정이 236줄 커밋으로
+번진 적이 있다. 그래서 지금도 커밋 전 `git diff --stat`으로 변경 범위가 의도한
+만큼인지 한 번 보는 습관은 유지할 것.
