@@ -94,6 +94,13 @@ export const deletePost = async (postId: string): Promise<void> => {
   await call({ postId })
 }
 
+/** 책 페이지 사진에서 텍스트를 인식한다(OCR). base64Image는 데이터 URI 접두어 없는 순수 base64. */
+export const ocrBookPage = async (base64Image: string): Promise<string> => {
+  const call = httpsCallable<{ base64Image: string }, string>(functions, 'ocrBookPage')
+  const res = await call({ base64Image })
+  return res.data
+}
+
 export const upsertUserProfile = async (
   uid: string,
   profile: { email: string; displayName: string; photoURL: string },

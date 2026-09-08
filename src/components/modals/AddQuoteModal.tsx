@@ -2,6 +2,8 @@ import { useRef, useState } from 'react'
 import Modal from './Modal'
 import type { Book, Quote } from '../../types'
 import { useAppUI } from '../../contexts/AppUIContext'
+import { ocrBookPage } from '../../firebase'
+import { fileToResizedBase64 } from '../../lib/image'
 import HighlightedText, { mergeRanges } from '../HighlightedText'
 
 interface Props {
@@ -51,6 +53,8 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
       : [{ text: '', note: '' }],
   )
   const textRefs = useRef<(HTMLTextAreaElement | null)[]>([])
+  const photoInputRef = useRef<HTMLInputElement>(null)
+  const [ocrLoading, setOcrLoading] = useState(false)
 
   const updateEntry = (i: number, field: 'text' | 'note', val: string) =>
     setEntries((prev) => prev.map((e, idx) => (idx === i ? { ...e, [field]: val } : e)))
@@ -74,6 +78,30 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
     setEntries((prev) => prev.map((e, idx) => (idx === i ? { ...e, highlights: undefined } : e)))
   const addEntry = () => setEntries((prev) => [...prev, { text: '', note: '' }])
   const removeEntry = (i: number) => setEntries((prev) => prev.filter((_, idx) => idx !== i))
+
+  const handlePhotoSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+
+    setOcrLoading(true)
+    try {
+      const base64 = await fileToResizedBase64(file)
+      const text = (await ocrBookPage(base64)).trim()
+      if (!text) {
+        showToast('사진에서 문장을 찾지 못했어요')
+        return
+      }
+      // 새 항목 하나가 아직 비어있으면 거기 채우고, 아니면 항목을 추가한다.
+      setEntries((prev) =>
+        prev.length === 1 && !prev[0].text.trim() ? [{ ...prev[0], text }] : [...prev, { text, note: '' }],
+      )
+    } catch {
+      showToast('사진에서 텍스트를 읽어오지 못했어요')
+    } finally {
+      setOcrLoading(false)
+    }
+  }
 
   const handleSave = () => {
     const valid = entries.filter((e) => e.text.trim())
@@ -199,9 +227,26 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
           ))}
 
           {!editId && (
-            <button type="button" className={BTN_SMALL_SECONDARY} onClick={addEntry}>
-              + 문장 추가
-            </button>
+            <div className="flex gap-2 flex-wrap">
+              <button type="button" className={BTN_SMALL_SECONDARY} onClick={addEntry}>
+                + 문장 추가
+              </button>
+              <button
+                type="button"
+                className={BTN_SMALL_SECONDARY}
+                onClick={() => photoInputRef.current?.click()}
+                disabled={ocrLoading}
+              >
+                {ocrLoading ? '인식 중…' : '사진에서 가져오기'}
+              </button>
+              <input
+                ref={photoInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoSelected}
+                className="hidden"
+              />
+            </div>
           )}
         </div>
         <div className={MODAL_ACTIONS}>

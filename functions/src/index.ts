@@ -3,6 +3,7 @@ import { defineSecret } from 'firebase-functions/params'
 import { initializeApp } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
 import { getAppCheck } from 'firebase-admin/app-check'
+import { ImageAnnotatorClient } from '@google-cloud/vision'
 import type { Request, Response } from 'express'
 
 initializeApp()
@@ -316,3 +317,37 @@ export const deletePost = onCall({ region: 'asia-northeast3', enforceAppCheck: t
   }
   return deletePostHandler(req.auth.uid, postId)
 })
+
+// 함수 재사용 시(콜드 스타트가 아닐 때) 클라이언트를 다시 만들지 않도록 모듈 스코프에 둔다.
+const visionClient = new ImageAnnotatorClient()
+
+/** base64 하나당 최대 6MB. 클라이언트가 이미 1600px로 줄여 보내므로 정상 요청은 이 값에 한참 못 미친다. */
+const MAX_OCR_IMAGE_BASE64_LENGTH = 6_000_000
+
+export async function ocrBookPageHandler(base64Image: string): Promise<string> {
+  if (!base64Image || base64Image.length > MAX_OCR_IMAGE_BASE64_LENGTH) {
+    throw new HttpsError('invalid-argument', '이미지 데이터가 없거나 너무 큽니다')
+  }
+
+  const [result] = await visionClient.documentTextDetection({
+    image: { content: Buffer.from(base64Image, 'base64') },
+  })
+  return result.fullTextAnnotation?.text ?? ''
+}
+
+/** 책 페이지 사진에서 텍스트를 인식한다(OCR). 인식된 문단 텍스트만 돌려주고 이미지 자체는 저장하지 않는다. */
+export const ocrBookPage = onCall(
+  { region: 'asia-northeast3', enforceAppCheck: true, timeoutSeconds: 60 },
+  async (req) => {
+    if (!req.auth) {
+      throw new HttpsError('unauthenticated', '로그인이 필요합니다')
+    }
+    const base64Image = String(req.data?.base64Image ?? '')
+    try {
+      return await ocrBookPageHandler(base64Image)
+    } catch (err) {
+      if (err instanceof HttpsError) throw err
+      throw new HttpsError('internal', '텍스트 인식 중 오류가 발생했습니다')
+    }
+  },
+)
