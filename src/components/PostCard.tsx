@@ -71,7 +71,7 @@ export default function PostCard({ post, isOwn, onDelete }: Props) {
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-[13px] font-semibold text-ink truncate">{attachment.bookTitle}</div>
+            <div className="text-[13px] font-medium text-ink truncate">{attachment.bookTitle}</div>
             <div className="text-xs sm:text-[13px] text-dim truncate mt-0.5">{attachment.bookAuthor}</div>
             <span
               className={`inline-block text-[10px] px-1.5 py-0.5 rounded mt-1 ${STATUS_BADGE[attachment.bookStatus].cls}`}

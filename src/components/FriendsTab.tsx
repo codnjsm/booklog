@@ -37,14 +37,6 @@ const BTN_SM_SECONDARY =
 const STATUS_PILL =
   'text-xs sm:text-[13px] text-dim bg-bg border border-border rounded-full px-2.5 py-[3px] whitespace-nowrap flex-shrink-0'
 
-function chipClass(isActive: boolean) {
-  const base =
-    'px-3 py-[9px] border rounded-full text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans'
-  return isActive
-    ? `${base} bg-accentsoft border-accent text-accent`
-    : `${base} bg-surface border-border text-dim hover:text-ink`
-}
-
 const SECTION_LABEL = 'text-xs sm:text-[13px] text-dim mb-2'
 const LIST_CARD = 'bg-surface border border-border rounded-xl'
 const LIST_ROW = 'flex items-center gap-3 px-4 py-3 border-b border-surface2 last:border-b-0'
@@ -165,28 +157,34 @@ export default function FriendsTab({
     const filtered = books.filter((b) => statusFilter === 'all' || b.status === statusFilter)
     return (
       <div>
-        <div className="flex items-center gap-2.5 mb-4">
-          <button
-            className="bg-transparent border-none text-ink text-[28px] leading-none cursor-pointer px-1 flex items-center"
-            onClick={() => {
-              setViewingFriend(null)
-              friendBooksQuery.reset()
-            }}
-          >
-            ‹
-          </button>
-          <div className="flex items-center gap-2 text-[15px] font-semibold text-ink">
-            <Avatar url={viewingFriend.photoURL} name={viewingFriend.displayName || viewingFriend.email} size="sm" />
-            <span>{viewingFriend.displayName || viewingFriend.email}의 책장</span>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+          <div className="flex items-center gap-2.5">
+            <button
+              className="bg-transparent border-none text-ink text-[28px] leading-none cursor-pointer px-1 flex items-center"
+              onClick={() => {
+                setViewingFriend(null)
+                friendBooksQuery.reset()
+              }}
+            >
+              ‹
+            </button>
+            <div className="flex items-center gap-2 text-[15px] font-semibold text-ink">
+              <Avatar url={viewingFriend.photoURL} name={viewingFriend.displayName || viewingFriend.email} size="sm" />
+              <span>{viewingFriend.displayName || viewingFriend.email}의 책장</span>
+            </div>
           </div>
-        </div>
-        <div className="flex justify-between gap-3 items-center w-full mb-4">
-          <div className="flex gap-1.5 flex-wrap">
+          <div className="flex gap-0.5 p-0.5 rounded-[9px] bg-surface2 border border-border sm:self-auto">
             {STATUS_LABELS.map((s) => {
               const count = s.id === 'all' ? books.length : books.filter((b) => b.status === s.id).length
               return (
-                <button key={s.id} className={chipClass(statusFilter === s.id)} onClick={() => setStatusFilter(s.id)}>
-                  {s.label} ({count})
+                <button
+                  key={s.id}
+                  onClick={() => setStatusFilter(s.id)}
+                  className={`flex-1 sm:flex-none sm:px-4 py-1.5 rounded-md text-[13px] sm:text-sm border-none cursor-pointer transition-colors duration-150 ${
+                    statusFilter === s.id ? 'bg-surface text-ink font-medium shadow-card' : 'bg-transparent text-dim'
+                  }`}
+                >
+                  {s.label} <span className="text-dim">{count}</span>
                 </button>
               )
             })}
@@ -222,7 +220,7 @@ export default function FriendsTab({
         {view === 'feed' && (
           <button
             onClick={openPublishPost}
-            className="text-[13px] sm:text-sm font-medium px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-ink text-bg border-none cursor-pointer hover:opacity-90"
+            className="text-[13px] sm:text-sm font-medium px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover"
           >
             + 공유하기
           </button>
@@ -230,7 +228,7 @@ export default function FriendsTab({
         {view === 'friends' && (
           <button
             onClick={openAddFriend}
-            className="text-[13px] sm:text-sm font-medium px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-ink text-bg border-none cursor-pointer hover:opacity-90"
+            className="text-[13px] sm:text-sm font-medium px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover"
           >
             + 친구 추가
           </button>
@@ -322,7 +320,6 @@ export default function FriendsTab({
 
           {/* 친구 목록 */}
           <div>
-            <div className={SECTION_LABEL}>친구</div>
             {friends.length === 0 ? (
               <div className="rounded-xl border border-dashed border-border bg-bg px-5 py-8 text-center text-sm text-dim">
                 아직 친구가 없어요

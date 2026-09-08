@@ -79,18 +79,18 @@ export default function BookDetailModal({
 
   const period = `${fmt(book.createdAt)} 담아둠`
 
-  // 표지 옆 세로 공간을 채운다. 모바일은 칼럼이 좁아 3칸이 겹치므로 2칸으로 접는다.
+  // 표지 옆 세로 공간을 채운다. 모바일은 칼럼이 좁아 3칸이 겹치므로 항상 2칸으로 접는다.
   const statsGrid =
     stats.length > 0 ? (
-      <div
-        // 모바일에서는 STARTED가 숨겨져 완독(FINISHED+DAYS)만 2칸, 읽는중(DAYS만)은 1칸이 된다.
-        className={`grid ${stats.length === 3 ? 'grid-cols-2' : 'grid-cols-1'} sm:grid-cols-3 gap-3 py-3 border-y border-border`}
-      >
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 py-3 border-y border-border">
         {stats.map((s) => (
           <div
             key={s.label}
-            // STARTED는 화면이 좁으면 FINISHED/DAYS에 밀려 줄바꿈이 어색해져서 PC(sm 이상)에서만 보여준다.
-            className={`flex-col items-center gap-1 text-center ${s.label === 'STARTED' ? 'hidden sm:flex' : 'flex'}`}
+            // 완독(STARTED+FINISHED+DAYS)일 때만 STARTED가 FINISHED/DAYS에 밀려 줄바꿈이 어색해지므로
+            // PC(sm 이상)에서만 보여준다. 읽는중(STARTED+DAYS 2개)은 모바일에서도 그대로 보여준다.
+            className={`flex flex-col items-center gap-1 text-center ${
+              s.label === 'STARTED' && stats.length === 3 ? 'hidden sm:flex' : ''
+            }`}
           >
             <span className={LABEL}>{s.label}</span>
             <span className="font-mono text-[13px] text-ink">{s.value}</span>
@@ -137,7 +137,7 @@ export default function BookDetailModal({
                   />
                 ) : (
                   <div className="w-full aspect-[2/3] rounded-md bg-surface2 border border-border flex items-center justify-center p-3">
-                    <span className="text-xs sm:text-[13px] font-semibold leading-snug text-center text-ink/70">
+                    <span className="text-xs sm:text-[13px] font-medium leading-snug text-center text-ink/70">
                       {book.title}
                     </span>
                   </div>
@@ -156,7 +156,7 @@ export default function BookDetailModal({
                     {status.label}
                   </span>
                 </div>
-                <h3 id={TITLE_ID} className="text-lg sm:text-[22px] font-semibold leading-snug tracking-[-0.01em]">
+                <h3 id={TITLE_ID} className="text-lg sm:text-[22px] font-medium leading-snug tracking-[-0.01em]">
                   {book.title}
                 </h3>
                 <div className="text-xs sm:text-[13px] text-dim">

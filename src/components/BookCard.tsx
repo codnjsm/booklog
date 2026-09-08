@@ -47,7 +47,7 @@ export default function BookCard({ book, quoteCount, onClick }: Props) {
             <span className="sm:hidden text-dim">
               <IconBooks size={26} />
             </span>
-            <div className="hidden sm:block text-xs sm:text-[13px] font-semibold mb-1.5 text-ink/70 leading-snug">
+            <div className="hidden sm:block text-xs sm:text-[13px] font-medium mb-1.5 text-ink/70 leading-snug">
               {book.title}
             </div>
             <div className="hidden sm:block text-xs sm:text-[13px] text-dim">{book.author}</div>
@@ -71,7 +71,7 @@ export default function BookCard({ book, quoteCount, onClick }: Props) {
             </span>
           )}
         </div>
-        <div className="text-[15px] sm:text-base font-semibold mb-1 leading-[1.3] flex items-center line-clamp-2">
+        <div className="text-[15px] sm:text-base font-medium mb-1 leading-[1.3] flex items-center line-clamp-2">
           {book.title}
           {book.isPrivate && (
             <span className="text-dim ml-1 inline-flex items-center">

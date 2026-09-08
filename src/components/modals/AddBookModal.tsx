@@ -126,7 +126,7 @@ export default function AddBookModal({ onClose, onSelectBook, onManualEntry }: P
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-sm mb-0.5">{title}</div>
+                      <div className="font-medium text-sm mb-0.5">{title}</div>
                       <div className="text-xs sm:text-[13px] text-dim">{author}</div>
                       {year && <div className="text-xs sm:text-[13px] text-dim mt-1">{year}</div>}
                     </div>

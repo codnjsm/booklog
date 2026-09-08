@@ -74,7 +74,7 @@ export default function BooksTab({ books, quotes }: { books: Book[]; quotes: Quo
       <PageHeader title="서재" meta={headerMeta}>
         <button
           onClick={openAddBook}
-          className="text-[13px] sm:text-sm font-medium px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-ink text-bg border-none cursor-pointer hover:opacity-90"
+          className="text-[13px] sm:text-sm font-medium px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover"
         >
           + 책 추가
         </button>

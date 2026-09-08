@@ -35,7 +35,7 @@ export default function CollectionTab({ quotes, books, words, onDeleteQuote, onA
         {view === 'quotes' && (
           <button
             onClick={() => openAddQuote()}
-            className="text-[13px] sm:text-sm font-medium px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-ink text-bg border-none cursor-pointer hover:opacity-90"
+            className="text-[13px] sm:text-sm font-medium px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover"
           >
             + 문장 저장
           </button>

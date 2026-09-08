@@ -79,7 +79,7 @@ function Cover({ book, className = '' }: { book: Book; className?: string }) {
   }
   return (
     <div className={`rounded-md bg-surface2 border border-border flex items-center justify-center p-2.5 ${className}`}>
-      <span className="text-xs sm:text-[13px] font-semibold leading-snug text-center text-ink/70">{book.title}</span>
+      <span className="text-xs sm:text-[13px] font-medium leading-snug text-center text-ink/70">{book.title}</span>
     </div>
   )
 }
@@ -153,14 +153,11 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
               {paceText && <div className="text-xs sm:text-[13px] text-dim">{paceText}</div>}
             </>
           ) : (
-            <div className="flex items-center gap-3">
-              <span className="text-xs sm:text-[13px] text-dim">올해 목표를 아직 안 정했어요</span>
-              <button
-                onClick={() => changeTab('records')}
-                className="text-[13px] sm:text-sm text-accent bg-transparent border-none cursor-pointer p-0"
-              >
-                목표 설정
-              </button>
+            <div className="flex flex-col gap-1 py-2">
+              <span className="text-xs sm:text-[15px] text-ink">올해 목표를 아직 안 정했어요</span>
+              <span className="text-xs sm:text-[13px] text-dim leading-relaxed">
+                <span className="text-ink">기록</span> 탭에서 목표를 설정해보세요
+              </span>
             </div>
           )}
         </div>
@@ -195,7 +192,7 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
               <span className="text-xs sm:text-[13px] text-dim">현재 읽고있는 책이 없습니다</span>
               <button
                 onClick={() => changeTab('books')}
-                className="text-[13px] sm:text-sm font-medium px-3 py-2 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover"
+                className="text-[13px] sm:text-sm font-medium px-3 py-1.5 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover"
               >
                 서재에서 고르기
               </button>
@@ -218,7 +215,7 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
                       <div className="flex-1 min-w-0">
                         <button
                           onClick={() => openBookDetail(book.id)}
-                          className="block w-full text-left bg-transparent border-none p-0 cursor-pointer text-[17px] font-semibold leading-snug tracking-[-0.01em] text-ink truncate"
+                          className="block w-full text-left bg-transparent border-none p-0 cursor-pointer text-[17px] font-medium leading-snug tracking-[-0.01em] text-ink truncate"
                         >
                           {book.title}
                         </button>
@@ -234,13 +231,13 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
                     <div className="flex justify-end gap-2">
                       <button
                         onClick={() => openAddQuote(book.id)}
-                        className="text-[13px] sm:text-sm font-medium px-3 py-2 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover"
+                        className="text-[13px] sm:text-sm font-medium px-3 py-1.5 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover"
                       >
                         문장 저장
                       </button>
                       <button
                         onClick={() => onFinishBook(book.id)}
-                        className="text-[13px] sm:text-sm px-3 py-2 rounded-lg bg-surface text-ink border border-border cursor-pointer hover:bg-surface2"
+                        className="text-[13px] sm:text-sm px-3 py-1.5 rounded-lg bg-surface text-ink border border-border cursor-pointer hover:bg-surface2"
                       >
                         완독 처리
                       </button>
@@ -285,14 +282,18 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
               </button>
             </>
           ) : (
-            <div className="flex-1 flex flex-col justify-center gap-2 py-2">
-              <span className="text-xs sm:text-[13px] text-dim leading-relaxed">아직 모은 문장이 없어요</span>
-              <button
-                onClick={() => openAddQuote()}
-                className="self-start text-[13px] sm:text-sm font-medium px-3 py-2 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover"
-              >
-                문장 저장하기
-              </button>
+            <div className="flex-1 flex flex-col items-center justify-center text-center gap-1 py-2">
+              <span className="text-xs sm:text-[15px] text-ink">아직 모은 문장이 없어요</span>
+              {/* 플로팅 + 버튼은 모바일에만 있다(HomeFab) — PC에서는 모음 탭 헤더의 버튼을 안내한다 */}
+              <span className="sm:hidden inline-flex items-center gap-1 text-xs text-dim leading-relaxed">
+                <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[var(--fab-soft)] text-accent text-[11px] leading-none">
+                  +
+                </span>
+                버튼을 눌러 마음에 남은 문장을 저장해보세요
+              </span>
+              <span className="hidden sm:inline text-[13px] text-dim leading-relaxed">
+                <span className="text-ink">모음</span> 탭에서 마음에 남은 문장을 저장해보세요
+              </span>
             </div>
           )}
         </div>

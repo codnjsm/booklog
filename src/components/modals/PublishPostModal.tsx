@@ -87,7 +87,7 @@ export default function PublishPostModal({ books, quotes, onClose, onPublish, on
     <Modal onClose={onClose} labelledBy={TITLE_ID}>
       <div className={MODAL_PANEL}>
         <div className={MODAL_HEADER}>
-          <h3 id={TITLE_ID} className="font-sans text-base font-semibold">
+          <h3 id={TITLE_ID} className="font-sans text-base font-medium">
             친구에게 공유하기
           </h3>
           <button className={MODAL_CLOSE} onClick={onClose} aria-label="닫기">
@@ -151,15 +151,15 @@ export default function PublishPostModal({ books, quotes, onClose, onPublish, on
                           <span className="text-[9px] text-dim text-center px-0.5 leading-tight">{b.title}</span>
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-[13px] font-semibold text-ink truncate">{b.title}</div>
+                      <div className="self-center flex-1 min-w-0">
+                        <div className="text-[13px] font-medium text-ink truncate">{b.title}</div>
                         <div className="text-xs sm:text-[13px] text-dim truncate mt-0.5">{b.author}</div>
-                        <span
-                          className={`inline-block text-[10px] px-1.5 py-0.5 rounded mt-1 ${STATUS_BADGE[b.status].cls}`}
-                        >
-                          {STATUS_BADGE[b.status].label}
-                        </span>
                       </div>
+                      <span
+                        className={`self-center flex-shrink-0 text-[10px] px-1.5 py-0.5 rounded ${STATUS_BADGE[b.status].cls}`}
+                      >
+                        {STATUS_BADGE[b.status].label}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -195,7 +195,7 @@ export default function PublishPostModal({ books, quotes, onClose, onPublish, on
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-[13px] font-semibold text-ink truncate">{pickedBook.title}</div>
+                      <div className="text-[13px] font-medium text-ink truncate">{pickedBook.title}</div>
                       <div className="text-xs sm:text-[13px] text-dim truncate mt-0.5">{pickedBook.author}</div>
                     </div>
                   </div>
