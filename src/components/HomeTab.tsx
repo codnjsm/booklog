@@ -63,7 +63,7 @@ function pickGreeting(name: string | undefined) {
 }
 
 const CARD = 'bg-surface border border-border rounded-xl'
-const LABEL = 'font-mono text-[10px] tracking-[0.09em] text-dim'
+const LABEL = 'font-mono text-[10px] sm:text-[12px] tracking-[0.09em] text-dim'
 
 function Cover({ book, className = '' }: { book: Book; className?: string }) {
   const [err, setErr] = useState(false)

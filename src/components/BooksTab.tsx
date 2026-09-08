@@ -104,7 +104,7 @@ export default function BooksTab({ books, quotes }: { books: Book[]; quotes: Quo
             placeholder="제목 또는 저자 검색…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 min-w-0 bg-transparent border-none text-ink py-[9px] text-base font-sans placeholder:text-dim focus:outline-none"
+            className="flex-1 min-w-0 bg-transparent border-none text-ink py-[9px] text-[13px] font-sans placeholder:text-dim focus:outline-none"
           />
           <span className="w-px self-stretch my-1.5 bg-border flex-shrink-0" />
           <select

@@ -223,7 +223,7 @@ export default function FriendsTab({
             onClick={openPublishPost}
             className="text-xs sm:text-[13px] font-medium px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-ink text-bg border-none cursor-pointer hover:opacity-90"
           >
-            + 발행
+            + 공유하기
           </button>
         )}
         {view === 'friends' && (
@@ -251,8 +251,8 @@ export default function FriendsTab({
             <div className="w-11 h-11 mx-auto mb-3 rounded-full bg-surface2 flex items-center justify-center text-dim">
               <IconFriends size={22} />
             </div>
-            <h3 className="font-sans text-ink mb-1.5 text-[15px]">아직 발행된 게 없어요</h3>
-            <p className="text-sm">"+ 발행"으로 문장이나 책을 나눠보세요</p>
+            <h3 className="font-sans text-ink mb-1.5 text-[15px]">아직 공유한 게 없어요</h3>
+            <p className="text-sm">마음에 남은 문장이나 책을 친구에게 공유해보세요</p>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
@@ -339,7 +339,7 @@ export default function FriendsTab({
                     placeholder="이름 또는 이메일로 찾기…"
                     value={friendFilter}
                     onChange={(e) => setFriendFilter(e.target.value)}
-                    className="flex-1 min-w-0 bg-transparent border-none text-ink py-[9px] text-base font-sans placeholder:text-dim focus:outline-none"
+                    className="flex-1 min-w-0 bg-transparent border-none text-ink py-[9px] text-[13px] font-sans placeholder:text-dim focus:outline-none"
                   />
                 </div>
                 {filteredFriends.length === 0 ? (

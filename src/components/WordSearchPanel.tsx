@@ -66,7 +66,7 @@ export default function WordSearchPanel({ words, onAddWord }: Props) {
           value={query}
           onChange={(e) => handleInput(e.target.value)}
           autoComplete="off"
-          className="flex-1 min-w-0 bg-transparent border-none text-ink py-[9px] text-base font-sans placeholder:text-dim focus:outline-none"
+          className="flex-1 min-w-0 bg-transparent border-none text-ink py-[9px] text-[13px] font-sans placeholder:text-dim focus:outline-none"
         />
         {loading && <span className="font-mono text-[11px] text-dim flex-shrink-0">검색중…</span>}
         {!loading && isSuccess && (

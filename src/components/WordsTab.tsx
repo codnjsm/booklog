@@ -16,7 +16,9 @@ export default function WordsTab({ words, onAddWord, onDeleteWord }: Props) {
       <WordSearchPanel words={words} onAddWord={onAddWord} />
 
       <div className="flex items-center gap-2.5">
-        <span className="font-mono text-[10px] tracking-[0.09em] text-dim">SAVED WORDS {words.length}</span>
+        <span className="font-mono text-[10px] sm:text-[12px] tracking-[0.09em] text-dim">
+          SAVED WORDS {words.length}
+        </span>
         {words.some((w) => isThisWeek(w.createdAt)) && (
           <span className="inline-flex items-center gap-1.5 text-[11px] text-dim">
             <span className="w-4 h-2 rounded-sm bg-highlight" />

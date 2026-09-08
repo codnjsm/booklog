@@ -9,7 +9,7 @@ interface Props {
 }
 
 const FORM_INPUT =
-  'w-full bg-bg border border-border text-ink px-3 py-2 rounded-[7px] text-base font-sans placeholder:text-dim placeholder:opacity-50 focus:outline-none focus:border-accent'
+  'w-full bg-bg border border-border text-ink px-3 py-2 rounded-[7px] text-[13px] font-sans placeholder:text-dim placeholder:opacity-50 focus:outline-none focus:border-accent'
 const BTN =
   'bg-ink text-bg border-none px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg text-xs sm:text-[13px] cursor-pointer transition-all duration-150 font-sans hover:opacity-90'
 const BTN_SECONDARY =

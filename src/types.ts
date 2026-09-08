@@ -87,7 +87,7 @@ export interface FriendShelf {
   readingGoal: number
 }
 
-/** 발행(게시물)의 첨부 — createPost 호출 시 서버가 만들어주는 스냅샷 모양과 같다. */
+/** 게시물의 첨부 — createPost 호출 시 서버가 만들어주는 스냅샷 모양과 같다. */
 export type PostAttachment =
   | {
       kind: 'quote'

@@ -19,10 +19,12 @@ const MODAL_BODY = 'px-[18px] py-3.5 sm:px-6 sm:py-[22px]'
 
 export default function AddWordModal({ words, onClose, onAddWord }: Props) {
   return (
-    <Modal onClose={onClose}>
+    <Modal onClose={onClose} labelledBy="add-word-modal-title">
       <div className={MODAL_PANEL}>
         <div className={MODAL_HEADER}>
-          <h3 className="font-sans text-base font-semibold">단어 저장</h3>
+          <h3 id="add-word-modal-title" className="font-sans text-base font-semibold">
+            단어 저장
+          </h3>
           <button className={MODAL_CLOSE} onClick={onClose} aria-label="닫기">
             ×
           </button>

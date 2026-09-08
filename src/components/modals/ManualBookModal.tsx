@@ -49,10 +49,17 @@ const MODAL_CLOSE = 'bg-transparent border-none text-dim text-lg cursor-pointer 
 const MODAL_BODY = 'px-[18px] py-3.5 sm:px-6 sm:py-[22px] text-sm sm:text-[15px]'
 const MODAL_ACTIONS = 'flex gap-2 justify-end px-[18px] py-3 sm:px-6 sm:py-4 border-t border-border'
 const FORM_GROUP = 'mb-3.5'
-const FORM_LABEL = 'flex text-xs text-dim mb-1.5 uppercase tracking-[.05em]'
+const FORM_LABEL = 'flex text-sm mb-1.5 uppercase tracking-[.05em] pl-2'
 const FORM_INPUT =
-  'w-full bg-bg border border-border text-ink px-3 py-2 rounded-[7px] text-base font-sans placeholder:text-dim placeholder:opacity-50 focus:outline-none focus:border-accent'
-const FORM_TEXTAREA = `${FORM_INPUT} resize-y min-h-[90px] leading-[1.6]`
+  'w-full bg-bg border border-border text-ink px-3 py-2 rounded-[7px] text-[13px] font-sans placeholder:text-dim placeholder:opacity-50 focus:outline-none focus:border-accent'
+const FORM_TEXTAREA = `${FORM_INPUT} resize-none min-h-[90px] max-h-[500px] overflow-y-auto leading-[1.6]`
+
+/** 최소 높이는 유지하되 내용이 길어지면 500px까지 늘어나고, 그 이상은 내부 스크롤로 처리한다. */
+function autoResizeTextarea(el: HTMLTextAreaElement | null) {
+  if (!el) return
+  el.style.height = 'auto'
+  el.style.height = `${Math.min(el.scrollHeight, 500)}px`
+}
 const BTN =
   'bg-ink text-bg border-none px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg text-xs sm:text-[13px] cursor-pointer transition-all duration-150 font-sans hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed'
 const BTN_SECONDARY =
@@ -86,10 +93,12 @@ export default function ManualBookModal({ prefill, editId, books, onClose, onSav
   }
 
   return (
-    <Modal onClose={onClose}>
+    <Modal onClose={onClose} labelledBy="manual-book-modal-title">
       <div className={MODAL_PANEL}>
         <div className={MODAL_HEADER}>
-          <h3 className="font-sans text-base font-semibold">{editId ? '책 편집' : '책 추가'}</h3>
+          <h3 id="manual-book-modal-title" className="font-sans text-base font-semibold">
+            {editId ? '책 편집' : '책 추가'}
+          </h3>
           <button className={MODAL_CLOSE} onClick={onClose} aria-label="닫기">
             ×
           </button>
@@ -183,6 +192,7 @@ export default function ManualBookModal({ prefill, editId, books, onClose, onSav
           <div className={FORM_GROUP}>
             <label className={FORM_LABEL}>독후감 / 메모</label>
             <textarea
+              ref={(el) => autoResizeTextarea(el)}
               placeholder="이 책에 대한 생각을 자유롭게 적어보세요…"
               value={review}
               onChange={(e) => setReview(e.target.value)}

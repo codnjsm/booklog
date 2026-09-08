@@ -63,10 +63,12 @@ export default function AddFriendModal({ user, friends, incoming, outgoing, onSe
   }
 
   return (
-    <Modal onClose={onClose}>
+    <Modal onClose={onClose} labelledBy="add-friend-modal-title">
       <div className={MODAL_PANEL}>
         <div className={MODAL_HEADER}>
-          <h3 className="font-sans text-base font-semibold">친구 추가</h3>
+          <h3 id="add-friend-modal-title" className="font-sans text-base font-semibold">
+            친구 추가
+          </h3>
           <button className={MODAL_CLOSE} onClick={onClose} aria-label="닫기">
             ×
           </button>
@@ -86,7 +88,7 @@ export default function AddFriendModal({ user, friends, incoming, outgoing, onSe
               }}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               autoFocus
-              className="flex-1 min-w-0 bg-transparent border-none text-ink py-[9px] text-base font-sans placeholder:text-dim focus:outline-none"
+              className="flex-1 min-w-0 bg-transparent border-none text-ink py-[9px] text-[13px] font-sans placeholder:text-dim focus:outline-none"
             />
             <span className="w-px self-stretch my-1.5 bg-border flex-shrink-0" />
             <button

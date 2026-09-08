@@ -3,9 +3,11 @@ import { useEffect, useRef, type ReactNode } from 'react'
 interface Props {
   onClose: () => void
   children: ReactNode
+  /** 이 모달의 제목 역할을 하는 요소의 id. 스크린리더가 모달을 무엇으로 부를지 정한다. */
+  labelledBy?: string
 }
 
-export default function Modal({ onClose, children }: Props) {
+export default function Modal({ onClose, children, labelledBy }: Props) {
   const boxRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -70,6 +72,9 @@ export default function Modal({ onClose, children }: Props) {
     <div className="fixed inset-0 bg-black/70 z-[100] backdrop-blur-sm touch-none" onClick={close}>
       <div
         ref={boxRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={labelledBy}
         className="absolute inset-x-0 top-0 h-full flex items-center justify-center p-4 sm:p-5"
         onClick={close}
       >

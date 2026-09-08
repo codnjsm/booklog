@@ -38,7 +38,7 @@ export default function QuotesTab({ quotes, books, onDeleteQuote }: Props) {
           placeholder="문장 · 책 · 저자 검색…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 min-w-0 bg-transparent border-none text-ink py-[9px] text-base font-sans placeholder:text-dim focus:outline-none"
+          className="flex-1 min-w-0 bg-transparent border-none text-ink py-[9px] text-[13px] font-sans placeholder:text-dim focus:outline-none"
         />
       </div>
       {filtered.length === 0 ? (

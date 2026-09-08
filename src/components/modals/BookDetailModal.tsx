@@ -14,7 +14,9 @@ const STATUS = {
 
 const PANEL =
   'bg-surface border border-border rounded-2xl sm:rounded-[14px] w-full max-w-full min-h-[min(500px,90%)] sm:max-w-[620px] max-h-[92%] sm:max-h-[90%] overflow-y-auto overscroll-contain touch-auto shadow-card'
-const LABEL = 'font-mono text-[10px] tracking-[0.09em] text-dim'
+const LABEL = 'font-mono text-[10px] sm:text-[12px] tracking-[0.09em] text-dim'
+// 헤더에 모달 제목이 없으므로 책 제목이 이 모달의 접근성 이름 역할을 한다
+const TITLE_ID = 'book-detail-modal-title'
 const BTN =
   'text-xs sm:text-[13px] font-medium px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover'
 const BTN_2 =
@@ -91,10 +93,10 @@ export default function BookDetailModal({
     ) : null
 
   return (
-    <Modal onClose={onClose}>
+    <Modal onClose={onClose} labelledBy={TITLE_ID}>
       <div className={PANEL}>
-        <div className="sticky top-0 z-10 bg-surface flex items-center justify-between pl-6 pr-4 py-3.5 border-b border-border">
-          <span className={LABEL}>BOOK</span>
+        {/* 바로 아래 책 제목이 헤더 역할을 하므로 모달 제목 없이 닫기 버튼만 둔다 */}
+        <div className="sticky top-0 z-10 bg-surface flex items-center justify-end pl-6 pr-4 py-3.5 border-b border-border">
           <button
             onClick={onClose}
             aria-label="닫기"
@@ -145,7 +147,9 @@ export default function BookDetailModal({
                     {status.label}
                   </span>
                 </div>
-                <h3 className="text-lg sm:text-[22px] font-semibold leading-snug tracking-[-0.01em]">{book.title}</h3>
+                <h3 id={TITLE_ID} className="text-lg sm:text-[22px] font-semibold leading-snug tracking-[-0.01em]">
+                  {book.title}
+                </h3>
                 <div className="text-[13px] text-dim">
                   {book.author || '저자 미상'}
                   {book.year ? ` · ${book.year}` : ''}
