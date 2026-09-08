@@ -18,11 +18,11 @@ const LABEL = 'font-mono text-[10px] sm:text-[12px] tracking-[0.09em] text-dim'
 // 헤더에 모달 제목이 없으므로 책 제목이 이 모달의 접근성 이름 역할을 한다
 const TITLE_ID = 'book-detail-modal-title'
 const BTN =
-  'text-xs sm:text-[13px] font-medium px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover'
+  'text-[13px] sm:text-sm font-medium px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover'
 const BTN_2 =
-  'text-xs sm:text-[13px] px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-surface text-ink border border-border cursor-pointer hover:bg-surface2'
+  'text-[13px] sm:text-sm px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-surface text-ink border border-border cursor-pointer hover:bg-surface2'
 const BTN_SM =
-  'text-xs px-3 py-1.5 rounded-md bg-surface text-ink border border-border cursor-pointer hover:bg-surface2'
+  'text-[13px] sm:text-sm px-3 py-1.5 rounded-md bg-surface text-ink border border-border cursor-pointer hover:bg-surface2'
 
 function fmt(iso?: string) {
   if (!iso) return ''
@@ -68,12 +68,12 @@ export default function BookDetailModal({
       ? [
           { label: 'STARTED', value: fmt(readingSince(book)) },
           { label: 'FINISHED', value: fmt(book.finishedAt) },
-          { label: 'ELAPSED', value: `${readDaysCount(book)}일` },
+          { label: 'DAYS', value: `${readDaysCount(book)}일` },
         ]
       : book.status === 'reading'
         ? [
             { label: 'STARTED', value: fmt(readingSince(book)) },
-            { label: 'ELAPSED', value: `${readDaysCount(book)}일째` },
+            { label: 'DAYS', value: `${readDaysCount(book)}일째` },
           ]
         : []
 
@@ -82,9 +82,16 @@ export default function BookDetailModal({
   // 표지 옆 세로 공간을 채운다. 모바일은 칼럼이 좁아 3칸이 겹치므로 2칸으로 접는다.
   const statsGrid =
     stats.length > 0 ? (
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 py-3 border-y border-border">
+      <div
+        // 모바일에서는 STARTED가 숨겨져 완독(FINISHED+DAYS)만 2칸, 읽는중(DAYS만)은 1칸이 된다.
+        className={`grid ${stats.length === 3 ? 'grid-cols-2' : 'grid-cols-1'} sm:grid-cols-3 gap-3 py-3 border-y border-border`}
+      >
         {stats.map((s) => (
-          <div key={s.label} className="flex flex-col gap-1">
+          <div
+            key={s.label}
+            // STARTED는 화면이 좁으면 FINISHED/DAYS에 밀려 줄바꿈이 어색해져서 PC(sm 이상)에서만 보여준다.
+            className={`flex-col items-center gap-1 text-center ${s.label === 'STARTED' ? 'hidden sm:flex' : 'flex'}`}
+          >
             <span className={LABEL}>{s.label}</span>
             <span className="font-mono text-[13px] text-ink">{s.value}</span>
           </div>
@@ -130,7 +137,9 @@ export default function BookDetailModal({
                   />
                 ) : (
                   <div className="w-full aspect-[2/3] rounded-md bg-surface2 border border-border flex items-center justify-center p-3">
-                    <span className="text-xs font-semibold leading-snug text-center text-ink/70">{book.title}</span>
+                    <span className="text-xs sm:text-[13px] font-semibold leading-snug text-center text-ink/70">
+                      {book.title}
+                    </span>
                   </div>
                 )}
               </div>
@@ -150,11 +159,11 @@ export default function BookDetailModal({
                 <h3 id={TITLE_ID} className="text-lg sm:text-[22px] font-semibold leading-snug tracking-[-0.01em]">
                   {book.title}
                 </h3>
-                <div className="text-[13px] text-dim">
+                <div className="text-xs sm:text-[13px] text-dim">
                   {book.author || '저자 미상'}
                   {book.year ? ` · ${book.year}` : ''}
                 </div>
-                {!statsGrid && <div className="font-mono text-[11px] text-dim mt-0.5">{period}</div>}
+                {!statsGrid && <div className="font-mono text-xs sm:text-[13px] text-dim mt-0.5">{period}</div>}
                 <div className="flex-1" />
                 {statsGrid}
               </div>
@@ -179,7 +188,7 @@ export default function BookDetailModal({
             </span>
             <span className="flex flex-col gap-px">
               <span className="text-[13px] font-medium text-ink">친구에게 비공개</span>
-              <span className="text-[11px] text-dim">
+              <span className="text-xs sm:text-[13px] text-dim">
                 {isPrivate ? '친구 책장에서 이 책이 숨겨져 있어요' : '친구가 내 책장을 볼 때 이 책도 보여요'}
               </span>
             </span>
@@ -219,9 +228,9 @@ export default function BookDetailModal({
                   <path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17z" />
                 </svg>
               </span>
-              <span className="text-[13px] text-dim">독후감을 아직 안 썼어요</span>
+              <span className="text-xs sm:text-[13px] text-dim">독후감을 아직 안 썼어요</span>
               <span className="flex-1" />
-              <span className="text-xs font-medium text-accent">쓰기</span>
+              <span className="text-[13px] sm:text-sm font-medium text-accent">쓰기</span>
             </button>
           )}
 
@@ -237,7 +246,7 @@ export default function BookDetailModal({
 
             {bookQuotes.length === 0 ? (
               <div className="border border-dashed border-border rounded-[10px] bg-bg px-5 py-7 flex flex-col items-center gap-3">
-                <p className="font-serif text-sm sm:text-base text-dim text-center leading-relaxed">
+                <p className="font-serif text-sm sm:text-[15px] text-dim text-center leading-relaxed">
                   읽다가 마음에 걸린 문장을
                   <br />
                   여기에 모아두세요
@@ -250,13 +259,15 @@ export default function BookDetailModal({
               <div className="flex flex-col gap-2">
                 {bookQuotes.map((q) => (
                   <div key={q.id} className="border border-border rounded-[10px] px-4 py-3.5 flex flex-col gap-2">
-                    <div className="font-serif text-sm sm:text-base leading-[1.9]">
+                    <div className="font-serif text-sm sm:text-[15px] leading-[1.9]">
                       &ldquo;
                       <HighlightedText text={q.text} highlights={q.highlights} />
                       &rdquo;
                     </div>
                     {q.note && (
-                      <div className="text-xs leading-relaxed text-dim pl-3 border-l-2 border-border">{q.note}</div>
+                      <div className="text-xs sm:text-[13px] leading-relaxed text-dim pl-3 border-l-2 border-border">
+                        {q.note}
+                      </div>
                     )}
                     <div className="flex items-center gap-2">
                       {q.page && <span className="font-mono text-[10px] text-dim">p.{q.page}</span>}
@@ -290,7 +301,7 @@ export default function BookDetailModal({
         <div className="flex items-center gap-2 px-5 sm:px-6 py-3.5 border-t border-border bg-bg">
           <button
             onClick={() => onDelete(bookId)}
-            className="text-xs sm:text-[13px] px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg bg-transparent border border-border text-danger cursor-pointer hover:bg-danger/10"
+            className="text-[13px] sm:text-sm px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg bg-transparent border border-border text-danger cursor-pointer hover:bg-danger/10"
           >
             책 삭제
           </button>

@@ -74,7 +74,7 @@ export default function BooksTab({ books, quotes }: { books: Book[]; quotes: Quo
       <PageHeader title="서재" meta={headerMeta}>
         <button
           onClick={openAddBook}
-          className="text-xs sm:text-[13px] font-medium px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-ink text-bg border-none cursor-pointer hover:opacity-90"
+          className="text-[13px] sm:text-sm font-medium px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-ink text-bg border-none cursor-pointer hover:opacity-90"
         >
           + 책 추가
         </button>
@@ -86,7 +86,7 @@ export default function BooksTab({ books, quotes }: { books: Book[]; quotes: Quo
             <button
               key={s.id}
               onClick={() => setStatusFilter(s.id)}
-              className={`flex-1 sm:flex-none sm:px-6 py-1.5 rounded-md text-[13px] border-none cursor-pointer transition-colors duration-150 ${
+              className={`flex-1 sm:flex-none sm:px-6 py-1.5 rounded-md text-[13px] sm:text-sm border-none cursor-pointer transition-colors duration-150 ${
                 statusFilter === s.id ? 'bg-surface text-ink font-medium shadow-card' : 'bg-transparent text-dim'
               }`}
             >
@@ -104,13 +104,13 @@ export default function BooksTab({ books, quotes }: { books: Book[]; quotes: Quo
             placeholder="제목 또는 저자 검색…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 min-w-0 bg-transparent border-none text-ink py-[9px] text-[13px] font-sans placeholder:text-dim focus:outline-none"
+            className="flex-1 min-w-0 bg-transparent border-none text-ink py-[9px] text-sm sm:text-[15px] font-sans placeholder:text-dim focus:outline-none"
           />
           <span className="w-px self-stretch my-1.5 bg-border flex-shrink-0" />
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value as SortKey)}
-            className="flex-shrink-0 appearance-none bg-transparent bg-no-repeat bg-[right_center] border-none pr-4 py-[9px] text-xs text-dim font-sans cursor-pointer outline-none"
+            className="flex-shrink-0 appearance-none bg-transparent bg-no-repeat bg-[right_center] border-none pr-4 py-[9px] text-xs sm:text-[13px] text-dim font-sans cursor-pointer outline-none"
             style={{ backgroundImage: `url("${CARET}")` }}
           >
             {SORTS.map((s) => (

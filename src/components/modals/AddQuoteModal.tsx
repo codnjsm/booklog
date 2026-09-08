@@ -29,9 +29,9 @@ const MODAL_HEADER =
 const MODAL_CLOSE = 'bg-transparent border-none text-dim text-lg cursor-pointer leading-none px-2 py-1 hover:text-ink'
 const MODAL_BODY = 'px-[18px] py-3.5 sm:px-6 sm:py-[22px] text-sm sm:text-[15px]'
 const MODAL_ACTIONS = 'flex gap-2 justify-end px-[18px] py-3 sm:px-6 sm:py-4 border-t border-border'
-const FORM_LABEL = 'flex text-sm mb-1.5 uppercase tracking-[.05em] pl-2'
+const FORM_LABEL = 'flex text-sm sm:text-[15px] mb-1.5 uppercase tracking-[.05em] pl-2'
 const FORM_INPUT =
-  'w-full bg-bg border border-border text-ink px-3 py-2 rounded-[7px] text-[13px] font-sans placeholder:text-dim placeholder:opacity-50 focus:outline-none focus:border-accent'
+  'w-full bg-bg border border-border text-ink px-3 py-2 rounded-[7px] text-sm sm:text-[15px] font-sans placeholder:text-dim placeholder:opacity-50 focus:outline-none focus:border-accent'
 const FORM_TEXTAREA = `${FORM_INPUT} resize-none min-h-[90px] max-h-[500px] overflow-y-auto leading-[1.6]`
 
 /** 최소 높이는 유지하되 내용이 길어지면 500px까지 늘어나고, 그 이상은 내부 스크롤로 처리한다. */
@@ -42,15 +42,15 @@ function autoResizeTextarea(el: HTMLTextAreaElement | null) {
 }
 const FORM_SELECT = `${FORM_INPUT} pr-8`
 const BTN =
-  'bg-ink text-bg border-none px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg text-xs sm:text-[13px] cursor-pointer transition-all duration-150 font-sans hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed'
+  'bg-ink text-bg border-none px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed'
 const BTN_SECONDARY =
-  'bg-surface text-ink border border-border px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg text-xs sm:text-[13px] cursor-pointer transition-all duration-150 font-sans hover:bg-surface2'
+  'bg-surface text-ink border border-border px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:bg-surface2'
 const BTN_DANGER =
-  'bg-transparent text-danger border border-border px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg text-xs sm:text-[13px] cursor-pointer transition-all duration-150 font-sans hover:bg-danger/10'
+  'bg-transparent text-danger border border-border px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:bg-danger/10'
 const BTN_SMALL_SECONDARY =
-  'bg-surface text-ink border border-border px-3 py-1.5 rounded-lg text-xs cursor-pointer transition-all duration-150 font-sans hover:bg-surface2'
+  'bg-surface text-ink border border-border px-3 py-1.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:bg-surface2'
 const BTN_SMALL_PRIMARY =
-  'bg-ink text-bg border-none px-3 py-1.5 rounded-lg text-xs cursor-pointer transition-all duration-150 font-sans hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed'
+  'bg-ink text-bg border-none px-3 py-1.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed'
 
 export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, onSave, onDelete }: Props) {
   const { showToast } = useAppUI()
@@ -209,8 +209,10 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
               <div className="mb-4">
                 {ocrPreview?.index === i ? (
                   <>
-                    <label className="flex text-sm uppercase tracking-[.05em] pl-2 mb-1.5">사진에서 인식한 문장</label>
-                    <p className="text-xs text-dim mb-2 pl-2">
+                    <label className="flex text-sm sm:text-[15px] uppercase tracking-[.05em] pl-2 mb-1.5">
+                      사진에서 인식한 문장
+                    </label>
+                    <p className="text-xs sm:text-[13px] text-dim mb-2 pl-2">
                       필요한 부분만 넣고 싶다면 드래그로 선택한 뒤 아래 버튼을 눌러주세요.
                     </p>
                     <textarea
@@ -242,14 +244,14 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
                 ) : (
                   <>
                     <div className="flex items-center justify-between mb-1.5">
-                      <label className="flex text-sm uppercase tracking-[.05em] pl-2">
+                      <label className="flex text-sm sm:text-[15px] uppercase tracking-[.05em] pl-2">
                         문장 <span className="text-danger">*</span>
                       </label>
                       <button
                         type="button"
                         onClick={() => triggerPhotoImport(i)}
                         disabled={ocrLoading}
-                        className="text-xs text-accent bg-transparent border-none cursor-pointer pr-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="text-[13px] sm:text-sm text-accent bg-transparent border-none cursor-pointer pr-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {ocrLoading ? '인식 중…' : '+ 사진으로 추가'}
                       </button>
@@ -276,21 +278,21 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
                       </button>
                       {entry.highlights?.length ? (
                         <>
-                          <span className="font-mono text-[11px] text-dim">{entry.highlights.length}곳</span>
+                          <span className="font-mono text-xs sm:text-[13px] text-dim">{entry.highlights.length}곳</span>
                           <button
                             type="button"
                             onClick={() => clearHighlights(i)}
-                            className="text-xs text-dim bg-transparent border-none cursor-pointer p-0 hover:text-ink"
+                            className="text-[13px] sm:text-sm text-dim bg-transparent border-none cursor-pointer p-0 hover:text-ink"
                           >
                             모두 지우기
                           </button>
                         </>
                       ) : (
-                        <span className="text-[11px] text-dim">칠할 부분을 드래그한 뒤 눌러주세요</span>
+                        <span className="text-xs sm:text-[13px] text-dim">칠할 부분을 드래그한 뒤 눌러주세요</span>
                       )}
                     </div>
                     {entry.highlights?.length && entry.text ? (
-                      <div className="mt-2 rounded-[7px] border border-border bg-bg px-3 py-2 font-serif text-sm sm:text-base leading-[1.8]">
+                      <div className="mt-2 rounded-[7px] border border-border bg-bg px-3 py-2 font-serif text-sm sm:text-[15px] leading-[1.8]">
                         <HighlightedText text={entry.text} highlights={entry.highlights} />
                       </div>
                     ) : null}

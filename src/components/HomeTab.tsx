@@ -79,7 +79,7 @@ function Cover({ book, className = '' }: { book: Book; className?: string }) {
   }
   return (
     <div className={`rounded-md bg-surface2 border border-border flex items-center justify-center p-2.5 ${className}`}>
-      <span className="text-[11px] font-semibold leading-snug text-center text-ink/70">{book.title}</span>
+      <span className="text-xs sm:text-[13px] font-semibold leading-snug text-center text-ink/70">{book.title}</span>
     </div>
   )
 }
@@ -125,7 +125,7 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
           </span>
           {greeting.emoji && <span className="ml-1">{greeting.emoji}</span>}
         </h1>
-        <div className="font-mono text-xs text-dim">
+        <div className="font-mono text-xs sm:text-[13px] text-dim">
           {thisYear}.{String(now.getMonth() + 1).padStart(2, '0')}.{String(now.getDate()).padStart(2, '0')}
         </div>
       </div>
@@ -150,14 +150,14 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
                   style={{ width: `${pct}%` }}
                 />
               </div>
-              {paceText && <div className="text-xs text-dim">{paceText}</div>}
+              {paceText && <div className="text-xs sm:text-[13px] text-dim">{paceText}</div>}
             </>
           ) : (
             <div className="flex items-center gap-3">
-              <span className="text-[13px] text-dim">올해 목표를 아직 안 정했어요</span>
+              <span className="text-xs sm:text-[13px] text-dim">올해 목표를 아직 안 정했어요</span>
               <button
                 onClick={() => changeTab('records')}
-                className="text-xs font-medium text-accent bg-transparent border-none cursor-pointer p-0"
+                className="text-[13px] sm:text-sm text-accent bg-transparent border-none cursor-pointer p-0"
               >
                 목표 설정
               </button>
@@ -192,10 +192,10 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
           <div className={LABEL}>NOW READING</div>
           {reading.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-3 py-8 rounded-[10px] border border-dashed border-border bg-bg">
-              <span className="text-[13px] text-dim">현재 읽고있는 책이 없습니다</span>
+              <span className="text-xs sm:text-[13px] text-dim">현재 읽고있는 책이 없습니다</span>
               <button
                 onClick={() => changeTab('books')}
-                className="text-xs font-medium px-3 py-2 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover"
+                className="text-[13px] sm:text-sm font-medium px-3 py-2 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover"
               >
                 서재에서 고르기
               </button>
@@ -222,9 +222,11 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
                         >
                           {book.title}
                         </button>
-                        <div className="mt-0.5 text-xs text-dim truncate">{book.author || '저자 미상'}</div>
+                        <div className="mt-0.5 text-xs sm:text-[13px] text-dim truncate">
+                          {book.author || '저자 미상'}
+                        </div>
                       </div>
-                      <span className="mt-1 font-mono text-[11px] text-dim whitespace-nowrap flex-shrink-0">
+                      <span className="mt-1 font-mono text-xs sm:text-[13px] text-dim whitespace-nowrap flex-shrink-0">
                         {readDaysCount(book)}일째 · 문장 {quotes.filter((q) => q.bookId === book.id).length}개
                       </span>
                     </div>
@@ -232,13 +234,13 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
                     <div className="flex justify-end gap-2">
                       <button
                         onClick={() => openAddQuote(book.id)}
-                        className="text-xs font-medium px-3 py-2 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover"
+                        className="text-[13px] sm:text-sm font-medium px-3 py-2 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover"
                       >
                         문장 저장
                       </button>
                       <button
                         onClick={() => onFinishBook(book.id)}
-                        className="text-xs px-3 py-2 rounded-lg bg-surface text-ink border border-border cursor-pointer hover:bg-surface2"
+                        className="text-[13px] sm:text-sm px-3 py-2 rounded-lg bg-surface text-ink border border-border cursor-pointer hover:bg-surface2"
                       >
                         완독 처리
                       </button>
@@ -268,7 +270,7 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
           {todayQuote ? (
             <>
               <div className="flex-1 flex items-center py-2">
-                <div className="font-serif text-sm sm:text-base leading-[1.85] text-ink">
+                <div className="font-serif text-sm sm:text-[15px] leading-[1.85] text-ink">
                   &ldquo;
                   <HighlightedText text={todayQuote.text} highlights={todayQuote.highlights} />
                   &rdquo;
@@ -276,7 +278,7 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
               </div>
               <button
                 onClick={() => quoteBook && openBookDetail(quoteBook.id)}
-                className="self-start text-left bg-transparent border-none p-0 text-[11px] text-dim cursor-pointer hover:text-ink"
+                className="self-start text-left bg-transparent border-none p-0 text-xs sm:text-[13px] text-dim cursor-pointer hover:text-ink"
               >
                 {quoteBook?.title ?? '출처 미상'}
                 {todayQuote.page ? ` · p.${todayQuote.page}` : ''}
@@ -284,10 +286,10 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
             </>
           ) : (
             <div className="flex-1 flex flex-col justify-center gap-2 py-2">
-              <span className="text-[13px] text-dim leading-relaxed">아직 모은 문장이 없어요</span>
+              <span className="text-xs sm:text-[13px] text-dim leading-relaxed">아직 모은 문장이 없어요</span>
               <button
                 onClick={() => openAddQuote()}
-                className="self-start text-xs font-medium px-3 py-2 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover"
+                className="self-start text-[13px] sm:text-sm font-medium px-3 py-2 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover"
               >
                 문장 저장하기
               </button>
@@ -329,7 +331,7 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
                   <div className="flex-1 min-w-0">
                     <div className="text-[13px] font-medium truncate">{a.title}</div>
                     {a.sub && (
-                      <div className="text-[11px] text-dim truncate">
+                      <div className="text-xs sm:text-[13px] text-dim truncate">
                         {a.kind === 'finished' ? `완독 · ${a.sub}` : a.sub}
                       </div>
                     )}
@@ -339,7 +341,7 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
                       <Stars rating={a.rating} size={11} />
                     </span>
                   ) : null}
-                  <span className="font-mono text-[11px] text-dim text-right whitespace-nowrap flex-shrink-0">
+                  <span className="font-mono text-xs sm:text-[13px] text-dim text-right whitespace-nowrap flex-shrink-0">
                     {relativeDay(a.at)}
                   </span>
                 </div>

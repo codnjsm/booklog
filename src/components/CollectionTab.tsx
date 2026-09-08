@@ -21,7 +21,7 @@ export default function CollectionTab({ quotes, books, words, onDeleteQuote, onA
   const seg = (id: 'quotes' | 'words', label: string) => (
     <button
       onClick={() => setView(id)}
-      className={`flex-1 sm:flex-none sm:px-6 py-1.5 rounded-md text-[13px] border-none cursor-pointer transition-colors duration-150 ${
+      className={`flex-1 sm:flex-none sm:px-6 py-1.5 rounded-md text-[13px] sm:text-sm border-none cursor-pointer transition-colors duration-150 ${
         view === id ? 'bg-surface text-ink font-medium shadow-card' : 'bg-transparent text-dim'
       }`}
     >
@@ -35,7 +35,7 @@ export default function CollectionTab({ quotes, books, words, onDeleteQuote, onA
         {view === 'quotes' && (
           <button
             onClick={() => openAddQuote()}
-            className="text-xs sm:text-[13px] font-medium px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-ink text-bg border-none cursor-pointer hover:opacity-90"
+            className="text-[13px] sm:text-sm font-medium px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-ink text-bg border-none cursor-pointer hover:opacity-90"
           >
             + 문장 저장
           </button>

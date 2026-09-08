@@ -31,20 +31,21 @@ interface Props {
 }
 
 const BTN_SM =
-  'bg-ink text-bg border-none px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-[13px] cursor-pointer transition-all duration-150 font-sans hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed'
+  'bg-ink text-bg border-none px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed'
 const BTN_SM_SECONDARY =
-  'bg-surface text-ink border border-border px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-[13px] cursor-pointer transition-all duration-150 font-sans hover:bg-surface2'
+  'bg-surface text-ink border border-border px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:bg-surface2'
 const STATUS_PILL =
-  'text-[11px] text-dim bg-bg border border-border rounded-full px-2.5 py-[3px] whitespace-nowrap flex-shrink-0'
+  'text-xs sm:text-[13px] text-dim bg-bg border border-border rounded-full px-2.5 py-[3px] whitespace-nowrap flex-shrink-0'
 
 function chipClass(isActive: boolean) {
-  const base = 'px-3 py-[9px] border rounded-full text-xs cursor-pointer transition-all duration-150 font-sans'
+  const base =
+    'px-3 py-[9px] border rounded-full text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans'
   return isActive
     ? `${base} bg-accentsoft border-accent text-accent`
     : `${base} bg-surface border-border text-dim hover:text-ink`
 }
 
-const SECTION_LABEL = 'text-xs text-dim mb-2'
+const SECTION_LABEL = 'text-xs sm:text-[13px] text-dim mb-2'
 const LIST_CARD = 'bg-surface border border-border rounded-xl'
 const LIST_ROW = 'flex items-center gap-3 px-4 py-3 border-b border-surface2 last:border-b-0'
 
@@ -55,7 +56,7 @@ function Person({ photoURL, displayName, email }: { photoURL?: string; displayNa
       <Avatar url={photoURL} name={displayName || email || '?'} size="md" />
       <div className="flex-1 min-w-0">
         <div className="text-sm font-medium text-ink truncate">{displayName || '이름 없음'}</div>
-        <div className="text-xs text-dim truncate">{email}</div>
+        <div className="text-xs sm:text-[13px] text-dim truncate">{email}</div>
       </div>
     </>
   )
@@ -82,7 +83,7 @@ function seg(view: MainView, active: MainView, onClick: () => void, label: strin
   return (
     <button
       onClick={onClick}
-      className={`flex-1 sm:flex-none sm:px-6 py-1.5 rounded-md text-[13px] border-none cursor-pointer transition-colors duration-150 ${
+      className={`flex-1 sm:flex-none sm:px-6 py-1.5 rounded-md text-[13px] sm:text-sm border-none cursor-pointer transition-colors duration-150 ${
         active === view ? 'bg-surface text-ink font-medium shadow-card' : 'bg-transparent text-dim'
       }`}
     >
@@ -221,7 +222,7 @@ export default function FriendsTab({
         {view === 'feed' && (
           <button
             onClick={openPublishPost}
-            className="text-xs sm:text-[13px] font-medium px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-ink text-bg border-none cursor-pointer hover:opacity-90"
+            className="text-[13px] sm:text-sm font-medium px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-ink text-bg border-none cursor-pointer hover:opacity-90"
           >
             + 공유하기
           </button>
@@ -229,7 +230,7 @@ export default function FriendsTab({
         {view === 'friends' && (
           <button
             onClick={openAddFriend}
-            className="text-xs sm:text-[13px] font-medium px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-ink text-bg border-none cursor-pointer hover:opacity-90"
+            className="text-[13px] sm:text-sm font-medium px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-ink text-bg border-none cursor-pointer hover:opacity-90"
           >
             + 친구 추가
           </button>
@@ -288,7 +289,7 @@ export default function FriendsTab({
                         수락
                       </button>
                       <button
-                        className="bg-transparent text-danger border border-border px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-[13px] cursor-pointer transition-all duration-150 font-sans hover:bg-danger/10"
+                        className="bg-transparent text-danger border border-border px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:bg-danger/10"
                         onClick={() => onRejectRequest(req.id)}
                       >
                         거절
@@ -339,7 +340,7 @@ export default function FriendsTab({
                     placeholder="이름 또는 이메일로 찾기…"
                     value={friendFilter}
                     onChange={(e) => setFriendFilter(e.target.value)}
-                    className="flex-1 min-w-0 bg-transparent border-none text-ink py-[9px] text-[13px] font-sans placeholder:text-dim focus:outline-none"
+                    className="flex-1 min-w-0 bg-transparent border-none text-ink py-[9px] text-sm sm:text-[15px] font-sans placeholder:text-dim focus:outline-none"
                   />
                 </div>
                 {filteredFriends.length === 0 ? (
@@ -356,7 +357,7 @@ export default function FriendsTab({
                             책장 보기
                           </button>
                           <button
-                            className="bg-transparent text-danger border border-border px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-[13px] cursor-pointer transition-all duration-150 font-sans hover:bg-danger/10"
+                            className="bg-transparent text-danger border border-border px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:bg-danger/10"
                             onClick={() => {
                               if (confirm(`${f.displayName || f.email}님을 친구 목록에서 삭제할까요?`))
                                 onRemoveFriend(f.uid)

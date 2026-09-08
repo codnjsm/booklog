@@ -12,9 +12,9 @@ const MODAL_HEADER =
 const MODAL_CLOSE = 'bg-transparent border-none text-dim text-lg cursor-pointer leading-none px-2 py-1 hover:text-ink'
 const MODAL_BODY = 'px-[18px] py-3.5 sm:px-6 sm:py-[22px]'
 const BTN_SM =
-  'bg-ink text-bg border-none px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-[13px] cursor-pointer transition-all duration-150 font-sans hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed'
+  'bg-ink text-bg border-none px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed'
 const STATUS_PILL =
-  'text-[11px] text-dim bg-bg border border-border rounded-full px-2.5 py-[3px] whitespace-nowrap flex-shrink-0'
+  'text-xs sm:text-[13px] text-dim bg-bg border border-border rounded-full px-2.5 py-[3px] whitespace-nowrap flex-shrink-0'
 
 interface Props {
   user: User | null
@@ -88,11 +88,11 @@ export default function AddFriendModal({ user, friends, incoming, outgoing, onSe
               }}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               autoFocus
-              className="flex-1 min-w-0 bg-transparent border-none text-ink py-[9px] text-[13px] font-sans placeholder:text-dim focus:outline-none"
+              className="flex-1 min-w-0 bg-transparent border-none text-ink py-[9px] text-sm sm:text-[15px] font-sans placeholder:text-dim focus:outline-none"
             />
             <span className="w-px self-stretch my-1.5 bg-border flex-shrink-0" />
             <button
-              className="flex-shrink-0 bg-transparent border-none px-1 py-[9px] text-xs font-medium text-accent cursor-pointer disabled:text-dim disabled:cursor-not-allowed"
+              className="flex-shrink-0 bg-transparent border-none px-1 py-[9px] text-[13px] sm:text-sm font-medium text-accent cursor-pointer disabled:text-dim disabled:cursor-not-allowed"
               onClick={handleSearch}
               disabled={searching || !emailInput.trim()}
             >
@@ -101,9 +101,9 @@ export default function AddFriendModal({ user, friends, incoming, outgoing, onSe
           </div>
 
           {searchResult === 'not-found' && (
-            <div className="text-[13px] text-dim mt-2.5">해당 이메일로 가입된 계정을 찾을 수 없어요</div>
+            <div className="text-xs sm:text-[13px] text-dim mt-2.5">해당 이메일로 가입된 계정을 찾을 수 없어요</div>
           )}
-          {searchResult === 'self' && <div className="text-[13px] text-dim mt-2.5">내 계정이에요</div>}
+          {searchResult === 'self' && <div className="text-xs sm:text-[13px] text-dim mt-2.5">내 계정이에요</div>}
           {searchResult && searchResult !== 'not-found' && searchResult !== 'self' && (
             <div className="flex items-center gap-3 px-4 py-3 mt-2.5 border border-border rounded-xl">
               {searchResult.photoURL ? (
@@ -120,7 +120,7 @@ export default function AddFriendModal({ user, friends, incoming, outgoing, onSe
               )}
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium text-ink truncate">{searchResult.displayName || '이름 없음'}</div>
-                <div className="text-xs text-dim truncate">{searchResult.email}</div>
+                <div className="text-xs sm:text-[13px] text-dim truncate">{searchResult.email}</div>
               </div>
               {getRequestStatus(searchResult.uid) === 'friend' && <span className={STATUS_PILL}>친구</span>}
               {getRequestStatus(searchResult.uid) === 'sent' && <span className={STATUS_PILL}>요청 보냄</span>}

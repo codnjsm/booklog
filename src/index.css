@@ -26,12 +26,14 @@
   --accent: #2946c8;
   --accent-hover: #1e37a6;
   --accent-soft: #eef1fc;
+  /* FAB처럼 다양한 콘텐츠 위에 떠 있는 요소 전용. accent-soft와 달리 항상 불투명해야 뒤 배경이 안 비친다 */
+  --fab-soft: #eef1fc;
   --danger: #dc2626;
   --ok: #16a34a;
   --highlight: #ddf247;
   --shadow: 0 1px 2px rgba(24, 24, 27, 0.04), 0 8px 24px rgba(24, 24, 27, 0.06);
   /* 카드 그림자(--shadow)보다 진하게 — 배경 위에 떠 있는 원형 버튼(FAB)용 */
-  --shadow-fab: 0 4px 11px rgba(24, 24, 27, 0.22), 0 1.5px 3px rgba(24, 24, 27, 0.15);
+  --shadow-fab: 0 6px 18px rgba(24, 24, 27, 0.32), 0 2px 5px rgba(24, 24, 27, 0.2);
   --logo: #18181b;
   /* 900px(사이드바 나타나는 지점)에서 220px, 1400px 이상에서 280px로 커진다 */
   --sidebar-w: clamp(220px, calc(112px + 12vw), 280px);
@@ -47,10 +49,11 @@
   --accent: #7b93ff;
   --accent-hover: #9aacff;
   --accent-soft: rgba(123, 147, 255, 0.14);
+  --fab-soft: #262c4a;
   --danger: #f87171;
   --ok: #4ade80;
   --highlight: rgba(221, 242, 71, 0.3);
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 28px rgba(0, 0, 0, 0.35);
-  --shadow-fab: 0 4px 11px rgba(0, 0, 0, 0.4), 0 1.5px 3px rgba(0, 0, 0, 0.28);
+  --shadow-fab: 0 6px 18px rgba(0, 0, 0, 0.5), 0 2px 5px rgba(0, 0, 0, 0.35);
   --logo: #f4f4f5;
 }

@@ -66,19 +66,21 @@ export default function WordSearchPanel({ words, onAddWord }: Props) {
           value={query}
           onChange={(e) => handleInput(e.target.value)}
           autoComplete="off"
-          className="flex-1 min-w-0 bg-transparent border-none text-ink py-[9px] text-[13px] font-sans placeholder:text-dim focus:outline-none"
+          className="flex-1 min-w-0 bg-transparent border-none text-ink py-[9px] text-sm sm:text-[15px] font-sans placeholder:text-dim focus:outline-none"
         />
-        {loading && <span className="font-mono text-[11px] text-dim flex-shrink-0">검색중…</span>}
+        {loading && <span className="font-mono text-xs sm:text-[13px] text-dim flex-shrink-0">검색중…</span>}
         {!loading && isSuccess && (
-          <span className="font-mono text-[11px] text-dim flex-shrink-0">우리말샘 · {results.length}건</span>
+          <span className="font-mono text-xs sm:text-[13px] text-dim flex-shrink-0">우리말샘 · {results.length}건</span>
         )}
       </div>
 
       {error && (
-        <div className="border-t border-border bg-bg px-4 py-4 text-[13px] text-dim">검색 중 오류가 발생했어요</div>
+        <div className="border-t border-border bg-bg px-4 py-4 text-xs sm:text-[13px] text-dim">
+          검색 중 오류가 발생했어요
+        </div>
       )}
       {!loading && !error && isSuccess && results.length === 0 && (
-        <div className="border-t border-border bg-bg px-4 py-4 text-[13px] text-dim">검색 결과가 없어요</div>
+        <div className="border-t border-border bg-bg px-4 py-4 text-xs sm:text-[13px] text-dim">검색 결과가 없어요</div>
       )}
       {!loading && results.length > 0 && (
         <div className="border-t border-border bg-bg max-h-[320px] overflow-y-auto">
@@ -93,14 +95,16 @@ export default function WordSearchPanel({ words, onAddWord }: Props) {
                         {item.word}
                         {s.pos && <span className="font-mono text-[10px] font-normal text-dim ml-1.5">{s.pos}</span>}
                       </div>
-                      <div className="text-xs leading-relaxed text-dim">{s.definition}</div>
+                      <div className="text-xs sm:text-[13px] leading-relaxed text-dim">{s.definition}</div>
                     </div>
                     {isSaved ? (
-                      <span className="flex-shrink-0 text-xs px-3 py-1.5 rounded-lg bg-surface2 text-dim">저장됨</span>
+                      <span className="flex-shrink-0 text-xs sm:text-[13px] px-3 py-1.5 rounded-lg bg-surface2 text-dim">
+                        저장됨
+                      </span>
                     ) : (
                       <button
                         onClick={() => onAddWord({ term: item.word, meaning: s.definition })}
-                        className="flex-shrink-0 text-xs font-medium px-3.5 py-1.5 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover"
+                        className="flex-shrink-0 text-[13px] sm:text-sm font-medium px-3.5 py-1.5 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover"
                       >
                         저장
                       </button>

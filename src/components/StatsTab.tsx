@@ -9,13 +9,13 @@ interface Props {
 }
 
 const FORM_INPUT =
-  'w-full bg-bg border border-border text-ink px-3 py-2 rounded-[7px] text-[13px] font-sans placeholder:text-dim placeholder:opacity-50 focus:outline-none focus:border-accent'
+  'w-full bg-bg border border-border text-ink px-3 py-2 rounded-[7px] text-sm sm:text-[15px] font-sans placeholder:text-dim placeholder:opacity-50 focus:outline-none focus:border-accent'
 const BTN =
-  'bg-ink text-bg border-none px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg text-xs sm:text-[13px] cursor-pointer transition-all duration-150 font-sans hover:opacity-90'
+  'bg-ink text-bg border-none px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:opacity-90'
 const BTN_SECONDARY =
-  'bg-surface text-ink border border-border px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg text-xs sm:text-[13px] cursor-pointer transition-all duration-150 font-sans hover:bg-surface2'
+  'bg-surface text-ink border border-border px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:bg-surface2'
 const BTN_SMALL_SECONDARY =
-  'bg-surface text-ink border border-border px-3 py-1.5 rounded-lg text-xs cursor-pointer transition-all duration-150 font-sans hover:bg-surface2'
+  'bg-surface text-ink border border-border px-3 py-1.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:bg-surface2'
 
 function StatCard({
   label,
@@ -33,8 +33,8 @@ function StatCard({
       <div className={`text-[22px] sm:text-[28px] font-bold font-sans ${highlight ? 'text-accent' : 'text-ink'}`}>
         {value}
       </div>
-      <div className="text-xs text-dim uppercase tracking-[0.05em] mt-1">{label}</div>
-      {sub && <div className="text-[11px] text-dim mt-0.5">{sub}</div>}
+      <div className="text-xs sm:text-[13px] text-dim uppercase tracking-[0.05em] mt-1">{label}</div>
+      {sub && <div className="text-xs sm:text-[13px] text-dim mt-0.5">{sub}</div>}
     </div>
   )
 }
@@ -131,10 +131,12 @@ export default function StatsTab({ books, quotes, goal, onSetGoal }: Props) {
             {goal ? (
               <div>
                 <div className="flex justify-between items-baseline mb-2.5">
-                  <span className="text-[13px] text-dim">
+                  <span className="text-xs sm:text-[13px] text-dim">
                     <span className="font-semibold text-ink">{doneThisYear}</span> / {goal}권
                   </span>
-                  <span className={`text-[13px] ${pct >= 100 ? 'text-accent font-semibold' : 'text-dim'}`}>{pct}%</span>
+                  <span className={`text-xs sm:text-[13px] ${pct >= 100 ? 'text-accent font-semibold' : 'text-dim'}`}>
+                    {pct}%
+                  </span>
                 </div>
                 <div className="h-2 bg-surface2 rounded-full overflow-hidden">
                   <div
@@ -144,7 +146,7 @@ export default function StatsTab({ books, quotes, goal, onSetGoal }: Props) {
                 </div>
               </div>
             ) : (
-              <div className="text-dim text-[13px] mt-2">올해 읽고 싶은 책 권수를 설정해보세요.</div>
+              <div className="text-dim text-xs sm:text-[13px] mt-2">올해 읽고 싶은 책 권수를 설정해보세요.</div>
             )}
           </div>
         )}
@@ -192,7 +194,7 @@ export default function StatsTab({ books, quotes, goal, onSetGoal }: Props) {
             )
           })}
         </div>
-        <div className="text-[11px] text-dim text-center mt-2">완독한 책의 '완독 날짜' 기준</div>
+        <div className="text-xs sm:text-[13px] text-dim text-center mt-2">완독한 책의 '완독 날짜' 기준</div>
       </div>
       {topAuthors.length > 0 && (
         <div className="bg-surface border border-border rounded-[10px] p-4 sm:p-[22px] mb-4">

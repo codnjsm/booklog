@@ -70,7 +70,7 @@ export default function LoginOverlay({ onSignIn, onDismiss }: Props) {
             <span>Google 계정으로 로그인</span>
           </button>
         )}
-        <p className="mt-5 text-xs text-dim leading-[1.6]">
+        <p className="mt-5 text-xs sm:text-[13px] text-dim leading-[1.6]">
           로그인하지 않아도 이 브라우저에서만 사용할 수 있어요 ·{' '}
           <a className="text-accent cursor-pointer no-underline hover:underline" onClick={onDismiss}>
             나중에

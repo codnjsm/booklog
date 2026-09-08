@@ -20,7 +20,7 @@ export default function WordsTab({ words, onAddWord, onDeleteWord }: Props) {
           SAVED WORDS {words.length}
         </span>
         {words.some((w) => isThisWeek(w.createdAt)) && (
-          <span className="inline-flex items-center gap-1.5 text-[11px] text-dim">
+          <span className="inline-flex items-center gap-1.5 text-xs sm:text-[13px] text-dim">
             <span className="w-4 h-2 rounded-sm bg-highlight" />
             이번 주에 담은 단어
           </span>
@@ -42,7 +42,7 @@ export default function WordsTab({ words, onAddWord, onDeleteWord }: Props) {
                 className={`group bg-surface border rounded-[10px] px-4 py-3.5 flex flex-col gap-1.5 ${fresh ? 'border-highlight' : 'border-border'}`}
               >
                 <div className="flex items-start gap-2">
-                  <div className="font-serif text-[15px] sm:text-base font-semibold leading-snug flex-1">
+                  <div className="font-serif text-sm sm:text-[15px] font-semibold leading-snug flex-1">
                     {fresh ? (
                       <span className="bg-[linear-gradient(transparent_56%,var(--highlight)_56%)]">{w.term}</span>
                     ) : (
@@ -57,7 +57,7 @@ export default function WordsTab({ words, onAddWord, onDeleteWord }: Props) {
                     ×
                   </button>
                 </div>
-                <div className="text-xs leading-relaxed text-dim">{w.meaning}</div>
+                <div className="text-xs sm:text-[13px] leading-relaxed text-dim">{w.meaning}</div>
                 <div className="font-mono text-[10px] text-dim opacity-70">{relativeDay(w.createdAt)}</div>
               </div>
             )

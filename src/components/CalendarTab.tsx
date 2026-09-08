@@ -141,7 +141,7 @@ export default function CalendarTab({ books }: Props) {
         </button>
       </div>
 
-      <div className="text-xs text-dim mb-1">
+      <div className="text-xs sm:text-[13px] text-dim mb-1">
         읽은 날 · <span className="text-ink font-semibold">{byDate.size}일</span>
       </div>
 
@@ -196,11 +196,11 @@ export default function CalendarTab({ books }: Props) {
       <div className="mt-6">
         <div className="flex items-baseline gap-2 mb-2.5">
           <h3 className="text-[13px] font-semibold text-ink">{listTitle}</h3>
-          <span className="font-mono text-xs text-dim">{listBooks.length}권</span>
+          <span className="font-mono text-xs sm:text-[13px] text-dim">{listBooks.length}권</span>
           {selectedDate && (
             <button
               onClick={() => setSelectedDate(null)}
-              className="ml-auto text-xs text-accent bg-transparent border-none cursor-pointer p-0"
+              className="ml-auto text-[13px] sm:text-sm text-accent bg-transparent border-none cursor-pointer p-0"
             >
               이 달 전체 보기
             </button>
@@ -223,11 +223,11 @@ export default function CalendarTab({ books }: Props) {
                 onClick={() => openBookDetail(book.id)}
                 className="w-full flex items-center gap-3 px-3.5 py-2.5 border-0 border-b border-surface2 last:border-b-0 bg-transparent text-left cursor-pointer transition-colors duration-150 hover:bg-surface2"
               >
-                <span className="font-mono text-[11px] text-dim w-3 flex-shrink-0">{i + 1}</span>
+                <span className="font-mono text-xs sm:text-[13px] text-dim w-3 flex-shrink-0">{i + 1}</span>
                 <Cover book={book} className="w-9 h-[50px]" />
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium text-ink truncate">{book.title}</div>
-                  <div className="text-xs text-dim truncate mt-0.5">{book.author || '저자 미상'}</div>
+                  <div className="text-xs sm:text-[13px] text-dim truncate mt-0.5">{book.author || '저자 미상'}</div>
                 </div>
                 <span className="text-ink flex-shrink-0">
                   <Stars rating={book.rating} size={12} showEmpty />

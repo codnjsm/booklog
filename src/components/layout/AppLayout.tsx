@@ -86,7 +86,9 @@ export default function AppLayout({
                 {id === 'friends' && incomingCount > 0 ? (
                   <Badge count={incomingCount} />
                 ) : (
-                  counts[id] !== undefined && <span className="font-mono text-[11px] text-dim">{counts[id]}</span>
+                  counts[id] !== undefined && (
+                    <span className="font-mono text-xs sm:text-[13px] text-dim">{counts[id]}</span>
+                  )
                 )}
               </button>
             )
@@ -98,14 +100,14 @@ export default function AppLayout({
         <div className="flex flex-col gap-0.5 pt-3.5 border-t border-border">
           <button
             onClick={onExport}
-            className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] text-dim bg-transparent border-none cursor-pointer text-left hover:text-ink"
+            className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] sm:text-sm text-dim bg-transparent border-none cursor-pointer text-left hover:text-ink"
           >
             <IconExport />
             <span>기록 내보내기</span>
           </button>
           <button
             onClick={toggleTheme}
-            className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] text-dim bg-transparent border-none cursor-pointer text-left hover:text-ink"
+            className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] sm:text-sm text-dim bg-transparent border-none cursor-pointer text-left hover:text-ink"
           >
             {theme === 'light' ? <IconSun /> : <IconMoon />}
             <span>{theme === 'light' ? '라이트 모드' : '다크 모드'}</span>
@@ -128,7 +130,9 @@ export default function AppLayout({
                 </span>
               )}
               <span className="flex flex-col gap-px min-w-0">
-                <span className="text-xs font-medium text-ink truncate">{user.displayName || '사용자'}</span>
+                <span className="text-xs sm:text-[13px] font-medium text-ink truncate">
+                  {user.displayName || '사용자'}
+                </span>
                 <span className="flex items-center gap-1.5">
                   <span className={`w-1.5 h-1.5 rounded-full ${syncColor}`} />
                   <span className="font-mono text-[9px] text-dim">{syncLabel}</span>

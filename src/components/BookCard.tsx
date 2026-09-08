@@ -47,18 +47,20 @@ export default function BookCard({ book, quoteCount, onClick }: Props) {
             <span className="sm:hidden text-dim">
               <IconBooks size={26} />
             </span>
-            <div className="hidden sm:block text-xs font-semibold mb-1.5 text-ink/70 leading-snug">{book.title}</div>
-            <div className="hidden sm:block text-[10px] text-dim">{book.author}</div>
+            <div className="hidden sm:block text-xs sm:text-[13px] font-semibold mb-1.5 text-ink/70 leading-snug">
+              {book.title}
+            </div>
+            <div className="hidden sm:block text-xs sm:text-[13px] text-dim">{book.author}</div>
           </div>
         )}
         <div
-          className={`absolute top-2 right-2 text-[11px] px-2 py-1 rounded font-medium ${isDone ? 'bg-accent text-white border border-transparent' : 'bg-surface text-ink border border-border'}`}
+          className={`absolute top-2 right-2 text-xs sm:text-[13px] px-2 py-1 rounded font-medium ${isDone ? 'bg-accent text-white border border-transparent' : 'bg-surface text-ink border border-border'}`}
         >
           {status.label}
         </div>
       </div>
       <div className="flex-1 sm:flex-none px-3.5 py-3 sm:pt-3 sm:pb-4 flex flex-col justify-start">
-        <div className="flex justify-between items-center text-[11px] text-dim mb-2 sm:mb-[15px]">
+        <div className="flex justify-between items-center text-xs sm:text-[13px] text-dim mb-2 sm:mb-[15px]">
           <span className="text-ink">
             <Stars rating={book.rating || 0} size={11} showEmpty />
           </span>
@@ -77,7 +79,7 @@ export default function BookCard({ book, quoteCount, onClick }: Props) {
             </span>
           )}
         </div>
-        <div className="text-xs text-dim mb-2 sm:mb-2.5">{book.author || '저자 미상'}</div>
+        <div className="text-xs sm:text-[13px] text-dim mb-2 sm:mb-2.5">{book.author || '저자 미상'}</div>
       </div>
     </div>
   )

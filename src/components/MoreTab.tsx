@@ -43,7 +43,7 @@ export default function MoreTab({ user, syncStatus, incomingCount, onExport, onS
             )}
             <div className="flex-1 min-w-0 flex flex-col gap-0.5">
               <div className="text-[15px] font-semibold">{user.displayName || '사용자'}</div>
-              <div className="text-xs text-dim truncate">{user.email}</div>
+              <div className="text-xs sm:text-[13px] text-dim truncate">{user.email}</div>
             </div>
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-surface2 flex-shrink-0">
               <span className={`w-1.5 h-1.5 rounded-full ${syncColor}`} />
@@ -57,7 +57,7 @@ export default function MoreTab({ user, syncStatus, incomingCount, onExport, onS
             </span>
             <span className="flex-1 flex flex-col gap-0.5">
               <span className="text-[15px] font-semibold text-ink">로그인</span>
-              <span className="text-xs text-dim">여러 기기에서 동기화하려면 로그인이 필요해요</span>
+              <span className="text-xs sm:text-[13px] text-dim">여러 기기에서 동기화하려면 로그인이 필요해요</span>
             </span>
             <IconChevronRight />
           </button>
@@ -98,7 +98,7 @@ export default function MoreTab({ user, syncStatus, incomingCount, onExport, onS
                 onClick={() => {
                   if (theme !== 'light') toggleTheme()
                 }}
-                className={`px-3 py-1 rounded-md text-[11px] border-none cursor-pointer ${theme === 'light' ? 'bg-surface text-ink font-medium' : 'bg-transparent text-dim'}`}
+                className={`px-3 py-1 rounded-md text-[13px] sm:text-sm border-none cursor-pointer ${theme === 'light' ? 'bg-surface text-ink font-medium' : 'bg-transparent text-dim'}`}
               >
                 라이트
               </button>
@@ -106,7 +106,7 @@ export default function MoreTab({ user, syncStatus, incomingCount, onExport, onS
                 onClick={() => {
                   if (theme !== 'dark') toggleTheme()
                 }}
-                className={`px-3 py-1 rounded-md text-[11px] border-none cursor-pointer ${theme === 'dark' ? 'bg-surface text-ink font-medium' : 'bg-transparent text-dim'}`}
+                className={`px-3 py-1 rounded-md text-[13px] sm:text-sm border-none cursor-pointer ${theme === 'dark' ? 'bg-surface text-ink font-medium' : 'bg-transparent text-dim'}`}
               >
                 다크
               </button>
@@ -125,7 +125,7 @@ export default function MoreTab({ user, syncStatus, incomingCount, onExport, onS
 
         <div className="px-1 pt-1 flex flex-col gap-1">
           <div className="font-mono text-[10px] text-dim opacity-70">Booklog</div>
-          <div className="text-[11px] text-dim opacity-70 leading-relaxed">
+          <div className="text-xs sm:text-[13px] text-dim opacity-70 leading-relaxed">
             로그아웃해도 이 기기의 기록은 남아 있어요.
           </div>
         </div>

@@ -63,7 +63,7 @@ export default function HomeFab() {
         <button
           onClick={() => setOpen((o) => !o)}
           aria-label={open ? '빠른 추가 닫기' : '빠른 추가'}
-          className="w-14 h-14 rounded-full bg-accent text-white border-none cursor-pointer shadow-fab flex items-center justify-center text-3xl font-light leading-none transition-transform duration-200"
+          className="w-11 h-11 rounded-full bg-[var(--fab-soft)] text-accent border-none cursor-pointer shadow-fab flex items-center justify-center text-2xl font-light leading-none transition-transform duration-200"
           style={{ transform: open ? 'rotate(45deg)' : 'rotate(0deg)' }}
         >
           +

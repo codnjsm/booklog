@@ -35,7 +35,7 @@ export default function PostCard({ post, isOwn, onDelete }: Props) {
       <div className="flex items-center gap-2 mb-3">
         <Avatar url={post.authorPhotoURL} name={post.authorDisplayName} />
         <span className="text-sm font-medium text-ink">{post.authorDisplayName || '이름 없음'}</span>
-        <span className="font-mono text-[11px] text-dim ml-auto">{relativeDay(post.createdAt)}</span>
+        <span className="font-mono text-xs sm:text-[13px] text-dim ml-auto">{relativeDay(post.createdAt)}</span>
         {isOwn && (
           <button
             onClick={onDelete}
@@ -49,13 +49,13 @@ export default function PostCard({ post, isOwn, onDelete }: Props) {
 
       {attachment.kind === 'quote' ? (
         <div className="bg-surface2 rounded-lg px-3.5 py-3">
-          <div className="font-serif text-sm sm:text-base leading-[1.8] text-ink">
+          <div className="font-serif text-sm sm:text-[15px] leading-[1.8] text-ink">
             &ldquo;
             <HighlightedText text={attachment.quoteText} highlights={attachment.quoteHighlights ?? undefined} />
             &rdquo;
           </div>
           {attachment.bookTitle && (
-            <div className="text-xs text-dim mt-2">
+            <div className="text-xs sm:text-[13px] text-dim mt-2">
               {attachment.bookTitle}
               {attachment.bookAuthor ? ` · ${attachment.bookAuthor}` : ''}
             </div>
@@ -72,7 +72,7 @@ export default function PostCard({ post, isOwn, onDelete }: Props) {
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-[13px] font-semibold text-ink truncate">{attachment.bookTitle}</div>
-            <div className="text-xs text-dim truncate mt-0.5">{attachment.bookAuthor}</div>
+            <div className="text-xs sm:text-[13px] text-dim truncate mt-0.5">{attachment.bookAuthor}</div>
             <span
               className={`inline-block text-[10px] px-1.5 py-0.5 rounded mt-1 ${STATUS_BADGE[attachment.bookStatus].cls}`}
             >
@@ -82,7 +82,9 @@ export default function PostCard({ post, isOwn, onDelete }: Props) {
         </div>
       )}
 
-      <div className="text-xs text-dim italic border-l-2 border-border pl-2.5 mt-3 leading-relaxed">{post.caption}</div>
+      <div className="text-xs sm:text-[13px] text-dim italic border-l-2 border-border pl-2.5 mt-3 leading-relaxed">
+        {post.caption}
+      </div>
     </div>
   )
 }
