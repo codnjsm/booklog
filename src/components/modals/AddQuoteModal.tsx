@@ -29,10 +29,17 @@ const MODAL_HEADER =
 const MODAL_CLOSE = 'bg-transparent border-none text-dim text-lg cursor-pointer leading-none px-2 py-1 hover:text-ink'
 const MODAL_BODY = 'px-[18px] py-3.5 sm:px-6 sm:py-[22px] text-sm sm:text-[15px]'
 const MODAL_ACTIONS = 'flex gap-2 justify-end px-[18px] py-3 sm:px-6 sm:py-4 border-t border-border'
-const FORM_LABEL = 'flex text-xs text-dim mb-1.5 uppercase tracking-[.05em]'
+const FORM_LABEL = 'flex text-sm text-dim mb-1.5 uppercase tracking-[.05em] pl-2'
 const FORM_INPUT =
   'w-full bg-bg border border-border text-ink px-3 py-2 rounded-[7px] text-base font-sans placeholder:text-dim placeholder:opacity-50 focus:outline-none focus:border-accent'
-const FORM_TEXTAREA = `${FORM_INPUT} resize-y min-h-[90px] leading-[1.6]`
+const FORM_TEXTAREA = `${FORM_INPUT} resize-none min-h-[90px] max-h-[500px] overflow-y-auto leading-[1.6]`
+
+/** 최소 높이는 유지하되 내용이 길어지면 500px까지 늘어나고, 그 이상은 내부 스크롤로 처리한다. */
+function autoResizeTextarea(el: HTMLTextAreaElement | null) {
+  if (!el) return
+  el.style.height = 'auto'
+  el.style.height = `${Math.min(el.scrollHeight, 500)}px`
+}
 const FORM_SELECT = `${FORM_INPUT} pr-8`
 const BTN =
   'bg-ink text-bg border-none px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg text-xs sm:text-[13px] cursor-pointer transition-all duration-150 font-sans hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed'
@@ -54,6 +61,7 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
   )
   const textRefs = useRef<(HTMLTextAreaElement | null)[]>([])
   const photoInputRef = useRef<HTMLInputElement>(null)
+  const ocrTargetIndexRef = useRef<number | null>(null)
   const [ocrLoading, setOcrLoading] = useState(false)
 
   const updateEntry = (i: number, field: 'text' | 'note', val: string) =>
@@ -76,13 +84,35 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
 
   const clearHighlights = (i: number) =>
     setEntries((prev) => prev.map((e, idx) => (idx === i ? { ...e, highlights: undefined } : e)))
+
+  /** 드래그로 고른 부분만 남기고 나머지는 버린다. OCR로 긴 문단이 통째로 들어왔을 때 필요한 부분만 추리는 용도. */
+  const keepSelectionOnly = (i: number) => {
+    const el = textRefs.current[i]
+    if (!el) return
+    const { selectionStart: start, selectionEnd: end, value } = el
+    if (start === end) {
+      showToast('남길 부분을 먼저 드래그해주세요')
+      return
+    }
+    // 기존 형광펜 범위는 이전 텍스트 기준이라 새 텍스트에서는 의미가 없어져 같이 지운다.
+    setEntries((prev) =>
+      prev.map((e, idx) => (idx === i ? { ...e, text: value.slice(start, end), highlights: undefined } : e)),
+    )
+  }
   const addEntry = () => setEntries((prev) => [...prev, { text: '', note: '' }])
   const removeEntry = (i: number) => setEntries((prev) => prev.filter((_, idx) => idx !== i))
 
+  const triggerPhotoImport = (i: number) => {
+    if (entries[i].text.trim() && !confirm('현재 입력된 문장을 사진 인식 결과로 바꿀까요?')) return
+    ocrTargetIndexRef.current = i
+    photoInputRef.current?.click()
+  }
+
   const handlePhotoSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
+    const targetIndex = ocrTargetIndexRef.current
     e.target.value = ''
-    if (!file) return
+    if (!file || targetIndex === null) return
 
     setOcrLoading(true)
     try {
@@ -92,10 +122,7 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
         showToast('사진에서 문장을 찾지 못했어요')
         return
       }
-      // 새 항목 하나가 아직 비어있으면 거기 채우고, 아니면 항목을 추가한다.
-      setEntries((prev) =>
-        prev.length === 1 && !prev[0].text.trim() ? [{ ...prev[0], text }] : [...prev, { text, note: '' }],
-      )
+      setEntries((prev) => prev.map((e2, idx) => (idx === targetIndex ? { ...e2, text } : e2)))
     } catch {
       showToast('사진에서 텍스트를 읽어오지 못했어요')
     } finally {
@@ -160,7 +187,7 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
           </div>
 
           {entries.map((entry, i) => (
-            <div key={i} className="bg-surface2 border border-border rounded-[10px] px-3.5 py-3 mb-2.5 relative">
+            <div key={i} className="bg-surface2 border border-border rounded-[10px] px-4 py-4 mb-3 relative">
               {entries.length > 1 && (
                 <button
                   type="button"
@@ -170,20 +197,39 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
                   ×
                 </button>
               )}
-              <div className="mb-2">
-                <label className={FORM_LABEL}>
-                  문장 <span className="text-danger">*</span>
-                </label>
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="flex text-sm text-dim uppercase tracking-[.05em] pl-2">
+                    문장 <span className="text-danger">*</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => triggerPhotoImport(i)}
+                    disabled={ocrLoading}
+                    className="text-xs text-accent bg-transparent border-none cursor-pointer pr-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {ocrLoading ? '인식 중…' : '+ 사진으로 추가'}
+                  </button>
+                </div>
                 <textarea
                   ref={(el) => {
                     textRefs.current[i] = el
+                    autoResizeTextarea(el)
                   }}
                   placeholder="간직하고 싶은 문장을 적어보세요…"
                   value={entry.text}
                   onChange={(e) => updateEntry(i, 'text', e.target.value)}
                   className={`${FORM_TEXTAREA} mb-0`}
                 />
-                <div className="flex items-center gap-2 mt-1.5">
+                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => keepSelectionOnly(i)}
+                    className={BTN_SMALL_SECONDARY}
+                  >
+                    선택한 부분만 남기기
+                  </button>
                   <button
                     type="button"
                     onMouseDown={(e) => e.preventDefault()}
@@ -217,6 +263,7 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
               <div>
                 <label className={FORM_LABEL}>나의 생각</label>
                 <textarea
+                  ref={(el) => autoResizeTextarea(el)}
                   placeholder="이 문장에 대한 느낌이나 생각…"
                   value={entry.note}
                   onChange={(e) => updateEntry(i, 'note', e.target.value)}
@@ -227,27 +274,11 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
           ))}
 
           {!editId && (
-            <div className="flex gap-2 flex-wrap">
-              <button type="button" className={BTN_SMALL_SECONDARY} onClick={addEntry}>
-                + 문장 추가
-              </button>
-              <button
-                type="button"
-                className={BTN_SMALL_SECONDARY}
-                onClick={() => photoInputRef.current?.click()}
-                disabled={ocrLoading}
-              >
-                {ocrLoading ? '인식 중…' : '사진에서 가져오기'}
-              </button>
-              <input
-                ref={photoInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handlePhotoSelected}
-                className="hidden"
-              />
-            </div>
+            <button type="button" className={BTN_SMALL_SECONDARY} onClick={addEntry}>
+              + 문장 추가
+            </button>
           )}
+          <input ref={photoInputRef} type="file" accept="image/*" onChange={handlePhotoSelected} className="hidden" />
         </div>
         <div className={MODAL_ACTIONS}>
           {editId && onDelete && (
