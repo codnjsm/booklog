@@ -66,11 +66,11 @@ export default function PublishPostModal({ books, quotes, onClose, onPublish, on
       return onPublish({ kind: picked.kind, refId: picked.refId, caption: caption.trim() })
     },
     onSuccess: () => {
-      showToast('친구에게 공유했어요')
+      showToast('친구에게 공유했어요', 'success')
       onPublished()
       onClose()
     },
-    onError: (err) => showToast(err instanceof Error ? err.message : '공유 중 오류가 발생했어요'),
+    onError: (err) => showToast(err instanceof Error ? err.message : '공유 중 오류가 발생했어요', 'error'),
   })
 
   const captionValid = caption.trim().length > 0 && caption.trim().length <= 300

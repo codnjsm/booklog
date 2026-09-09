@@ -115,8 +115,16 @@ export default function FriendsTab({
     mutationFn: onDeletePost,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['friendFeed'] })
-      showToast('게시물이 삭제됐어요')
+      showToast('게시물이 삭제됐어요', 'success')
     },
+  })
+
+  // 수락·거절·친구 삭제는 모두 "서버에 쓰고, 성공하면 토스트" 형태가 같다.
+  // 성공 여부를 기다려서 띄우므로 실패한 동작에 완료 문구가 뜨지 않는다.
+  const friendActionMutation = useMutation({
+    mutationFn: ({ run }: { run: () => void; done: string }) => Promise.resolve(run()),
+    onSuccess: (_data, { done }) => showToast(done, 'success'),
+    onError: () => showToast('처리 중 오류가 발생했어요', 'error'),
   })
 
   const [friendFilter, setFriendFilter] = useState('')
@@ -286,10 +294,26 @@ export default function FriendsTab({
                       email={req.profile?.email}
                     />
                     <div className="flex gap-1.5 flex-shrink-0">
-                      <button className={BTN_SM} onClick={() => onAcceptRequest(req.id)}>
+                      <button
+                        className={BTN_SM}
+                        onClick={() =>
+                          friendActionMutation.mutate({
+                            run: () => onAcceptRequest(req.id),
+                            done: '친구 요청을 수락했어요',
+                          })
+                        }
+                      >
                         수락
                       </button>
-                      <button className={BTN_SM_DANGER} onClick={() => onRejectRequest(req.id)}>
+                      <button
+                        className={BTN_SM_DANGER}
+                        onClick={() =>
+                          friendActionMutation.mutate({
+                            run: () => onRejectRequest(req.id),
+                            done: '친구 요청을 거절했어요',
+                          })
+                        }
+                      >
                         거절
                       </button>
                     </div>
@@ -357,7 +381,10 @@ export default function FriendsTab({
                             className={BTN_SM_DANGER}
                             onClick={() => {
                               if (confirm(`${f.displayName || f.email}님을 친구 목록에서 삭제할까요?`))
-                                onRemoveFriend(f.uid)
+                                friendActionMutation.mutate({
+                                  run: () => onRemoveFriend(f.uid),
+                                  done: '친구를 삭제했어요',
+                                })
                             }}
                           >
                             삭제

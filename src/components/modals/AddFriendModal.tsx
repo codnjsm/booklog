@@ -1,7 +1,8 @@
-import { useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
+import { useRef, useState } from 'react'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import type { User } from 'firebase/auth'
 import type { UserProfile, FriendRequest } from '../../types'
+import { useAppUI } from '../../contexts/AppUIContext'
 import { IconSearch } from '../layout/icons'
 import Modal from './Modal'
 
@@ -31,21 +32,38 @@ interface Props {
 }
 
 export default function AddFriendModal({ user, friends, incoming, outgoing, onSearch, onSendRequest, onClose }: Props) {
+  const { showToast } = useAppUI()
   const [emailInput, setEmailInput] = useState('')
-  const [results, setResults] = useState<UserProfile[] | 'self'>()
+  // 입력할 때마다 서버를 부르지 않도록, 책 검색(AddBookModal)과 같은 방식으로 디바운스한다
+  const [debouncedInput, setDebouncedInput] = useState('')
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const searchMutation = useMutation({
-    mutationFn: onSearch,
-    onSuccess: (found) => setResults(found),
+  const handleInput = (v: string) => {
+    setEmailInput(v)
+    if (timerRef.current) clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(() => setDebouncedInput(v), 400)
+  }
+
+  const query = debouncedInput.trim().toLowerCase()
+  const isSelf = query === user?.email?.toLowerCase()
+
+  const {
+    data: results = [],
+    isFetching: searching,
+    isSuccess,
+  } = useQuery({
+    queryKey: ['friendSearch', query],
+    queryFn: () => onSearch(query),
+    enabled: query.length >= MIN_SEARCH_LENGTH && !isSelf,
+    staleTime: 60 * 1000,
+    retry: false,
   })
-  const searching = searchMutation.isPending
 
+  // 요청을 보내도 목록은 그대로 둔다 — 상태 뱃지가 "요청 보냄"으로 바뀌고, 이어서 다른 사람도 추가할 수 있다
   const sendRequestMutation = useMutation({
     mutationFn: (toUid: string) => Promise.resolve(onSendRequest(toUid)),
-    onSuccess: () => {
-      setResults(undefined)
-      setEmailInput('')
-    },
+    onSuccess: () => showToast('친구 요청을 보냈어요', 'success'),
+    onError: () => showToast('친구 요청 중 오류가 발생했어요', 'error'),
   })
   const sending = sendRequestMutation.isPending
 
@@ -56,17 +74,8 @@ export default function AddFriendModal({ user, friends, incoming, outgoing, onSe
     return 'none'
   }
 
-  const query = emailInput.trim().toLowerCase()
-  const tooShort = query.length > 0 && query.length < MIN_SEARCH_LENGTH
-
-  const handleSearch = () => {
-    if (query.length < MIN_SEARCH_LENGTH) return
-    if (query === user?.email?.toLowerCase()) {
-      setResults('self')
-      return
-    }
-    searchMutation.mutate(query)
-  }
+  const typed = emailInput.trim()
+  const tooShort = typed.length > 0 && typed.length < MIN_SEARCH_LENGTH
 
   return (
     <Modal onClose={onClose} labelledBy="add-friend-modal-title">
@@ -88,33 +97,24 @@ export default function AddFriendModal({ user, friends, incoming, outgoing, onSe
               type="email"
               placeholder="친구의 이메일 앞부분 입력…"
               value={emailInput}
-              onChange={(e) => {
-                setEmailInput(e.target.value)
-                setResults(undefined)
-              }}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              onChange={(e) => handleInput(e.target.value)}
               autoFocus
               className="flex-1 min-w-0 bg-transparent border-none text-ink py-[9px] text-sm sm:text-[15px] font-sans placeholder:text-dim focus:outline-none"
             />
-            <span className="w-px self-stretch my-1.5 bg-border flex-shrink-0" />
-            <button
-              className="flex-shrink-0 bg-transparent border-none px-1 py-[9px] text-[13px] sm:text-sm font-medium text-accent cursor-pointer disabled:text-dim disabled:cursor-not-allowed"
-              onClick={handleSearch}
-              disabled={searching || query.length < MIN_SEARCH_LENGTH}
-            >
-              {searching ? '검색중…' : '검색'}
-            </button>
+            {searching && (
+              <span className="flex-shrink-0 w-3.5 h-3.5 border-2 border-border border-t-accent rounded-full animate-spin" />
+            )}
           </div>
 
           {tooShort && (
             <div className="text-xs sm:text-[13px] text-dim mt-2.5">{MIN_SEARCH_LENGTH}자 이상 입력해주세요</div>
           )}
 
-          {results === 'self' && <div className="text-xs sm:text-[13px] text-dim mt-2.5">내 계정이에요</div>}
-          {Array.isArray(results) && results.length === 0 && (
+          {isSelf && <div className="text-xs sm:text-[13px] text-dim mt-2.5">내 계정이에요</div>}
+          {isSuccess && !searching && results.length === 0 && (
             <div className="text-xs sm:text-[13px] text-dim mt-2.5">해당 이메일로 시작하는 계정을 찾을 수 없어요</div>
           )}
-          {Array.isArray(results) && results.length > 0 && (
+          {results.length > 0 && (
             <div className="mt-2.5 border border-border rounded-xl">
               {results.map((person) => (
                 <div

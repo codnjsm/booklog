@@ -70,9 +70,7 @@ export default function MoreTab({ user, syncStatus, incomingCount, onExport, onS
             </span>
             <span className="text-sm text-ink">친구</span>
             {incomingCount > 0 && (
-              <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full bg-danger text-white text-[10px] font-bold">
-                {incomingCount > 99 ? '99+' : incomingCount}
-              </span>
+              <span className="text-danger text-[10px] font-bold">{incomingCount > 99 ? '99+' : incomingCount}</span>
             )}
             <span className="flex-1" />
             <span className="text-dim">

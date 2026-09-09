@@ -83,12 +83,12 @@ function AppShell() {
 
   const handleExport = useCallback(() => {
     exportData()
-    showToast('데이터를 내보냈어요')
+    showToast('데이터를 내보냈어요', 'success')
   }, [exportData, showToast])
   const handleFinishBook = useCallback(
     (id: string) => {
       updateBook(id, { status: 'done' })
-      showToast('완독 처리했어요')
+      showToast('완독 처리했어요', 'success')
     },
     [updateBook, showToast],
   )
@@ -97,13 +97,16 @@ function AppShell() {
       await signIn()
     } catch (e) {
       const err = e as { code?: string }
-      showToast(err.code === 'auth/popup-closed-by-user' ? '로그인이 취소됐어요' : '로그인 중 오류가 발생했어요')
+      showToast(
+        err.code === 'auth/popup-closed-by-user' ? '로그인이 취소됐어요' : '로그인 중 오류가 발생했어요',
+        err.code === 'auth/popup-closed-by-user' ? 'info' : 'error',
+      )
     }
   }, [signIn, showToast])
   const handleSignOut = useCallback(async () => {
     if (!confirm('로그아웃할까요?\n이 기기의 데이터는 그대로 남아있어요.')) return
     await signOut()
-    showToast('로그아웃됐어요')
+    showToast('로그아웃됐어요', 'success')
   }, [signOut, showToast])
 
   return (
@@ -125,15 +128,15 @@ function AppShell() {
           onDeleteQuote={(id) => {
             if (!confirm('이 문장을 삭제할까요?')) return
             deleteQuote(id)
-            showToast('문장이 삭제됐어요')
+            showToast('문장이 삭제됐어요', 'success')
           }}
           onAddWord={(data) => {
             addWord(data)
-            showToast('단어가 저장됐어요')
+            showToast('단어가 저장됐어요', 'success')
           }}
           onDeleteWord={(id) => {
             deleteWord(id)
-            showToast('단어가 삭제됐어요')
+            showToast('단어가 삭제됐어요', 'success')
           }}
         />
       )}
@@ -184,10 +187,10 @@ function AppShell() {
           onSave={(data, editId) => {
             if (editId) {
               updateBook(editId, data)
-              showToast('책이 수정됐어요')
+              showToast('책이 수정됐어요', 'success')
             } else {
               addBook(data)
-              showToast('책이 추가됐어요')
+              showToast('책이 추가됐어요', 'success')
             }
             closeModal()
           }}
@@ -217,11 +220,11 @@ function AppShell() {
               return
             deleteBook(id)
             closeModal()
-            showToast('책이 삭제됐어요')
+            showToast('책이 삭제됐어요', 'success')
           }}
           onTogglePrivate={(id, next) => {
             updateBook(id, { isPrivate: next || undefined })
-            showToast(next ? '친구에게 비공개로 바꿨어요' : '친구에게 공개로 바꿨어요')
+            showToast(next ? '친구에게 비공개로 바꿨어요' : '친구에게 공개로 바꿨어요', 'success')
           }}
           onAddQuote={(bookId) => openAddQuote(bookId)}
           onEditQuote={(quoteId) => openAddQuote(undefined, quoteId)}
@@ -237,17 +240,17 @@ function AppShell() {
           onSave={(data, editId) => {
             if (editId) {
               updateQuote(editId, data)
-              showToast('문장이 수정됐어요')
+              showToast('문장이 수정됐어요', 'success')
             } else {
               addQuote(data)
-              showToast('문장이 추가됐어요')
+              showToast('문장이 추가됐어요', 'success')
             }
             closeModal()
           }}
           onDelete={(id) => {
             deleteQuote(id)
             closeModal()
-            showToast('문장이 삭제됐어요')
+            showToast('문장이 삭제됐어요', 'success')
           }}
         />
       )}
@@ -257,7 +260,7 @@ function AppShell() {
           onClose={closeModal}
           onAddWord={(data) => {
             addWord(data)
-            showToast('단어가 저장됐어요')
+            showToast('단어가 저장됐어요', 'success')
           }}
         />
       )}

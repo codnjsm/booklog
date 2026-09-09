@@ -17,8 +17,13 @@ export type Modal =
 // Modals that aren't worth a shareable URL (transient create/edit flows) stay in local state.
 type LocalModal = Exclude<Modal, { type: 'bookDetail' }>
 
+/** 'info'는 안내/취소 같은 중립 메시지의 기본값이다 — 완료도 실패도 아닌 걸 성공(초록 체크)으로
+ * 잘못 표시하지 않기 위해 명시적으로 골라야만 success/error가 된다. */
+export type ToastType = 'success' | 'error' | 'info'
+
 interface ToastState {
   msg: string
+  type: ToastType
   key: number
 }
 
@@ -40,7 +45,7 @@ interface AppUIValue {
   toggleTheme: () => void
 
   toast: ToastState | null
-  showToast: (msg: string) => void
+  showToast: (msg: string, type?: ToastType) => void
 
   loginDismissed: boolean
   dismissLogin: () => void
@@ -157,7 +162,7 @@ export function AppUIProvider({ children }: { children: ReactNode }) {
   }, [clearBookParam])
 
   const toggleTheme = useCallback(() => setTheme((t) => (t === 'light' ? 'dark' : 'light')), [])
-  const showToast = useCallback((msg: string) => setToast({ msg, key: Date.now() }), [])
+  const showToast = useCallback((msg: string, type: ToastType = 'info') => setToast({ msg, type, key: Date.now() }), [])
   const dismissLogin = useCallback(() => setLoginDismissed(true), [])
   const toggleUserMenu = useCallback(() => setUserMenuOpen((o) => !o), [])
   const closeUserMenu = useCallback(() => setUserMenuOpen(false), [])

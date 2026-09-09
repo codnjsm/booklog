@@ -39,11 +39,7 @@ const MOBILE_NAV: { id: Tab; label: string; Icon: typeof IconHome }[] = [
 ]
 
 function Badge({ count }: { count: number }) {
-  return (
-    <span className="inline-flex items-center justify-center min-w-[16px] h-4 px-1.5 rounded-full bg-danger text-white text-[10px] font-bold">
-      {count > 99 ? '99+' : count}
-    </span>
-  )
+  return <span className="text-danger text-[10px] font-bold">{count > 99 ? '99+' : count}</span>
 }
 
 export default function AppLayout({
@@ -161,15 +157,11 @@ export default function AppLayout({
               onClick={() => changeTab(id)}
               className={`flex flex-col items-center gap-1 bg-transparent border-none cursor-pointer ${active ? 'text-accent' : 'text-dim'}`}
             >
-              <span className="relative inline-flex items-center justify-center w-5 h-5">
-                <Icon size={20} />
-                {id === 'more' && incomingCount > 0 && (
-                  <span className="absolute -top-2 left-3 inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-danger text-white text-[9px] font-bold border-[1.5px] border-surface">
-                    {incomingCount > 99 ? '99+' : incomingCount}
-                  </span>
-                )}
+              <Icon size={20} />
+              <span className="inline-flex items-center gap-1">
+                <span className="text-[10px]">{label}</span>
+                {id === 'more' && incomingCount > 0 && <span className="w-1.5 h-1.5 rounded-full bg-accent" />}
               </span>
-              <span className="text-[10px]">{label}</span>
             </button>
           )
         })}

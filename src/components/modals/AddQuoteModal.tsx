@@ -109,12 +109,12 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
       const base64 = await fileToResizedBase64(file)
       const text = (await ocrBookPage(base64)).trim()
       if (!text) {
-        showToast('사진에서 문장을 찾지 못했어요')
+        showToast('사진에서 문장을 찾지 못했어요', 'error')
         return
       }
       setOcrPreview({ index: targetIndex, text })
     } catch {
-      showToast('사진에서 텍스트를 읽어오지 못했어요')
+      showToast('사진에서 텍스트를 읽어오지 못했어요', 'error')
     } finally {
       setOcrLoading(false)
     }
