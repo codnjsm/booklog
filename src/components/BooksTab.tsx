@@ -68,7 +68,7 @@ export default function BooksTab({ books, quotes }: { books: Book[]; quotes: Quo
           title: '아직 책이 없어요',
           desc: (
             <>
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-accentsoft text-accent align-[1px] sm:align-[3px]">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-accentsoft text-accent">
                 + 책 추가
               </span>{' '}
               버튼으로 시작해보세요

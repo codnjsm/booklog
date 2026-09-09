@@ -12,9 +12,10 @@ const MODAL_HEADER =
   'sticky top-0 z-10 bg-surface pt-3.5 px-[18px] pb-3 sm:pt-[22px] sm:px-6 sm:pb-4 border-b border-border flex justify-between items-center'
 const MODAL_CLOSE = 'bg-transparent border-none text-dim text-lg cursor-pointer leading-none px-2 py-1 hover:text-ink'
 const MODAL_BODY = 'px-[18px] py-3.5 sm:px-6 sm:py-[22px]'
-// 검색 결과 행 안에 들어가는 버튼이라 작은 사이즈(py-1.5)를 쓴다 — 친구 탭의 수락 버튼과 같은 규격
+// 검색 결과 행 안에 들어가는 버튼이라 작은 사이즈(py-1.5)를 쓴다 — 친구 탭의 수락 버튼과 같은 규격.
+// 경쟁하는 버튼이 없는 단일 액션이라 연한 배경으로 — 진한 accent는 모달 안에서 너무 튄다.
 const BTN_SM =
-  'bg-accent text-white border-none font-medium px-3 py-1.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:bg-accenthover disabled:opacity-50 disabled:cursor-not-allowed'
+  'bg-accentsoft text-accent border-none font-medium px-3 py-1.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed'
 const STATUS_PILL =
   'text-xs sm:text-[13px] text-dim bg-bg border border-border rounded-full px-2.5 py-[3px] whitespace-nowrap flex-shrink-0'
 

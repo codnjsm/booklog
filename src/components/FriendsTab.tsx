@@ -30,9 +30,10 @@ interface Props {
   onDeletePost: (postId: string) => Promise<void>
 }
 
-// 리스트 행 안에 들어가는 버튼이라 작은 사이즈(py-1.5)를 쓴다 — QuoteCard와 같은 규격
+// 리스트 행 안에 들어가는 버튼이라 작은 사이즈(py-1.5)를 쓴다 — QuoteCard와 같은 규격.
+// 경쟁하는 버튼이 없는 단일 액션(수락)이라 연한 배경으로 — 진한 accent는 목록 행 안에서 너무 튄다.
 const BTN_SM =
-  'bg-accent text-white border-none font-medium px-3 py-1.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:bg-accenthover disabled:opacity-50 disabled:cursor-not-allowed'
+  'bg-accentsoft text-accent border-none font-medium px-3 py-1.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed'
 const BTN_SM_SECONDARY =
   'bg-surface text-ink border border-border px-3 py-1.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:bg-surface2'
 const BTN_SM_DANGER =
@@ -351,7 +352,7 @@ export default function FriendsTab({
                 </div>
                 <h3 className="font-sans text-ink mb-1.5 text-sm sm:text-[15px]">아직 친구가 없어요</h3>
                 <p className="text-xs sm:text-[13px]">
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-accentsoft text-accent align-[1px] sm:align-[3px]">
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-accentsoft text-accent">
                     + 친구 추가
                   </span>{' '}
                   버튼으로 친구에게 요청을 보내보세요
