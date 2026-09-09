@@ -4,6 +4,28 @@ import type { AppState, Book, Quote, Word } from '../types'
 import { loadUserData, saveUserData } from '../firebase'
 
 const STORAGE_KEY = 'reading-notes-data-v1'
+// 로컬 캐시가 지금 로그인한 사람 것인지 구분하는 꼬리표.
+// 이게 없으면 "A로 로그인 -> 로그아웃 -> B로 로그인"에서 로컬에 남은 A의 데이터를
+// "B가 게스트일 때 쓴 데이터"로 착각해 B의 계정에 그대로 업로드해버린다.
+const OWNER_KEY = 'reading-notes-data-owner-v1'
+// 로그인 전 화면을 채우는 데모용 데이터인지 구분하는 꼬리표. 실제로 손을 대기 전까지는
+// "게스트가 직접 쓴 데이터"가 아니므로 로그인해도 계정에 업로드하면 안 된다.
+const SEED_KEY = 'reading-notes-data-seed-v1'
+
+function getLocalOwnerUid(): string | null {
+  return localStorage.getItem(OWNER_KEY)
+}
+function setLocalOwnerUid(uid: string | null) {
+  if (uid) localStorage.setItem(OWNER_KEY, uid)
+  else localStorage.removeItem(OWNER_KEY)
+}
+function isLocalSeedOnly(): boolean {
+  return localStorage.getItem(SEED_KEY) === '1'
+}
+function setLocalSeedOnly(v: boolean) {
+  if (v) localStorage.setItem(SEED_KEY, '1')
+  else localStorage.removeItem(SEED_KEY)
+}
 
 function uid(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7)
@@ -89,6 +111,7 @@ export function useData(user: User | null) {
     if (!localStorage.getItem(STORAGE_KEY)) {
       const seed = makeSeedData()
       localStorage.setItem(STORAGE_KEY, JSON.stringify(seed))
+      setLocalSeedOnly(true)
       setStateRaw(seed)
     }
   }, [])
@@ -101,20 +124,37 @@ export function useData(user: User | null) {
     if (cloudLoadedRef.current) return
     cloudLoadedRef.current = true
 
+    // 로컬 캐시가 지금 로그인한 사람 것이 아니면(다른 계정이 쓰던 것이거나, 아직 손대지 않은
+    // 시드 데이터면) 아무리 최신이어도 신뢰하지 않는다 — 다른 사람 데이터를 이 계정에 올리지 않는다.
+    const localOwner = getLocalOwnerUid()
+    const localIsForeign = localOwner !== null && localOwner !== user.uid
+    const localIsSeed = isLocalSeedOnly()
+    const localIsUntrusted = localIsForeign || localIsSeed
+
     loadUserData(user.uid)
       .then((cloud) => {
         if (cloud?.books) {
           const local = getInitialState()
           // Don't overwrite local data if it's newer than cloud data
-          if (local.updatedAt && cloud.updatedAt && local.updatedAt > cloud.updatedAt) return
+          if (!localIsUntrusted && local.updatedAt && cloud.updatedAt && local.updatedAt > cloud.updatedAt) return
           const merged = { ...cloud, words: cloud.words ?? [] }
           setStateRaw(merged)
           localStorage.setItem(STORAGE_KEY, JSON.stringify(merged))
+          setLocalOwnerUid(user.uid)
+          setLocalSeedOnly(false)
+        } else if (localIsUntrusted) {
+          // 신규 가입이라 클라우드는 비어있는데, 로컬은 남의 캐시/시드 데이터다 — 올리지 않고 비운다.
+          const empty: AppState = { books: [], quotes: [], words: [] }
+          setStateRaw(empty)
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(empty))
+          setLocalOwnerUid(user.uid)
+          setLocalSeedOnly(false)
         } else {
           const local = getInitialState()
           if (local.books.length > 0 || local.quotes.length > 0) {
             saveUserData(user.uid, JSON.parse(JSON.stringify(local)))
           }
+          setLocalOwnerUid(user.uid)
         }
       })
       .catch(() => setSyncStatus('error'))
@@ -124,6 +164,8 @@ export function useData(user: User | null) {
     (next: AppState) => {
       const stamped = { ...next, updatedAt: new Date().toISOString() }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(stamped))
+      setLocalSeedOnly(false)
+      if (user) setLocalOwnerUid(user.uid)
       if (!user) return
       if (timerRef.current) clearTimeout(timerRef.current)
       setSyncStatus('saving')
