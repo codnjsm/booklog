@@ -69,9 +69,7 @@ export default function MoreTab({ user, syncStatus, incomingCount, onExport, onS
               <IconFriends size={19} />
             </span>
             <span className="text-sm text-ink">친구</span>
-            {incomingCount > 0 && (
-              <span className="text-danger text-[10px] font-bold">{incomingCount > 99 ? '99+' : incomingCount}</span>
-            )}
+            {incomingCount > 0 && <span className="w-1.5 h-1.5 rounded-full bg-accent" />}
             <span className="flex-1" />
             <span className="text-dim">
               <IconChevronRight />

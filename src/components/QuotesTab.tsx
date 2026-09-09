@@ -46,11 +46,20 @@ export default function QuotesTab({ quotes, books, onDeleteQuote }: Props) {
           <div className="w-11 h-11 mx-auto mb-3 rounded-full bg-surface2 flex items-center justify-center text-dim">
             <IconCollection size={20} />
           </div>
-          <h3 className="font-sans text-ink mb-1.5 text-[15px]">
+          <h3 className="font-sans text-ink mb-1.5 text-sm sm:text-[15px]">
             {quotes.length === 0 ? '아직 모은 문장이 없어요' : '검색 결과가 없어요'}
           </h3>
-          <p className="text-sm">
-            {quotes.length === 0 ? '책 상세 페이지에서 문장을 추가할 수 있어요' : '다른 조건으로 검색해보세요'}
+          <p className="text-xs sm:text-[13px]">
+            {quotes.length === 0 ? (
+              <>
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-accentsoft text-accent align-[3px]">
+                  + 문장 저장
+                </span>{' '}
+                버튼을 눌러 마음에 남은 문장을 저장해보세요
+              </>
+            ) : (
+              '다른 조건으로 검색해보세요'
+            )}
           </p>
         </div>
       ) : (

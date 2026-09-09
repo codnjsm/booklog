@@ -38,10 +38,6 @@ const MOBILE_NAV: { id: Tab; label: string; Icon: typeof IconHome }[] = [
   { id: 'more', label: '더보기', Icon: IconMore },
 ]
 
-function Badge({ count }: { count: number }) {
-  return <span className="text-danger text-[10px] font-bold">{count > 99 ? '99+' : count}</span>
-}
-
 export default function AppLayout({
   user,
   syncStatus,
@@ -80,7 +76,7 @@ export default function AppLayout({
                 <span>{label}</span>
                 <span className="flex-1" />
                 {id === 'friends' && incomingCount > 0 ? (
-                  <Badge count={incomingCount} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent" />
                 ) : (
                   counts[id] !== undefined && (
                     <span className="font-mono text-xs sm:text-[13px] text-dim">{counts[id]}</span>

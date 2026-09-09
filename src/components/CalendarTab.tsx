@@ -212,8 +212,8 @@ export default function CalendarTab({ books }: Props) {
             <div className="w-11 h-11 mx-auto mb-3 rounded-full bg-surface2 flex items-center justify-center text-dim">
               <IconBooks size={22} />
             </div>
-            <h3 className="font-sans text-ink mb-1.5 text-[15px]">읽은 기록이 없어요</h3>
-            <p className="text-sm">책에 읽은 날짜를 등록하면 달력에 표시돼요</p>
+            <h3 className="font-sans text-ink mb-1.5 text-sm sm:text-[15px]">읽은 기록이 없어요</h3>
+            <p className="text-xs sm:text-[13px]">책에 읽은 날짜를 등록하면 달력에 표시돼요</p>
           </div>
         ) : (
           <div className="bg-surface border border-border rounded-xl">

@@ -156,8 +156,8 @@ export default function FriendsTab({
         <div className="w-11 h-11 mx-auto mb-3 rounded-full bg-surface2 flex items-center justify-center text-dim">
           <IconFriends size={22} />
         </div>
-        <h3 className="font-sans text-ink mb-1.5 text-[15px]">로그인이 필요해요</h3>
-        <p className="text-sm">친구 기능은 로그인 후 사용할 수 있어요</p>
+        <h3 className="font-sans text-ink mb-1.5 text-sm sm:text-[15px]">로그인이 필요해요</h3>
+        <p className="text-xs sm:text-[13px]">친구 기능은 로그인 후 사용할 수 있어요</p>
       </div>
     )
   }
@@ -210,7 +210,7 @@ export default function FriendsTab({
             <div className="w-11 h-11 mx-auto mb-3 rounded-full bg-surface2 flex items-center justify-center text-dim">
               <IconBooks size={22} />
             </div>
-            <h3 className="font-sans text-ink mb-1.5 text-[15px]">
+            <h3 className="font-sans text-ink mb-1.5 text-sm sm:text-[15px]">
               {books.length === 0 ? '아직 책이 없어요' : '해당 상태의 책이 없어요'}
             </h3>
           </div>
@@ -261,8 +261,8 @@ export default function FriendsTab({
             <div className="w-11 h-11 mx-auto mb-3 rounded-full bg-surface2 flex items-center justify-center text-dim">
               <IconFriends size={22} />
             </div>
-            <h3 className="font-sans text-ink mb-1.5 text-[15px]">아직 공유한 게 없어요</h3>
-            <p className="text-sm">마음에 남은 문장이나 책을 친구에게 공유해보세요</p>
+            <h3 className="font-sans text-ink mb-1.5 text-sm sm:text-[15px]">아직 공유한 게 없어요</h3>
+            <p className="text-xs sm:text-[13px]">마음에 남은 문장이나 책을 친구에게 공유해보세요</p>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
@@ -345,10 +345,17 @@ export default function FriendsTab({
           {/* 친구 목록 */}
           <div>
             {friends.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-border bg-bg px-5 py-8 text-center text-sm text-dim">
-                아직 친구가 없어요
-                <br />
-                "+ 친구 추가"로 이메일을 검색해보세요
+              <div className="text-center py-[60px] px-5 text-dim bg-surface border border-dashed border-border rounded-[10px]">
+                <div className="w-11 h-11 mx-auto mb-3 rounded-full bg-surface2 flex items-center justify-center text-dim">
+                  <IconFriends size={22} />
+                </div>
+                <h3 className="font-sans text-ink mb-1.5 text-sm sm:text-[15px]">아직 친구가 없어요</h3>
+                <p className="text-xs sm:text-[13px]">
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-accentsoft text-accent align-[3px]">
+                    + 친구 추가
+                  </span>{' '}
+                  버튼으로 친구에게 요청을 보내보세요
+                </p>
               </div>
             ) : (
               <>

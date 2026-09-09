@@ -25,7 +25,7 @@ const SORTS: { id: SortKey; label: string }[] = [
 // 상태 칩만 눌렀는데 그 상태에 책이 없을 때 — 검색 얘기 대신 상태에 맞는 문구를 보여준다
 const EMPTY_BY_STATUS: Record<BookStatus, { title: string; desc: string }> = {
   wishlist: { title: '읽고 싶은 책이 아직 없어요', desc: '관심 가는 책을 담아두세요' },
-  reading: { title: '읽는 중인 책이 없어요', desc: '책을 골라 읽기 시작해보세요' },
+  reading: { title: '읽는 중인 책이 아직 없어요', desc: '책을 골라 읽기 시작해보세요' },
   done: { title: '완독한 책이 아직 없어요', desc: '다 읽은 책을 완독 처리해보세요' },
 }
 
@@ -64,7 +64,17 @@ export default function BooksTab({ books, quotes }: { books: Book[]; quotes: Quo
   // 빈 상태 세 가지: 책이 아예 없음 / 상태 필터에 해당하는 책이 없음 / 검색 결과가 없음
   const empty =
     books.length === 0
-      ? { title: '아직 책이 없어요', desc: '"+ 책 추가" 버튼으로 시작해보세요' }
+      ? {
+          title: '아직 책이 없어요',
+          desc: (
+            <>
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-accentsoft text-accent align-[3px]">
+                + 책 추가
+              </span>{' '}
+              버튼으로 시작해보세요
+            </>
+          ),
+        }
       : !search && statusFilter !== 'all'
         ? EMPTY_BY_STATUS[statusFilter]
         : { title: '검색 결과가 없어요', desc: '다른 검색어를 시도해보세요' }
@@ -126,8 +136,8 @@ export default function BooksTab({ books, quotes }: { books: Book[]; quotes: Quo
           <div className="w-11 h-11 mx-auto mb-3 rounded-full bg-surface2 flex items-center justify-center text-dim">
             <IconBooks size={22} />
           </div>
-          <h3 className="font-sans text-ink mb-1.5 text-[15px]">{empty.title}</h3>
-          <p className="text-sm">{empty.desc}</p>
+          <h3 className="font-sans text-ink mb-1.5 text-sm sm:text-[15px]">{empty.title}</h3>
+          <p className="text-xs sm:text-[13px]">{empty.desc}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5 sm:gap-[18px]">

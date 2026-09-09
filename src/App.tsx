@@ -67,7 +67,8 @@ function AppShell() {
     publishPost,
     removePost,
   } = useFriends(user)
-  const { tab, modal, showToast, loginDismissed, dismissLogin, openManualBook, openAddQuote, closeModal } = useAppUI()
+  const { tab, modal, showToast, loginDismissed, dismissLogin, openManualBook, openAddQuote, closeModal, changeTab } =
+    useAppUI()
   const queryClient = useQueryClient()
 
   useEffect(() => {
@@ -95,6 +96,8 @@ function AppShell() {
   const handleSignIn = useCallback(async () => {
     try {
       await signIn()
+      // 다른 계정으로 갈아타도 이전 세션이 보던 탭(예: 친구탭)에 그대로 남지 않도록 홈으로 보낸다.
+      changeTab('home')
     } catch (e) {
       const err = e as { code?: string }
       showToast(
@@ -102,7 +105,7 @@ function AppShell() {
         err.code === 'auth/popup-closed-by-user' ? 'info' : 'error',
       )
     }
-  }, [signIn, showToast])
+  }, [signIn, showToast, changeTab])
   const handleSignOut = useCallback(async () => {
     if (!confirm('로그아웃할까요?\n이 기기의 데이터는 그대로 남아있어요.')) return
     await signOut()

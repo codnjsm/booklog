@@ -1,5 +1,6 @@
 import type { Word } from '../types'
 import { isThisWeek, relativeDay } from '../lib/insights'
+import { IconWord } from './layout/icons'
 import WordSearchPanel from './WordSearchPanel'
 
 interface Props {
@@ -29,8 +30,12 @@ export default function WordsTab({ words, onAddWord, onDeleteWord }: Props) {
       </div>
 
       {sorted.length === 0 ? (
-        <div className="text-center py-[52px] px-5 text-dim bg-surface border border-dashed border-border rounded-xl">
-          <p className="text-sm">위에서 단어를 검색하고 저장해보세요</p>
+        <div className="text-center py-[60px] px-5 text-dim bg-surface border border-dashed border-border rounded-[10px]">
+          <div className="w-11 h-11 mx-auto mb-3 rounded-full bg-surface2 flex items-center justify-center text-dim">
+            <IconWord size={22} />
+          </div>
+          <h3 className="font-sans text-ink mb-1.5 text-sm sm:text-[15px]">아직 저장한 단어가 없어요</h3>
+          <p className="text-xs sm:text-[13px]">위에서 단어를 검색하고 저장해보세요</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
