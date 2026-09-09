@@ -52,7 +52,7 @@ export default function QuotesTab({ quotes, books, onDeleteQuote }: Props) {
           <p className="text-xs sm:text-[13px]">
             {quotes.length === 0 ? (
               <>
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-accentsoft text-accent align-[3px]">
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-accentsoft text-accent align-[1px] sm:align-[3px]">
                   + 문장 저장
                 </span>{' '}
                 버튼을 눌러 마음에 남은 문장을 저장해보세요

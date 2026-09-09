@@ -351,7 +351,7 @@ export default function FriendsTab({
                 </div>
                 <h3 className="font-sans text-ink mb-1.5 text-sm sm:text-[15px]">아직 친구가 없어요</h3>
                 <p className="text-xs sm:text-[13px]">
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-accentsoft text-accent align-[3px]">
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-accentsoft text-accent align-[1px] sm:align-[3px]">
                     + 친구 추가
                   </span>{' '}
                   버튼으로 친구에게 요청을 보내보세요
