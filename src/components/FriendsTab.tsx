@@ -30,10 +30,13 @@ interface Props {
   onDeletePost: (postId: string) => Promise<void>
 }
 
+// 리스트 행 안에 들어가는 버튼이라 작은 사이즈(py-1.5)를 쓴다 — QuoteCard와 같은 규격
 const BTN_SM =
-  'bg-ink text-bg border-none px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed'
+  'bg-accent text-white border-none font-medium px-3 py-1.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:bg-accenthover disabled:opacity-50 disabled:cursor-not-allowed'
 const BTN_SM_SECONDARY =
-  'bg-surface text-ink border border-border px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:bg-surface2'
+  'bg-surface text-ink border border-border px-3 py-1.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:bg-surface2'
+const BTN_SM_DANGER =
+  'bg-transparent text-danger border border-border px-3 py-1.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:bg-danger/10'
 const STATUS_PILL =
   'text-xs sm:text-[13px] text-dim bg-bg border border-border rounded-full px-2.5 py-[3px] whitespace-nowrap flex-shrink-0'
 
@@ -99,7 +102,7 @@ export default function FriendsTab({
 }: Props) {
   const { openPublishPost, openAddFriend, showToast } = useAppUI()
   const queryClient = useQueryClient()
-  const [view, setView] = useState<MainView>('feed')
+  const [view, setView] = useState<MainView>('friends')
 
   const feedQuery = useQuery({
     queryKey: ['friendFeed'],
@@ -236,8 +239,8 @@ export default function FriendsTab({
       </PageHeader>
 
       <div className="flex gap-0.5 p-0.5 mb-5 rounded-[9px] bg-surface2 border border-border sm:w-fit">
-        {seg('feed', view, () => setView('feed'), '피드')}
         {seg('friends', view, () => setView('friends'), '친구')}
+        {seg('feed', view, () => setView('feed'), '피드')}
       </div>
 
       {view === 'feed' &&
@@ -286,10 +289,7 @@ export default function FriendsTab({
                       <button className={BTN_SM} onClick={() => onAcceptRequest(req.id)}>
                         수락
                       </button>
-                      <button
-                        className="bg-transparent text-danger border border-border px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:bg-danger/10"
-                        onClick={() => onRejectRequest(req.id)}
-                      >
+                      <button className={BTN_SM_DANGER} onClick={() => onRejectRequest(req.id)}>
                         거절
                       </button>
                     </div>
@@ -354,7 +354,7 @@ export default function FriendsTab({
                             책장 보기
                           </button>
                           <button
-                            className="bg-transparent text-danger border border-border px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:bg-danger/10"
+                            className={BTN_SM_DANGER}
                             onClick={() => {
                               if (confirm(`${f.displayName || f.email}님을 친구 목록에서 삭제할까요?`))
                                 onRemoveFriend(f.uid)

@@ -3,7 +3,7 @@ import type { User } from 'firebase/auth'
 import { collection, query, where, onSnapshot } from 'firebase/firestore'
 import {
   db,
-  getUserByEmail,
+  searchUsersByEmail,
   getUserProfile,
   sendFriendRequest,
   acceptFriendRequest,
@@ -63,7 +63,7 @@ export function useFriends(user: User | null) {
     }
   }, [user, refresh])
 
-  const searchUser = useCallback((email: string) => getUserByEmail(email), [])
+  const searchUser = useCallback((email: string) => searchUsersByEmail(email), [])
 
   const sendRequest = useCallback(
     (toUid: string) => {

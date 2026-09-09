@@ -74,34 +74,55 @@ export const koreanDictSearch = onRequest(
   },
 )
 
+/** 이 글자 수 아래로는 검색하지 않는다 — 짧은 문자열을 훑어서 회원 목록을 긁어가는 걸 막는 방어선. */
+const MIN_EMAIL_SEARCH_LENGTH = 4
+const MAX_EMAIL_SEARCH_RESULTS = 10
+
 /**
- * 이메일로 친구를 찾는다.
- * 클라이언트가 users 컬렉션을 직접 조회하면 전체 회원 목록을 덤프할 수 있어서,
- * 서버에서 정확히 일치하는 한 명만 찾아서 돌려준다.
+ * 이메일 접두사로 회원을 검색한다.
+ *
+ * Firestore는 부분 문자열 검색을 못 하므로 범위 쿼리로 접두사만 매칭한다
+ * (codn → codnjsm@... 은 찾히지만, njsm 으로는 못 찾는다).
+ * 전체 회원 열거를 막으려고 최소 글자 수를 두고, 결과 수도 제한한다.
  */
-export const findUserByEmail = onCall({ region: 'asia-northeast3', enforceAppCheck: true }, async (req) => {
-  if (!req.auth) {
-    throw new HttpsError('unauthenticated', '로그인이 필요합니다')
-  }
-  const email = String(req.data?.email ?? '')
+export async function findUserByEmailHandler(viewerUid: string, rawEmail: unknown) {
+  const email = String(rawEmail ?? '')
     .trim()
     .toLowerCase()
   if (!email) {
     throw new HttpsError('invalid-argument', '이메일이 필요합니다')
   }
-
-  const snap = await getFirestore().collection('users').where('email', '==', email).limit(1).get()
-
-  if (snap.empty) return null
-
-  const doc = snap.docs[0]
-  const data = doc.data()
-  return {
-    uid: doc.id,
-    email: data.email ?? '',
-    displayName: data.displayName ?? '',
-    photoURL: data.photoURL ?? '',
+  if (email.length < MIN_EMAIL_SEARCH_LENGTH) {
+    throw new HttpsError('invalid-argument', `${MIN_EMAIL_SEARCH_LENGTH}자 이상 입력해주세요`)
   }
+
+  // \uf8ff는 유니코드에서 아주 큰 값이라, 접두사로 시작하는 문자열의 상한 역할을 한다
+  const snap = await getFirestore()
+    .collection('users')
+    .where('email', '>=', email)
+    .where('email', '<=', email + '\uf8ff')
+    .limit(MAX_EMAIL_SEARCH_RESULTS + 1)
+    .get()
+
+  return snap.docs
+    .filter((doc) => doc.id !== viewerUid)
+    .slice(0, MAX_EMAIL_SEARCH_RESULTS)
+    .map((doc) => {
+      const data = doc.data()
+      return {
+        uid: doc.id,
+        email: data.email ?? '',
+        displayName: data.displayName ?? '',
+        photoURL: data.photoURL ?? '',
+      }
+    })
+}
+
+export const findUserByEmail = onCall({ region: 'asia-northeast3', enforceAppCheck: true }, async (req) => {
+  if (!req.auth) {
+    throw new HttpsError('unauthenticated', '로그인이 필요합니다')
+  }
+  return findUserByEmailHandler(req.auth.uid, req.data?.email)
 })
 
 /**

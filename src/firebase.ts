@@ -114,10 +114,11 @@ export const getUserProfile = async (uid: string): Promise<UserProfile | null> =
 }
 
 /** 클라이언트가 users 컬렉션을 통째로 조회할 수 없도록, 이메일 검색은 서버 함수를 거친다. */
-export const getUserByEmail = async (email: string): Promise<UserProfile | null> => {
-  const call = httpsCallable<{ email: string }, UserProfile | null>(functions, 'findUserByEmail')
+/** 이메일 앞부분으로 회원을 검색한다. 서버가 최소 글자 수(4자)와 결과 수를 제한한다. */
+export const searchUsersByEmail = async (email: string): Promise<UserProfile[]> => {
+  const call = httpsCallable<{ email: string }, UserProfile[]>(functions, 'findUserByEmail')
   const res = await call({ email })
-  return res.data ?? null
+  return res.data ?? []
 }
 
 export const sendFriendRequest = async (fromUid: string, toUid: string): Promise<void> => {
