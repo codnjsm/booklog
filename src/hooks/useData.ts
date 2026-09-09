@@ -8,6 +8,9 @@ const STORAGE_KEY = 'reading-notes-data-v1'
 // 이게 없으면 "A로 로그인 -> 로그아웃 -> B로 로그인"에서 로컬에 남은 A의 데이터를
 // "B가 게스트일 때 쓴 데이터"로 착각해 B의 계정에 그대로 업로드해버린다.
 const OWNER_KEY = 'reading-notes-data-owner-v1'
+const OWNER_MIGRATED_KEY = 'reading-notes-owner-migrated-v1'
+/** 소유자를 알 수 없는 로컬 캐시. 어떤 uid와도 다르므로 어느 계정에도 올라가지 않는다. */
+const UNKNOWN_OWNER = 'unknown'
 
 function getLocalOwnerUid(): string | null {
   return localStorage.getItem(OWNER_KEY)
@@ -81,6 +84,15 @@ export function useData(user: User | null) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const cloudLoadedRef = useRef(false)
 
+  // 소유자 꼬리표가 생기기 전(2026-09-09 이전)에 저장된 로컬 데이터는 누구 것인지 알 수 없다.
+  // 딱 한 번 unknown으로 찍어서 어느 계정에도 올라가지 않게 한다. 이후 게스트가 새로 쓴 데이터는
+  // 꼬리표가 없으므로 첫 로그인 때 정상적으로 계정에 합쳐진다.
+  useEffect(() => {
+    if (localStorage.getItem(OWNER_MIGRATED_KEY)) return
+    localStorage.setItem(OWNER_MIGRATED_KEY, '1')
+    if (localStorage.getItem(STORAGE_KEY) && !getLocalOwnerUid()) setLocalOwnerUid(UNKNOWN_OWNER)
+  }, [])
+
   // 기기에 남아 있는 데모 데이터 뒷정리. 로그인해서 클라우드를 읽기 전에 먼저 치운다.
   useEffect(() => {
     const local = getInitialState()
@@ -105,6 +117,11 @@ export function useData(user: User | null) {
 
     loadUserData(user.uid)
       .then((cloud) => {
+        // 어느 분기로 가든 이 로컬 캐시의 주인은 지금 로그인한 사람이다.
+        // 분기 안에서 찍으면 "로컬이 더 최신이라 그냥 return"하는 경로에서 빠져,
+        // 다음 계정이 로그인할 때 남의 데이터를 걸러내지 못한다.
+        setLocalOwnerUid(user.uid)
+
         if (cloud?.books) {
           const local = getInitialState()
           // Don't overwrite local data if it's newer than cloud data
@@ -113,7 +130,6 @@ export function useData(user: User | null) {
           const merged = stripLegacySeed(cloudState)
           setStateRaw(merged)
           localStorage.setItem(STORAGE_KEY, JSON.stringify(merged))
-          setLocalOwnerUid(user.uid)
           // 클라우드에 남아 있던 데모 데이터도 같이 걷어낸다
           if (merged !== cloudState) saveUserData(user.uid, JSON.parse(JSON.stringify(merged)))
         } else if (localIsForeign) {
@@ -121,13 +137,11 @@ export function useData(user: User | null) {
           const empty: AppState = { books: [], quotes: [], words: [] }
           setStateRaw(empty)
           localStorage.setItem(STORAGE_KEY, JSON.stringify(empty))
-          setLocalOwnerUid(user.uid)
         } else {
           const local = getInitialState()
           if (local.books.length > 0 || local.quotes.length > 0) {
             saveUserData(user.uid, JSON.parse(JSON.stringify(local)))
           }
-          setLocalOwnerUid(user.uid)
         }
       })
       .catch(() => setSyncStatus('error'))
