@@ -125,9 +125,11 @@ export default function MoreTab({ user, syncStatus, incomingCount, onExport, onS
 
         <div className="px-1 pt-1 flex flex-col gap-1">
           <div className="font-mono text-[10px] text-dim opacity-70">Booklog</div>
-          <div className="text-xs sm:text-[13px] text-dim opacity-70 leading-relaxed">
-            로그아웃해도 이 기기의 기록은 남아 있어요.
-          </div>
+          {user && (
+            <div className="text-xs sm:text-[13px] text-dim opacity-70 leading-relaxed">
+              로그아웃해도 이 계정의 기록은 남아 있어요.
+            </div>
+          )}
         </div>
       </div>
     </div>
