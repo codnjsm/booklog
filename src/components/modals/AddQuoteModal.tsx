@@ -27,11 +27,11 @@ const MODAL_PANEL =
 const MODAL_HEADER =
   'sticky top-0 z-10 bg-surface pt-3.5 px-[18px] pb-3 sm:pt-[22px] sm:px-6 sm:pb-4 border-b border-border flex justify-between items-center'
 const MODAL_CLOSE = 'bg-transparent border-none text-dim text-lg cursor-pointer leading-none px-2 py-1 hover:text-ink'
-const MODAL_BODY = 'px-[18px] py-3.5 sm:px-6 sm:py-[22px] text-sm sm:text-[15px]'
+const MODAL_BODY = 'px-[18px] py-3.5 sm:px-6 sm:py-[22px] text-[13px] sm:text-[14px]'
 const MODAL_ACTIONS = 'flex gap-2 justify-end px-[18px] py-3 sm:px-6 sm:py-4 border-t border-border'
 const FORM_LABEL = 'flex text-xs sm:text-[13px] mb-1.5 uppercase tracking-[.05em] text-dim'
 const FORM_INPUT =
-  'w-full bg-bg border border-border text-ink px-3 py-2 rounded-[7px] text-sm sm:text-[15px] font-sans placeholder:text-dim placeholder:opacity-50 focus:outline-none focus:border-accent'
+  'w-full bg-bg border border-border text-ink px-3 py-2 rounded-[7px] text-[13px] sm:text-[14px] font-sans placeholder:text-dim placeholder:opacity-50 focus:outline-none focus:border-accent'
 const FORM_TEXTAREA = `${FORM_INPUT} resize-none min-h-[90px] max-h-[500px] overflow-y-auto leading-[1.6]`
 
 /** 최소 높이는 유지하되 내용이 길어지면 500px까지 늘어나고, 그 이상은 내부 스크롤로 처리한다. */
@@ -292,7 +292,7 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
                       )}
                     </div>
                     {entry.highlights?.length && entry.text ? (
-                      <div className="mt-2 rounded-[7px] border border-border bg-bg px-3 py-2 font-serif text-sm sm:text-[15px] leading-[1.8]">
+                      <div className="mt-2 rounded-[7px] border border-border bg-bg px-3 py-2 font-serif text-[13px] sm:text-[14px] leading-[1.8]">
                         <HighlightedText text={entry.text} highlights={entry.highlights} />
                       </div>
                     ) : null}

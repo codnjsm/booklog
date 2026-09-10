@@ -77,13 +77,16 @@ export const getFriendFeed = async (): Promise<Post[]> => {
   return res.data
 }
 
+/** 발행 직후 화면에 바로 이어붙일 수 있도록, 서버가 저장한 내용을 그대로 돌려받는다(작성자 표시정보 제외). */
+export type CreatedPost = Omit<Post, 'authorDisplayName' | 'authorPhotoURL'>
+
 /** 문장(quote) 또는 책(book) 하나를 골라 한마디를 붙여 친구에게 공유한다. 스냅샷은 서버가 만든다. */
 export const createPost = async (data: {
   kind: 'quote' | 'book'
   refId: string
   caption: string
-}): Promise<{ id: string }> => {
-  const call = httpsCallable<typeof data, { id: string }>(functions, 'createPost')
+}): Promise<CreatedPost> => {
+  const call = httpsCallable<typeof data, CreatedPost>(functions, 'createPost')
   const res = await call(data)
   return res.data
 }

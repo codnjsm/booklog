@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
+import type { User } from 'firebase/auth'
 import Modal from './Modal'
-import type { Book, Quote } from '../../types'
+import type { Book, Quote, Post } from '../../types'
+import type { CreatedPost } from '../../firebase'
 import { useAppUI } from '../../contexts/AppUIContext'
 import HighlightedText from '../HighlightedText'
 
@@ -38,14 +40,15 @@ type Kind = 'quote' | 'book'
 type Selected = { kind: Kind; refId: string }
 
 interface Props {
+  user: User | null
   books: Book[]
   quotes: Quote[]
   onClose: () => void
-  onPublish: (data: { kind: Kind; refId: string; caption: string }) => Promise<{ id: string }>
-  onPublished: () => void
+  onPublish: (data: { kind: Kind; refId: string; caption: string }) => Promise<CreatedPost>
+  onPublished: (post: Post) => void
 }
 
-export default function PublishPostModal({ books, quotes, onClose, onPublish, onPublished }: Props) {
+export default function PublishPostModal({ user, books, quotes, onClose, onPublish, onPublished }: Props) {
   const { showToast } = useAppUI()
   const [kindFilter, setKindFilter] = useState<Kind>('quote')
   const [picked, setPicked] = useState<Selected | null>(null)
@@ -65,9 +68,14 @@ export default function PublishPostModal({ books, quotes, onClose, onPublish, on
       if (!picked) throw new Error('선택된 항목이 없습니다')
       return onPublish({ kind: picked.kind, refId: picked.refId, caption: caption.trim() })
     },
-    onSuccess: () => {
+    onSuccess: (created) => {
       showToast('친구에게 공유했어요', 'success')
-      onPublished()
+      // 서버가 저장한 내용을 그대로 받았으니, 피드를 다시 불러오지 않고 이 결과로 화면을 바로 갱신한다.
+      onPublished({
+        ...created,
+        authorDisplayName: user?.displayName ?? '',
+        authorPhotoURL: user?.photoURL ?? '',
+      })
       onClose()
     },
     onError: (err) => showToast(err instanceof Error ? err.message : '공유 중 오류가 발생했어요', 'error'),

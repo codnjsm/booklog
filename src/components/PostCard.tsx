@@ -8,6 +8,9 @@ const STATUS_BADGE = {
   done: { label: '완독', cls: 'bg-accent text-white' },
 }
 
+const BTN_SMALL_DANGER =
+  'bg-transparent text-danger border border-border px-3 py-1.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-colors duration-200 font-sans hover:bg-dangersoft'
+
 function Avatar({ url, name }: { url?: string; name: string }) {
   if (url) {
     return (
@@ -40,7 +43,7 @@ export default function PostCard({ post, isOwn, onDelete }: Props) {
           <button
             onClick={onDelete}
             aria-label="게시물 삭제"
-            className="w-[26px] h-[26px] flex-shrink-0 flex items-center justify-center rounded-md bg-transparent text-danger border border-border cursor-pointer transition-colors duration-200 hover:bg-dangersoft"
+            className="sm:hidden w-[26px] h-[26px] flex-shrink-0 flex items-center justify-center rounded-md bg-transparent text-danger border border-border cursor-pointer transition-colors duration-200 hover:bg-dangersoft"
           >
             ×
           </button>
@@ -62,7 +65,7 @@ export default function PostCard({ post, isOwn, onDelete }: Props) {
           )}
         </div>
       ) : (
-        <div className="flex gap-2.5 bg-surface2 rounded-lg p-2.5">
+        <div className="flex items-center gap-2.5 bg-surface2 rounded-lg p-2.5">
           <div className="w-11 h-16 rounded bg-bg border border-border flex-shrink-0 overflow-hidden flex items-center justify-center">
             {attachment.bookCover ? (
               <img src={attachment.bookCover} alt="" className="w-full h-full object-cover" />
@@ -73,18 +76,26 @@ export default function PostCard({ post, isOwn, onDelete }: Props) {
           <div className="flex-1 min-w-0">
             <div className="text-[13px] font-medium text-ink truncate">{attachment.bookTitle}</div>
             <div className="text-xs sm:text-[13px] text-dim truncate mt-0.5">{attachment.bookAuthor}</div>
-            <span
-              className={`inline-block text-[10px] px-1.5 py-0.5 rounded mt-1 ${STATUS_BADGE[attachment.bookStatus].cls}`}
-            >
-              {STATUS_BADGE[attachment.bookStatus].label}
-            </span>
           </div>
+          <span
+            className={`flex-shrink-0 inline-block text-[10px] px-1.5 py-0.5 rounded ${STATUS_BADGE[attachment.bookStatus].cls}`}
+          >
+            {STATUS_BADGE[attachment.bookStatus].label}
+          </span>
         </div>
       )}
 
       <div className="text-xs sm:text-[13px] text-dim italic border-l-2 border-border pl-2.5 mt-3 leading-relaxed">
         {post.caption}
       </div>
+
+      {isOwn && (
+        <div className="hidden sm:flex justify-end mt-3">
+          <button className={BTN_SMALL_DANGER} onClick={onDelete}>
+            삭제
+          </button>
+        </div>
+      )}
     </div>
   )
 }

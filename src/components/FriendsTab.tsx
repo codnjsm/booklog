@@ -112,13 +112,16 @@ export default function FriendsTab({
     queryKey: ['friendFeed'],
     queryFn: onLoadFriendFeed,
     enabled: view === 'feed' && !!user,
+    // 발행·삭제가 캐시를 직접 갱신하므로, 탭을 왔다갔다 할 때마다 다시 불러올 필요는 없다.
+    staleTime: 30_000,
   })
   const feedPosts = feedQuery.data ?? []
 
   const deletePostMutation = useMutation({
     mutationFn: onDeletePost,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['friendFeed'] })
+    onSuccess: (_data, postId) => {
+      // 삭제 성공 응답을 이미 받았으니, 피드를 다시 불러오지 않고 캐시에서 바로 지운다.
+      queryClient.setQueryData<Post[]>(['friendFeed'], (old) => old?.filter((p) => p.id !== postId))
       showToast('게시물이 삭제됐어요', 'success')
     },
   })

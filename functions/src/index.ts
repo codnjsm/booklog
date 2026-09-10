@@ -194,7 +194,7 @@ export const getFriendShelf = onCall({ region: 'asia-northeast3', enforceAppChec
 export async function createPostHandler(
   uid: string,
   data: { kind?: unknown; refId?: unknown; caption?: unknown },
-): Promise<{ id: string }> {
+): Promise<Record<string, unknown>> {
   const kind = data?.kind
   if (kind !== 'quote' && kind !== 'book') {
     throw new HttpsError('invalid-argument', 'kind는 quote 또는 book이어야 합니다')
@@ -250,13 +250,16 @@ export async function createPostHandler(
     }
   }
 
+  // 클라이언트가 발행 직후 서버 응답만으로 피드에 바로 이어붙일 수 있도록,
+  // 저장한 내용을 id와 함께 그대로 돌려준다 (재조회 왕복을 없애기 위함).
+  const createdAt = new Date().toISOString()
   const doc = await db.collection('posts').add({
     authorUid: uid,
-    createdAt: new Date().toISOString(),
+    createdAt,
     caption,
     attachment,
   })
-  return { id: doc.id }
+  return { id: doc.id, authorUid: uid, createdAt, caption, attachment }
 }
 
 export const createPost = onCall({ region: 'asia-northeast3', enforceAppCheck: true }, async (req) => {

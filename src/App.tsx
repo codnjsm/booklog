@@ -5,6 +5,7 @@ import { useAuth } from './hooks/useAuth'
 import { useData } from './hooks/useData'
 import { useFriends } from './hooks/useFriends'
 import { upsertUserProfile } from './firebase'
+import type { Post } from './types'
 import { AppUIProvider, useAppUI } from './contexts/AppUIContext'
 import AppLayout from './components/layout/AppLayout'
 import HomeTab from './components/HomeTab'
@@ -296,11 +297,12 @@ function AppShell() {
       )}
       {modal.type === 'publishPost' && (
         <PublishPostModal
+          user={user}
           books={state.books}
           quotes={state.quotes}
           onClose={closeModal}
           onPublish={publishPost}
-          onPublished={() => queryClient.invalidateQueries({ queryKey: ['friendFeed'] })}
+          onPublished={(post) => queryClient.setQueryData<Post[]>(['friendFeed'], (old) => [post, ...(old ?? [])])}
         />
       )}
       {modal.type === 'addFriend' && (
