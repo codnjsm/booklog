@@ -46,10 +46,11 @@ const MODAL_PANEL =
 const MODAL_HEADER =
   'sticky top-0 z-10 bg-surface pt-3.5 px-[18px] pb-3 sm:pt-[22px] sm:px-6 sm:pb-4 border-b border-border flex justify-between items-center'
 const MODAL_CLOSE = 'bg-transparent border-none text-dim text-lg cursor-pointer leading-none px-2 py-1 hover:text-ink'
-const MODAL_BODY = 'px-[18px] py-3.5 sm:px-6 sm:py-[22px] text-sm sm:text-[15px]'
+const MODAL_BODY = 'px-5 py-4 sm:px-7 sm:py-6 text-sm sm:text-[15px]'
 const MODAL_ACTIONS = 'flex gap-2 justify-end px-[18px] py-3 sm:px-6 sm:py-4 border-t border-border'
-const FORM_GROUP = 'mb-3.5'
-const FORM_LABEL = 'flex text-sm sm:text-[15px] mb-1.5 uppercase tracking-[.05em] pl-2'
+const FORM_GROUP = 'mb-5'
+const FORM_SECTION = 'pt-5 mt-5 border-t border-border first:pt-0 first:mt-0 first:border-t-0'
+const FORM_LABEL = 'flex text-xs sm:text-[13px] mb-2 uppercase tracking-[.05em] text-dim'
 const FORM_INPUT =
   'w-full bg-bg border border-border text-ink px-3 py-2 rounded-[7px] text-sm sm:text-[15px] font-sans placeholder:text-dim placeholder:opacity-50 focus:outline-none focus:border-accent'
 const FORM_TEXTAREA = `${FORM_INPUT} resize-none min-h-[90px] max-h-[500px] overflow-y-auto leading-[1.6]`
@@ -104,111 +105,117 @@ export default function ManualBookModal({ prefill, editId, books, onClose, onSav
           </button>
         </div>
         <div className={MODAL_BODY}>
-          <div className={FORM_GROUP}>
-            <label className={FORM_LABEL}>
-              제목 <span className="text-danger">*</span>
-            </label>
-            <input
-              type="text"
-              placeholder="책 제목"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className={FORM_INPUT}
-            />
-          </div>
-          <div className={FORM_GROUP}>
-            <label className={FORM_LABEL}>저자</label>
-            <input
-              type="text"
-              placeholder="저자명"
-              value={author}
-              onChange={(e) => setAuthor(e.target.value)}
-              className={FORM_INPUT}
-            />
-          </div>
-          <div className={FORM_GROUP}>
-            <label className={FORM_LABEL}>표지 이미지 URL</label>
-            <input
-              type="text"
-              placeholder="https://..."
-              value={cover}
-              onChange={(e) => setCover(e.target.value)}
-              className={FORM_INPUT}
-            />
-          </div>
-          <div className={FORM_GROUP}>
-            <label className={FORM_LABEL}>출판 연도</label>
-            <input
-              type="number"
-              placeholder="2024"
-              value={year}
-              onChange={(e) => setYear(e.target.value)}
-              className={FORM_INPUT}
-            />
-          </div>
-          <div className={FORM_GROUP}>
-            <label className={FORM_LABEL}>상태</label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
-              {STATUSES.map((s) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  aria-pressed={status === s.id}
-                  className={`py-[9px] px-2 rounded-[7px] text-center cursor-pointer text-[13px] sm:text-sm transition-all duration-150 border ${status === s.id ? 'border-accent bg-accentsoft text-accent' : 'bg-bg border-border text-ink hover:border-dim'}`}
-                  onClick={() => handleStatusChange(s.id)}
-                >
-                  {s.label}
-                </button>
-              ))}
-            </div>
-          </div>
-          {(status === 'reading' || status === 'done') && (
+          <div className={FORM_SECTION}>
             <div className={FORM_GROUP}>
-              <label className={FORM_LABEL}>읽은 날짜</label>
-              <DateMultiPicker selected={readDates} onChange={setReadDates} max={today} />
-              {readDates.length > 0 ? (
-                <p className="mt-1.5 text-xs sm:text-[13px] text-dim">{readDatesSummary(readDates)}</p>
-              ) : (
-                <p className="mt-1.5 text-xs sm:text-[13px] text-danger">읽은 날짜를 하나 이상 선택해주세요</p>
-              )}
-            </div>
-          )}
-          <div className={FORM_GROUP}>
-            <label className={FORM_LABEL}>별점</label>
-            <div className="flex gap-1.5">
-              {[1, 2, 3, 4, 5].map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  aria-label={`별점 ${n}점`}
-                  className={`bg-transparent border-none p-0 cursor-pointer transition-colors duration-100 ${rating >= n ? 'text-accent' : 'text-border'}`}
-                  onClick={() => setRating(rating === n ? 0 : n)}
-                >
-                  <IconStar size={26} filled={rating >= n} />
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className={FORM_GROUP}>
-            <label className={FORM_LABEL}>독후감 / 메모</label>
-            <textarea
-              ref={(el) => autoResizeTextarea(el)}
-              placeholder="이 책에 대한 생각을 자유롭게 적어보세요…"
-              value={review}
-              onChange={(e) => setReview(e.target.value)}
-              className={FORM_TEXTAREA}
-            />
-          </div>
-          <div className={FORM_GROUP}>
-            <label className="flex items-center gap-1.5 cursor-pointer text-sm text-ink select-none leading-none">
+              <label className={FORM_LABEL}>
+                제목 <span className="text-danger">*</span>
+              </label>
               <input
-                type="checkbox"
-                checked={isPrivate}
-                onChange={(e) => setIsPrivate(e.target.checked)}
-                className="w-[15px] h-[15px] accent-accent cursor-pointer flex-shrink-0 m-0"
+                type="text"
+                placeholder="책 제목"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className={FORM_INPUT}
               />
-              <span>친구에게 비공개</span>
-            </label>
+            </div>
+            <div className={FORM_GROUP}>
+              <label className={FORM_LABEL}>저자</label>
+              <input
+                type="text"
+                placeholder="저자명"
+                value={author}
+                onChange={(e) => setAuthor(e.target.value)}
+                className={FORM_INPUT}
+              />
+            </div>
+            <div className={FORM_GROUP}>
+              <label className={FORM_LABEL}>표지 이미지 URL</label>
+              <input
+                type="text"
+                placeholder="https://..."
+                value={cover}
+                onChange={(e) => setCover(e.target.value)}
+                className={FORM_INPUT}
+              />
+            </div>
+            <div className={FORM_GROUP}>
+              <label className={FORM_LABEL}>출판 연도</label>
+              <input
+                type="number"
+                placeholder="2024"
+                value={year}
+                onChange={(e) => setYear(e.target.value)}
+                className={FORM_INPUT}
+              />
+            </div>
+          </div>
+          <div className={FORM_SECTION}>
+            <div className={FORM_GROUP}>
+              <label className={FORM_LABEL}>상태</label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
+                {STATUSES.map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    aria-pressed={status === s.id}
+                    className={`py-[9px] px-2 rounded-[7px] text-center cursor-pointer text-[13px] sm:text-sm transition-all duration-150 border ${status === s.id ? 'border-accent bg-accentsoft text-accent' : 'bg-bg border-border text-ink hover:border-dim'}`}
+                    onClick={() => handleStatusChange(s.id)}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {(status === 'reading' || status === 'done') && (
+              <div className={FORM_GROUP}>
+                <label className={FORM_LABEL}>읽은 날짜</label>
+                <DateMultiPicker selected={readDates} onChange={setReadDates} max={today} />
+                {readDates.length > 0 ? (
+                  <p className="mt-1.5 text-xs sm:text-[13px] text-dim">{readDatesSummary(readDates)}</p>
+                ) : (
+                  <p className="mt-1.5 text-xs sm:text-[13px] text-danger">읽은 날짜를 하나 이상 선택해주세요</p>
+                )}
+              </div>
+            )}
+          </div>
+          <div className={FORM_SECTION}>
+            <div className={FORM_GROUP}>
+              <label className={FORM_LABEL}>별점</label>
+              <div className="flex gap-1.5">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    aria-label={`별점 ${n}점`}
+                    className={`bg-transparent border-none p-0 cursor-pointer transition-colors duration-100 ${rating >= n ? 'text-accent' : 'text-border'}`}
+                    onClick={() => setRating(rating === n ? 0 : n)}
+                  >
+                    <IconStar size={26} filled={rating >= n} />
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className={FORM_GROUP}>
+              <label className={FORM_LABEL}>독후감 / 메모</label>
+              <textarea
+                ref={(el) => autoResizeTextarea(el)}
+                placeholder="이 책에 대한 생각을 자유롭게 적어보세요…"
+                value={review}
+                onChange={(e) => setReview(e.target.value)}
+                className={FORM_TEXTAREA}
+              />
+            </div>
+            <div className={FORM_GROUP}>
+              <label className="flex items-center gap-1.5 cursor-pointer text-sm text-ink select-none leading-none">
+                <input
+                  type="checkbox"
+                  checked={isPrivate}
+                  onChange={(e) => setIsPrivate(e.target.checked)}
+                  className="w-[15px] h-[15px] accent-accent cursor-pointer flex-shrink-0 m-0"
+                />
+                <span>친구에게 비공개</span>
+              </label>
+            </div>
           </div>
         </div>
         <div className={MODAL_ACTIONS}>

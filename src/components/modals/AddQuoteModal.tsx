@@ -29,7 +29,7 @@ const MODAL_HEADER =
 const MODAL_CLOSE = 'bg-transparent border-none text-dim text-lg cursor-pointer leading-none px-2 py-1 hover:text-ink'
 const MODAL_BODY = 'px-[18px] py-3.5 sm:px-6 sm:py-[22px] text-sm sm:text-[15px]'
 const MODAL_ACTIONS = 'flex gap-2 justify-end px-[18px] py-3 sm:px-6 sm:py-4 border-t border-border'
-const FORM_LABEL = 'flex text-sm sm:text-[15px] mb-1.5 uppercase tracking-[.05em] pl-2'
+const FORM_LABEL = 'flex text-xs sm:text-[13px] mb-1.5 uppercase tracking-[.05em] text-dim'
 const FORM_INPUT =
   'w-full bg-bg border border-border text-ink px-3 py-2 rounded-[7px] text-sm sm:text-[15px] font-sans placeholder:text-dim placeholder:opacity-50 focus:outline-none focus:border-accent'
 const FORM_TEXTAREA = `${FORM_INPUT} resize-none min-h-[90px] max-h-[500px] overflow-y-auto leading-[1.6]`
@@ -209,10 +209,10 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
               <div className="mb-4">
                 {ocrPreview?.index === i ? (
                   <>
-                    <label className="flex text-sm sm:text-[15px] uppercase tracking-[.05em] pl-2 mb-1.5">
+                    <label className="flex text-xs sm:text-[13px] uppercase tracking-[.05em] text-dim mb-1.5">
                       사진에서 인식한 문장
                     </label>
-                    <p className="text-xs sm:text-[13px] text-dim mb-2 pl-2">
+                    <p className="text-xs sm:text-[13px] text-dim mb-2">
                       필요한 부분만 넣고 싶다면 드래그로 선택한 뒤 아래 버튼을 눌러주세요.
                     </p>
                     <textarea
@@ -244,7 +244,7 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
                 ) : (
                   <>
                     <div className="flex items-center justify-between mb-1.5">
-                      <label className="flex text-sm sm:text-[15px] uppercase tracking-[.05em] pl-2">
+                      <label className="flex text-xs sm:text-[13px] uppercase tracking-[.05em] text-dim">
                         문장 <span className="text-danger">*</span>
                       </label>
                       <button
