@@ -73,7 +73,7 @@ export default function MoreTab({ user, syncStatus, incomingCount, onExport, onS
                 onClick={() => {
                   if (theme !== 'light') toggleTheme()
                 }}
-                className={`px-3 py-1 rounded-md text-[13px] sm:text-sm border-none cursor-pointer ${theme === 'light' ? 'bg-surface text-ink font-medium' : 'bg-transparent text-dim'}`}
+                className={`px-3 py-1 rounded-md text-xs sm:text-[13px] border-none cursor-pointer ${theme === 'light' ? 'bg-surface text-ink font-medium' : 'bg-transparent text-dim'}`}
               >
                 라이트
               </button>
@@ -81,7 +81,7 @@ export default function MoreTab({ user, syncStatus, incomingCount, onExport, onS
                 onClick={() => {
                   if (theme !== 'dark') toggleTheme()
                 }}
-                className={`px-3 py-1 rounded-md text-[13px] sm:text-sm border-none cursor-pointer ${theme === 'dark' ? 'bg-surface text-ink font-medium' : 'bg-transparent text-dim'}`}
+                className={`px-3 py-1 rounded-md text-xs sm:text-[13px] border-none cursor-pointer ${theme === 'dark' ? 'bg-surface text-ink font-medium' : 'bg-transparent text-dim'}`}
               >
                 다크
               </button>

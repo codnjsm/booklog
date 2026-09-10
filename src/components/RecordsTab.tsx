@@ -18,7 +18,7 @@ export default function RecordsTab({ books, quotes, goal, onSetGoal }: Props) {
   const seg = (id: 'stats' | 'calendar', label: string) => (
     <button
       onClick={() => setView(id)}
-      className={`flex-1 py-1.5 rounded-md text-[13px] sm:text-sm border-none cursor-pointer transition-colors duration-150 ${
+      className={`flex-1 py-1.5 rounded-md text-xs sm:text-[13px] border-none cursor-pointer transition-colors duration-150 ${
         view === id ? 'bg-surface text-ink font-medium shadow-card' : 'bg-transparent text-dim'
       }`}
     >

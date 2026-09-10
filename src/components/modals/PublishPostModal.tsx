@@ -33,7 +33,7 @@ const BTN =
 const BTN_SECONDARY =
   'bg-surface text-ink border border-border px-4 py-2.5 rounded-lg text-[13px] sm:text-sm cursor-pointer hover:bg-surface2'
 const SEG =
-  'flex-1 sm:flex-none sm:px-6 py-1.5 rounded-md text-[13px] sm:text-sm border-none cursor-pointer transition-colors duration-150'
+  'flex-1 sm:flex-none sm:px-6 py-1.5 rounded-md text-xs sm:text-[13px] border-none cursor-pointer transition-colors duration-150'
 const TITLE_ID = 'publish-post-modal-title'
 
 type Kind = 'quote' | 'book'
