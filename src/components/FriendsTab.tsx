@@ -37,7 +37,10 @@ const BTN_SM =
 const BTN_SM_SECONDARY =
   'bg-surface text-ink border border-border px-3 py-1.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:bg-surface2'
 const BTN_SM_DANGER =
-  'bg-transparent text-danger border border-border px-3 py-1.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:bg-danger/10'
+  'bg-transparent text-danger border border-border px-3 py-1.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:bg-dangersoft'
+// 수락(연한 배경)과 짝을 이루는 거절 버튼 — 톤은 반대(빨강)지만 모양은 같은 연한 채움으로 맞춘다
+const BTN_SM_DANGER_SOFT =
+  'bg-dangersoft text-danger border-none font-medium px-3 py-1.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:opacity-80'
 const STATUS_PILL =
   'text-xs sm:text-[13px] text-dim bg-bg border border-border rounded-full px-2.5 py-[3px] whitespace-nowrap flex-shrink-0'
 
@@ -307,7 +310,7 @@ export default function FriendsTab({
                         수락
                       </button>
                       <button
-                        className={BTN_SM_DANGER}
+                        className={BTN_SM_DANGER_SOFT}
                         onClick={() =>
                           friendActionMutation.mutate({
                             run: () => onRejectRequest(req.id),

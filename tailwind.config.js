@@ -17,6 +17,7 @@ export default {
         accenthover: 'var(--accent-hover)',
         accentsoft: 'var(--accent-soft)',
         danger: 'var(--danger)',
+        dangersoft: 'var(--danger-soft)',
         ok: 'var(--ok)',
         highlight: 'var(--highlight)',
       },

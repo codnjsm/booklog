@@ -16,8 +16,10 @@ const MODAL_BODY = 'px-[18px] py-3.5 sm:px-6 sm:py-[22px]'
 // 경쟁하는 버튼이 없는 단일 액션이라 연한 배경으로 — 진한 accent는 모달 안에서 너무 튄다.
 const BTN_SM =
   'bg-accentsoft text-accent border-none font-medium px-3 py-1.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed'
-const STATUS_PILL =
-  'text-xs sm:text-[13px] text-dim bg-bg border border-border rounded-full px-2.5 py-[3px] whitespace-nowrap flex-shrink-0'
+// 비활성화된 버튼처럼 보이게 — 방금까지 있던 "친구 추가" 버튼과 같은 모양(크기·둥근 정도)에서
+// 회색으로 바뀌는 것뿐이라, 알약 모양 뱃지로 바뀌는 것보다 "이 자리의 버튼이 눌렸다"는 게 자연스럽게 읽힌다.
+const STATUS_DISABLED =
+  'bg-surface2 text-dim px-3 py-1.5 rounded-lg text-[13px] sm:text-sm font-medium whitespace-nowrap flex-shrink-0'
 
 /** 서버가 이 글자 수 미만은 거부한다 — 버튼을 미리 막아 헛걸음을 줄인다. */
 const MIN_SEARCH_LENGTH = 4
@@ -60,17 +62,24 @@ export default function AddFriendModal({ user, friends, incoming, outgoing, onSe
     retry: false,
   })
 
-  // 요청을 보내도 목록은 그대로 둔다 — 상태 뱃지가 "요청 보냄"으로 바뀌고, 이어서 다른 사람도 추가할 수 있다
+  // 서버의 outgoing 구독이 갱신될 때까지 기다리면 한 박자 늦게 바뀐 것처럼 보인다.
+  // 요청이 실제로 성공한 uid를 바로 기록해서, 응답을 기다리지 않고 즉시 "요청 보냄"으로 바꾼다.
+  const [sentUids, setSentUids] = useState<Set<string>>(new Set())
+
+  // 요청을 보내도 목록은 그대로 둔다 — 상태가 "요청 보냄"으로 바뀌고, 이어서 다른 사람도 추가할 수 있다
   const sendRequestMutation = useMutation({
     mutationFn: (toUid: string) => Promise.resolve(onSendRequest(toUid)),
-    onSuccess: () => showToast('친구 요청을 보냈어요', 'success'),
+    onSuccess: (_data, toUid) => {
+      setSentUids((prev) => new Set(prev).add(toUid))
+      showToast('친구 요청을 보냈어요', 'success')
+    },
     onError: () => showToast('친구 요청 중 오류가 발생했어요', 'error'),
   })
   const sending = sendRequestMutation.isPending
 
   const getRequestStatus = (uid: string) => {
     if (friends.some((f) => f.uid === uid)) return 'friend'
-    if (outgoing.some((r) => r.toUid === uid)) return 'sent'
+    if (sentUids.has(uid) || outgoing.some((r) => r.toUid === uid)) return 'sent'
     if (incoming.some((r) => r.fromUid === uid)) return 'incoming'
     return 'none'
   }
@@ -138,9 +147,11 @@ export default function AddFriendModal({ user, friends, incoming, outgoing, onSe
                     <div className="text-sm font-medium text-ink truncate">{person.displayName || '이름 없음'}</div>
                     <div className="text-xs sm:text-[13px] text-dim truncate">{person.email}</div>
                   </div>
-                  {getRequestStatus(person.uid) === 'friend' && <span className={STATUS_PILL}>친구</span>}
-                  {getRequestStatus(person.uid) === 'sent' && <span className={STATUS_PILL}>요청 보냄</span>}
-                  {getRequestStatus(person.uid) === 'incoming' && <span className={STATUS_PILL}>받은 요청 있음</span>}
+                  {getRequestStatus(person.uid) === 'friend' && <span className={STATUS_DISABLED}>친구</span>}
+                  {getRequestStatus(person.uid) === 'sent' && <span className={STATUS_DISABLED}>요청 보냄</span>}
+                  {getRequestStatus(person.uid) === 'incoming' && (
+                    <span className={STATUS_DISABLED}>받은 요청 있음</span>
+                  )}
                   {getRequestStatus(person.uid) === 'none' && (
                     <button
                       className={`${BTN_SM} flex-shrink-0`}

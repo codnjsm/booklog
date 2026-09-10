@@ -2,7 +2,7 @@ import type { User } from 'firebase/auth'
 import type { SyncStatus } from '../hooks/useData'
 import { useAppUI } from '../contexts/AppUIContext'
 import PageHeader from './layout/PageHeader'
-import { IconFriends, IconExport, IconSun, IconMoon, IconSignOut, IconChevronRight } from './layout/icons'
+import { IconFriends, IconExport, IconSun, IconMoon, IconSignOut, IconChevronRight, IconBooks } from './layout/icons'
 
 interface Props {
   user: User | null
@@ -17,7 +17,7 @@ const ROW =
   'w-full flex items-center gap-3 px-4 py-3.5 bg-surface border border-border rounded-xl text-left cursor-pointer'
 
 export default function MoreTab({ user, syncStatus, incomingCount, onExport, onSignOut, onSignIn }: Props) {
-  const { changeTab, theme, toggleTheme } = useAppUI()
+  const { changeTab, theme, toggleTheme, openWelcome } = useAppUI()
 
   const syncLabel = syncStatus === 'saving' ? '저장 중…' : syncStatus === 'error' ? '저장 실패' : '동기화됨'
   const syncColor = syncStatus === 'saving' ? 'bg-accent' : syncStatus === 'error' ? 'bg-danger' : 'bg-ok'
@@ -64,27 +64,6 @@ export default function MoreTab({ user, syncStatus, incomingCount, onExport, onS
         )}
 
         <div className="flex flex-col gap-2">
-          <button className={ROW} onClick={() => changeTab('friends')}>
-            <span className="text-dim">
-              <IconFriends size={19} />
-            </span>
-            <span className="text-sm text-ink">친구</span>
-            {incomingCount > 0 && <span className="w-1.5 h-1.5 rounded-full bg-accent" />}
-            <span className="flex-1" />
-            <span className="text-dim">
-              <IconChevronRight />
-            </span>
-          </button>
-
-          <button className={ROW} onClick={onExport}>
-            <span className="text-dim">
-              <IconExport size={19} />
-            </span>
-            <span className="text-sm text-ink">기록 내보내기</span>
-            <span className="flex-1" />
-            <span className="font-mono text-[10px] text-dim">.txt</span>
-          </button>
-
           <div className={ROW.replace('cursor-pointer', '')}>
             <span className="text-dim">{theme === 'light' ? <IconSun size={19} /> : <IconMoon size={19} />}</span>
             <span className="text-sm text-ink">테마</span>
@@ -108,6 +87,38 @@ export default function MoreTab({ user, syncStatus, incomingCount, onExport, onS
               </button>
             </div>
           </div>
+
+          <button className={ROW} onClick={() => changeTab('friends')}>
+            <span className="text-dim">
+              <IconFriends size={19} />
+            </span>
+            <span className="text-sm text-ink">친구</span>
+            {incomingCount > 0 && <span className="w-1.5 h-1.5 rounded-full bg-accent" />}
+            <span className="flex-1" />
+            <span className="text-dim">
+              <IconChevronRight />
+            </span>
+          </button>
+
+          <button className={ROW} onClick={openWelcome}>
+            <span className="text-dim">
+              <IconBooks size={19} />
+            </span>
+            <span className="text-sm text-ink">기능 소개</span>
+            <span className="flex-1" />
+            <span className="text-dim">
+              <IconChevronRight />
+            </span>
+          </button>
+
+          <button className={ROW} onClick={onExport}>
+            <span className="text-dim">
+              <IconExport size={19} />
+            </span>
+            <span className="text-sm text-ink">기록 내보내기</span>
+            <span className="flex-1" />
+            <span className="font-mono text-[10px] text-dim">.txt</span>
+          </button>
 
           {user && (
             <button className={ROW} onClick={onSignOut}>

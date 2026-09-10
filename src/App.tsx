@@ -22,8 +22,11 @@ import AddQuoteModal from './components/modals/AddQuoteModal'
 import AddWordModal from './components/modals/AddWordModal'
 import PublishPostModal from './components/modals/PublishPostModal'
 import AddFriendModal from './components/modals/AddFriendModal'
+import WelcomeModal from './components/modals/WelcomeModal'
 
 const queryClient = new QueryClient()
+// 이 브라우저에서 기능 소개를 한 번 본 뒤 남겨두는 표시.
+const WELCOME_SEEN_KEY = 'reading-notes-welcome-seen-v1'
 
 export default function App() {
   return (
@@ -67,9 +70,33 @@ function AppShell() {
     publishPost,
     removePost,
   } = useFriends(user)
-  const { tab, modal, showToast, loginDismissed, dismissLogin, openManualBook, openAddQuote, closeModal, changeTab } =
-    useAppUI()
+  const {
+    tab,
+    modal,
+    showToast,
+    loginDismissed,
+    dismissLogin,
+    openManualBook,
+    openAddQuote,
+    openWelcome,
+    closeModal,
+    changeTab,
+  } = useAppUI()
   const queryClient = useQueryClient()
+
+  // 첫 진입에는 로그인 창이 먼저다. 로그인하거나 "나중에"로 넘긴 뒤에야 기능 소개를 띄운다.
+  const showLogin = !loading && !user && !loginDismissed
+
+  useEffect(() => {
+    if (loading || showLogin) return
+    if (localStorage.getItem(WELCOME_SEEN_KEY)) return
+    openWelcome()
+  }, [loading, showLogin, openWelcome])
+
+  const closeWelcome = useCallback(() => {
+    localStorage.setItem(WELCOME_SEEN_KEY, '1')
+    closeModal()
+  }, [closeModal])
 
   useEffect(() => {
     if (!user) return
@@ -288,7 +315,7 @@ function AppShell() {
         />
       )}
 
-      {!loading && !user && !loginDismissed && (
+      {showLogin && (
         <LoginOverlay
           onSignIn={handleSignIn}
           onDismiss={() => {
@@ -297,6 +324,8 @@ function AppShell() {
           }}
         />
       )}
+
+      {modal.type === 'welcome' && <WelcomeModal onClose={closeWelcome} />}
     </AppLayout>
   )
 }
