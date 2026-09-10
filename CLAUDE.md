@@ -10,7 +10,7 @@
 - **Frontend**: React 18, TypeScript, Vite, Tailwind CSS
 - **상태 관리**: React Context(전역 UI 상태) + `@tanstack/react-query`(서버 상태) + `react-router-dom`(URL 상태 — 탭 전환이 라우팅)
 - **Backend**: Firebase Hosting, Firestore, Google Auth
-- **Functions**: Firebase Functions v2 (Node 20, Cloud Run, asia-northeast3) — 카카오 책 검색 / 우리말샘 사전 프록시
+- **Functions**: Firebase Functions v2 (Node 20, Cloud Run, asia-northeast3) — 카카오 책 검색 / 우리말샘 사전 프록시, 친구 게시물 CRUD, 사진 문장 인식(OCR)
 
 ## Firebase 프로젝트
 
@@ -23,24 +23,26 @@
 src/
   components/
     layout/           # AppLayout(데스크톱 사이드바 / 모바일 하단탭), PageHeader, icons
-    modals/            # AddBookModal, ManualBookModal, BookDetailModal, AddQuoteModal, Modal
+    modals/            # AddBookModal, ManualBookModal, BookDetailModal, AddQuoteModal, AddWordModal,
+                       # AddFriendModal, PublishPostModal, WelcomeModal, Modal
     HomeTab, BooksTab, CollectionTab, RecordsTab, FriendsTab, MoreTab   # 탭(=라우트) 컴포넌트
     QuotesTab, WordsTab, StatsTab, CalendarTab   # CollectionTab(모음)·RecordsTab(기록) 내부에서 조합
-    BookCard, QuoteCard, HighlightedText, DatePicker, Toast, LoginOverlay
+    BookCard, QuoteCard, PostCard, HighlightedText, DatePicker, Toast, LoginOverlay
   contexts/
     AppUIContext.tsx  # 탭(URL과 동기화)/모달/테마/토스트/로그인 배너 등 전역 UI 상태
   hooks/
     useAuth.ts        # Firebase Google 로그인
     useData.ts        # 로컬스토리지 + Firestore 동기화, 책/인용구/단어 CRUD, txt 내보내기
-    useFriends.ts     # 친구 요청 구독, 친구 책장 로드
+    useFriends.ts     # 친구 요청 구독, 친구 책장 로드, 피드 게시물 발행·조회·삭제
   lib/
     insights.ts        # 홈 대시보드 파생 지표(목표 페이스, 이번 주 기록한 날, 최근 활동 등)
   firebase.ts          # Firebase 초기화 + Firestore 접근 함수 전부
-  types.ts             # Book, Quote, Word, AppState, UserProfile, FriendRequest
+  types.ts             # Book, Quote, Word, AppState, UserProfile, FriendRequest, Post, PostAttachment, FriendShelf
   App.tsx              # QueryClientProvider + BrowserRouter + AppUIProvider 조립, 모달 라우팅
   index.css            # CSS 변수(디자인 토큰) 정의. 실제 스타일은 컴포넌트의 Tailwind 클래스
 functions/
-  src/index.ts         # kakaoBookSearch, koreanDictSearch
+  src/index.ts         # kakaoBookSearch, koreanDictSearch, findUserByEmail, getFriendShelf,
+                       # createPost, getFriendFeed, deletePost, ocrBookPage
 firestore.rules         # Firestore 보안 규칙
 ```
 
@@ -66,6 +68,7 @@ Firestore 컬렉션:
 - `reading-notes/{uid}` — 유저의 `AppState` 전체를 문서 하나에 저장 (books/quotes/words/readingGoal)
 - `users/{uid}` — 프로필(email, displayName, photoURL). 이메일 친구 검색용
 - `friendRequests/{fromUid}_{toUid}` — 친구 요청 status(pending/accepted/rejected)
+- `posts/{postId}` — 친구 피드에 공유한 게시물(문장 또는 책 스냅샷). `createPost`/`getFriendFeed`/`deletePost` Functions로만 쓰고 읽음
 
 보안 규칙(`firestore.rules`)의 `isFriend()`로, 친구 관계면 상대의 `reading-notes` 문서를 읽을 수 있음.
 친구 책장에서 `isPrivate` 책은 클라이언트에서 필터링됨.
@@ -83,8 +86,9 @@ Firestore 컬렉션:
 
 - 책 검색: 카카오 책 검색 API → `/api/kakaoBookSearch` (Functions 프록시)
 - 사전 검색: 우리말샘 오픈 API → `/api/koreanDictSearch` (Functions 프록시)
+- 문장 인식(OCR): Google Cloud Vision(`documentTextDetection`) → `ocrBookPage` 콜러블. 인식된 텍스트만 반환하고 이미지는 저장하지 않음. 서비스 계정 권한으로 호출하므로 별도 API 키 불필요
 - API 키는 Firebase Secret Manager (`KAKAO_REST_API_KEY`, `OPENDICT_API_KEY`)
-- 로컬 개발 서버(`npm run dev`)만으로는 두 검색이 동작하지 않음 (배포 환경에서만 프록시 경로가 살아있음)
+- 로컬 개발 서버(`npm run dev`)만으로는 세 기능이 동작하지 않음 (배포 환경에서만 프록시/콜러블 경로가 살아있음)
 
 ## 테마 & 디자인 토큰
 

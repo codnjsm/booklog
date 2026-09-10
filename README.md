@@ -8,9 +8,9 @@
 
 - **홈** — 오늘의 독서 목표 진행률, 지금 읽는 중인 책, 오늘의 문장, 최근 활동 피드
 - **서재** — 위시리스트 / 읽는중 / 완독 상태로 책 관리, 별점·독후감·비공개 설정(친구에게 숨기기)
-- **모음** — 책에서 발췌한 인용구(형광펜으로 부분 강조 가능) + 우리말샘 사전 검색·단어장을 한 화면에서
+- **모음** — 책에서 발췌한 인용구(형광펜으로 부분 강조 가능) + 우리말샘 사전 검색·단어장을 한 화면에서, 책 페이지 사진으로 문장 인식(OCR)해 인용구로 가져오기
 - **기록** — 완독 달력, 최근 12개월 완독 추이, 연간 독서 목표
-- **친구** — 이메일로 친구 추가, 서로의 책장 열람(비공개 책 제외)
+- **친구** — 이메일로 친구 추가, 서로의 책장 열람(비공개 책 제외), 문장·책을 친구 피드에 공유
 - Google 로그인 시 기기 간 동기화, 로그인 없이도 브라우저 로컬 저장으로 사용 가능
 - 다크/라이트 테마, 데스크톱 사이드바 / 모바일 하단 탭 네비게이션
 
@@ -19,7 +19,7 @@
 - **Frontend**: React 18, TypeScript, Vite, Tailwind CSS
 - **상태 관리**: React Context(전역 UI 상태) + `@tanstack/react-query`(서버 상태) + `react-router-dom`(URL 상태)
 - **Backend**: Firebase Hosting, Firestore, Google Auth
-- **Functions**: Firebase Functions v2 — 카카오 책 검색 / 우리말샘 사전 프록시
+- **Functions**: Firebase Functions v2 — 카카오 책 검색 / 우리말샘 사전 프록시, 친구 게시물 CRUD, 사진 문장 인식(OCR, Google Cloud Vision)
 
 ## 시작하기
 
@@ -44,10 +44,11 @@ firebase deploy --only functions
 src/
   components/
     layout/           # AppLayout(사이드바/하단탭), PageHeader, icons
-    modals/            # AddBookModal, ManualBookModal, BookDetailModal, AddQuoteModal, Modal
+    modals/            # AddBookModal, ManualBookModal, BookDetailModal, AddQuoteModal, AddWordModal,
+                       # AddFriendModal, PublishPostModal, WelcomeModal, Modal
     HomeTab, BooksTab, CollectionTab, RecordsTab, FriendsTab, MoreTab
     QuotesTab, WordsTab, StatsTab, CalendarTab   # CollectionTab/RecordsTab 안에서 조합
-    BookCard, QuoteCard, HighlightedText, DatePicker, Toast, LoginOverlay
+    BookCard, QuoteCard, PostCard, HighlightedText, DatePicker, Toast, LoginOverlay
   contexts/
     AppUIContext.tsx  # 탭(URL 라우팅)/모달/테마/토스트 등 전역 UI 상태
   hooks/
@@ -57,9 +58,10 @@ src/
   lib/
     insights.ts        # 홈 대시보드용 파생 지표(목표 페이스, 최근 활동 등)
   firebase.ts          # Firebase 초기화 + Firestore 접근 함수
-  types.ts             # Book, Quote, Word, AppState 등 타입
+  types.ts             # Book, Quote, Word, AppState, Post 등 타입
 functions/
-  src/index.ts         # kakaoBookSearch, koreanDictSearch
+  src/index.ts         # kakaoBookSearch, koreanDictSearch, findUserByEmail, getFriendShelf,
+                       # createPost, getFriendFeed, deletePost, ocrBookPage
 firestore.rules         # Firestore 보안 규칙
 ```
 
