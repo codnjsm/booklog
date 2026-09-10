@@ -12,7 +12,7 @@ interface Props {
 const BTN_SMALL_SECONDARY =
   'bg-surface text-ink border border-border px-3 py-1.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:bg-surface2'
 const BTN_SMALL_DANGER =
-  'bg-transparent text-danger border border-border px-3 py-1.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:bg-danger/10'
+  'bg-transparent text-danger border border-border px-3 py-1.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-colors duration-200 font-sans hover:bg-dangersoft'
 
 export default function QuoteCard({ quote, book, onBookClick, onEdit, onDelete }: Props) {
   return (

@@ -137,7 +137,7 @@ export default function BookDetailModal({
                   />
                 ) : (
                   <div className="w-full aspect-[2/3] rounded-md bg-surface2 border border-border flex items-center justify-center p-3">
-                    <span className="text-xs sm:text-[13px] font-medium leading-snug text-center text-ink/70">
+                    <span className="text-xs sm:text-[13px] font-medium leading-snug text-center text-ink">
                       {book.title}
                     </span>
                   </div>
@@ -301,7 +301,7 @@ export default function BookDetailModal({
         <div className="flex items-center gap-2 px-5 sm:px-6 py-3.5 border-t border-border bg-bg">
           <button
             onClick={() => onDelete(bookId)}
-            className="text-[13px] sm:text-sm px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg bg-transparent border border-border text-danger cursor-pointer hover:bg-danger/10"
+            className="text-[13px] sm:text-sm px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg bg-transparent border border-border text-danger cursor-pointer transition-colors duration-200 hover:bg-dangersoft"
           >
             책 삭제
           </button>

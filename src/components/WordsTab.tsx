@@ -56,7 +56,7 @@ export default function WordsTab({ words, onAddWord, onDeleteWord }: Props) {
                   </div>
                   <button
                     onClick={() => onDeleteWord(w.id)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity text-dim hover:text-danger bg-transparent border-none cursor-pointer text-sm leading-none p-0.5"
+                    className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-dim hover:text-danger bg-transparent border-none cursor-pointer text-sm leading-none p-0.5"
                     aria-label="단어 삭제"
                   >
                     ×

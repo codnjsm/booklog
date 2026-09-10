@@ -1,6 +1,11 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
+  // 터치 기기에서 탭한 뒤 hover 색이 남는 문제를 막는다.
+  // 모든 hover: 유틸을 @media (hover: hover)로 감싸 마우스가 있는 기기에서만 적용된다.
+  future: {
+    hoverOnlyWhenSupported: true,
+  },
   theme: {
     extend: {
       screens: {

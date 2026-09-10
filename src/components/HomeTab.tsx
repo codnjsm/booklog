@@ -79,7 +79,7 @@ function Cover({ book, className = '' }: { book: Book; className?: string }) {
   }
   return (
     <div className={`rounded-md bg-surface2 border border-border flex items-center justify-center p-2.5 ${className}`}>
-      <span className="text-xs sm:text-[13px] font-medium leading-snug text-center text-ink/70">{book.title}</span>
+      <span className="text-xs sm:text-[13px] font-medium leading-snug text-center text-ink">{book.title}</span>
     </div>
   )
 }

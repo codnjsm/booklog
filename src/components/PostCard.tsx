@@ -40,7 +40,7 @@ export default function PostCard({ post, isOwn, onDelete }: Props) {
           <button
             onClick={onDelete}
             aria-label="게시물 삭제"
-            className="w-[26px] h-[26px] flex-shrink-0 flex items-center justify-center rounded-md bg-transparent text-danger border border-border cursor-pointer hover:bg-danger/10"
+            className="w-[26px] h-[26px] flex-shrink-0 flex items-center justify-center rounded-md bg-transparent text-danger border border-border cursor-pointer transition-colors duration-200 hover:bg-dangersoft"
           >
             ×
           </button>

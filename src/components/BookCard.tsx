@@ -31,7 +31,7 @@ export default function BookCard({ book, quoteCount, onClick }: Props) {
 
   return (
     <div
-      className={`bg-surface border rounded-[10px] overflow-hidden cursor-pointer transition-all duration-200 flex flex-row sm:flex-col hover:-translate-y-[3px] hover:border-accent hover:shadow-card ${isDone ? 'border-accent/40 border-l-[3px] border-l-accent' : 'border-border'}`}
+      className={`bg-surface border rounded-[10px] overflow-hidden cursor-pointer transition-all duration-200 flex flex-row sm:flex-col hover:-translate-y-[3px] hover:border-accent hover:shadow-card ${isDone ? 'border-border border-l-[3px] border-l-accent' : 'border-border'}`}
       onClick={onClick}
     >
       <div className="w-[90px] sm:w-full flex-shrink-0 sm:flex-shrink aspect-[2/3] bg-gradient-to-br from-surface2 to-bg flex items-center justify-center overflow-hidden relative rounded-none">
@@ -47,7 +47,7 @@ export default function BookCard({ book, quoteCount, onClick }: Props) {
             <span className="sm:hidden text-dim">
               <IconBooks size={26} />
             </span>
-            <div className="hidden sm:block text-xs sm:text-[13px] font-medium mb-1.5 text-ink/70 leading-snug">
+            <div className="hidden sm:block text-xs sm:text-[13px] font-medium mb-1.5 text-ink leading-snug">
               {book.title}
             </div>
             <div className="hidden sm:block text-xs sm:text-[13px] text-dim">{book.author}</div>
