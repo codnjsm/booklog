@@ -23,11 +23,11 @@
   --border: #e4e4e7;
   --text: #18181b;
   --text-dim: #71717a;
-  --accent: #2946c8;
-  --accent-hover: #1e37a6;
-  --accent-soft: #eef1fc;
+  --accent: #4f65c4;
+  --accent-hover: #384da8;
+  --accent-soft: #eeeff7;
   /* FAB처럼 다양한 콘텐츠 위에 떠 있는 요소 전용. accent-soft와 달리 항상 불투명해야 뒤 배경이 안 비친다 */
-  --fab-soft: #eef1fc;
+  --fab-soft: #eeeff7;
   --danger: #dc2626;
   --danger-soft: #fef2f2;
   --ok: #16a34a;
@@ -47,10 +47,10 @@
   --border: #2e2e33;
   --text: #f4f4f5;
   --text-dim: #9c9ca5;
-  --accent: #7b93ff;
-  --accent-hover: #9aacff;
-  --accent-soft: rgba(123, 147, 255, 0.14);
-  --fab-soft: #262c4a;
+  --accent: #7787d5;
+  --accent-hover: #8b9adb;
+  --accent-soft: rgba(119, 135, 213, 0.16);
+  --fab-soft: #262938;
   --danger: #f87171;
   --danger-soft: rgba(248, 113, 113, 0.14);
   --ok: #4ade80;

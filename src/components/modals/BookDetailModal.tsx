@@ -13,7 +13,7 @@ const STATUS = {
 }
 
 const PANEL =
-  'bg-surface border border-border rounded-2xl sm:rounded-[14px] w-full max-w-full min-h-[min(500px,90%)] sm:max-w-[620px] max-h-[92%] sm:max-h-[90%] overflow-y-auto overscroll-contain touch-auto shadow-card'
+  'bg-surface border border-border rounded-2xl sm:rounded-[14px] w-full max-w-full min-h-[min(500px,90%)] sm:min-h-0 sm:max-w-[620px] max-h-[92%] sm:max-h-[90%] overflow-y-auto overscroll-contain touch-auto shadow-card'
 const LABEL = 'font-mono text-[10px] sm:text-[12px] tracking-[0.09em] text-dim'
 // 헤더에 모달 제목이 없으므로 책 제목이 이 모달의 접근성 이름 역할을 한다
 const TITLE_ID = 'book-detail-modal-title'
@@ -253,7 +253,10 @@ export default function BookDetailModal({
                   <h3 className="font-sans text-ink mb-1.5 text-sm sm:text-[15px]">아직 담긴 문장이 없어요</h3>
                   <p className="text-xs sm:text-[13px] text-dim">이 책에서 마음에 남은 문장을 저장해보세요</p>
                 </div>
-                <button className={BTN} onClick={() => onAddQuote(bookId)}>
+                <button
+                  className="text-xs sm:text-[13px] font-medium px-2.5 py-1.5 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover"
+                  onClick={() => onAddQuote(bookId)}
+                >
                   + 첫 문장 저장하기
                 </button>
               </div>

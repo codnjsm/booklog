@@ -192,7 +192,7 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
               <span className="text-xs sm:text-[13px] text-dim">현재 읽고있는 책이 없습니다</span>
               <button
                 onClick={() => changeTab('books')}
-                className="text-[13px] sm:text-sm font-medium px-3 py-1.5 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover"
+                className="text-xs sm:text-[13px] font-medium px-2.5 py-1.5 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover"
               >
                 서재에서 고르기
               </button>
