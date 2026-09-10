@@ -3,7 +3,7 @@ import Modal from './Modal'
 import type { Book, Quote } from '../../types'
 import { readingSince, readDaysCount } from '../../lib/insights'
 import HighlightedText from '../HighlightedText'
-import { IconLock } from '../layout/icons'
+import { IconLock, IconCollection } from '../layout/icons'
 import Stars from '../Stars'
 
 const STATUS = {
@@ -245,12 +245,14 @@ export default function BookDetailModal({
             </div>
 
             {bookQuotes.length === 0 ? (
-              <div className="border border-dashed border-border rounded-[10px] bg-bg px-5 py-7 flex flex-col items-center gap-3">
-                <p className="font-serif text-sm sm:text-[15px] text-dim text-center leading-relaxed">
-                  읽다가 마음에 걸린 문장을
-                  <br />
-                  여기에 모아두세요
-                </p>
+              <div className="border border-dashed border-border rounded-[10px] bg-bg px-5 py-7 flex flex-col items-center gap-3 text-center">
+                <div className="w-11 h-11 rounded-full bg-surface2 flex items-center justify-center text-dim">
+                  <IconCollection size={20} />
+                </div>
+                <div>
+                  <h3 className="font-sans text-ink mb-1.5 text-sm sm:text-[15px]">아직 담긴 문장이 없어요</h3>
+                  <p className="text-xs sm:text-[13px] text-dim">이 책에서 마음에 남은 문장을 저장해보세요</p>
+                </div>
                 <button className={BTN} onClick={() => onAddQuote(bookId)}>
                   + 첫 문장 저장하기
                 </button>
