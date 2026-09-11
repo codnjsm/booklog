@@ -46,54 +46,36 @@ export default function Modal({ onClose, children, labelledBy }: Props) {
     //   - 배치 박스(안쪽)만 '보이는 영역'에 맞춰 옮긴다. 모달은 이 안에서 가운데 정렬되므로
     //     키보드가 올라오면 키보드 위 남은 공간의 중앙으로 따라 올라간다.
     const vv = window.visualViewport
+    if (!vv) return
+    const sync = () => {
+      const el = boxRef.current
+      if (!el) return
+      el.style.top = `${vv.offsetTop}px`
+      el.style.height = `${vv.height}px`
+    }
+    sync()
+    vv.addEventListener('resize', sync)
+    vv.addEventListener('scroll', sync)
+    return () => {
+      vv.removeEventListener('resize', sync)
+      vv.removeEventListener('scroll', sync)
+    }
+  }, [])
+
+  useEffect(() => {
+    // 포커스된 입력창이 키보드에 가려지면, 키보드가 올라오는 애니메이션이 끝나길 기다렸다가
+    // 그 입력창이 보이는 영역 안으로 들어오게 스크롤한다. 브라우저는 포커스만 옮길 뿐
+    // 이 스크롤을 대신 해주지 않는다.
     const el = boxRef.current
     if (!el) return
-
-    // iOS 사파리가 키보드 위에 붙이는 입력창 이동 바(위/아래 화살표 + 완료)는 visualViewport
-    // 계산에 안 잡힌다. 그만큼 안 빼주면 모달 패널 아래쪽이 그 바 뒤로 살짝 걸쳐 흰 모서리가
-    // 바 틈새로 비친다. 텍스트 입력 중(=키보드가 떠 있을 때)에만 그 높이만큼 더 줄인다.
-    // index.css의 입력창 scroll-margin-bottom(24px)과 합쳐져 실제 여백이 되므로 크지 않게 잡는다.
-    const INPUT_TOOLBAR_HEIGHT = 24
-    const sync = () => {
-      if (!vv) return
-      const active = document.activeElement
-      const isTyping =
-        active instanceof HTMLElement &&
-        el.contains(active) &&
-        (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')
-      const keyboardOpen = vv.height < window.innerHeight
-      const buffer = isTyping && keyboardOpen ? INPUT_TOOLBAR_HEIGHT : 0
-      el.style.top = `${vv.offsetTop}px`
-      el.style.height = `${vv.height - buffer}px`
-    }
-
-    // 포커스된 입력창이 키보드에 가려지면, 키보드가 올라오는 애니메이션이 끝나길 기다렸다가
-    // (박스 크기부터 다시 맞춘 뒤) 그 입력창이 보이는 영역 안으로 들어오게 스크롤한다.
-    // 브라우저는 포커스만 옮길 뿐 이 스크롤을 대신 해주지 않는다.
     const onFocusIn = (e: FocusEvent) => {
       const target = e.target
       if (!(target instanceof HTMLElement)) return
       if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') return
-      setTimeout(() => {
-        sync()
-        target.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
-      }, 300)
+      setTimeout(() => target.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 300)
     }
-    // 필드 사이를 옮겨 다닐 때(키보드 크기는 그대로라 resize가 안 뜸)도 입력창 이동 바
-    // 여백을 뗐다 붙였다 해야 하므로, 포커스가 빠질 때도 다시 맞춘다.
-    const onFocusOut = () => sync()
-
-    sync()
-    vv?.addEventListener('resize', sync)
-    vv?.addEventListener('scroll', sync)
     el.addEventListener('focusin', onFocusIn)
-    el.addEventListener('focusout', onFocusOut)
-    return () => {
-      vv?.removeEventListener('resize', sync)
-      vv?.removeEventListener('scroll', sync)
-      el.removeEventListener('focusin', onFocusIn)
-      el.removeEventListener('focusout', onFocusOut)
-    }
+    return () => el.removeEventListener('focusin', onFocusIn)
   }, [])
 
   const close = (e: React.MouseEvent) => {
