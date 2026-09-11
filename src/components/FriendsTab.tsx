@@ -35,9 +35,9 @@ interface Props {
 const BTN_SM =
   'bg-accentsoft text-accent border-none font-medium px-3 py-1.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed'
 const BTN_SM_SECONDARY =
-  'bg-surface text-ink border border-border px-3 py-1.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:bg-surface2'
+  'bg-surface text-ink border border-border px-2.5 py-1 rounded-lg text-xs sm:text-[13px] cursor-pointer transition-all duration-150 font-sans hover:bg-surface2'
 const BTN_SM_DANGER =
-  'bg-transparent text-danger border border-border px-3 py-1.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:bg-dangersoft'
+  'bg-transparent text-danger border border-border px-2.5 py-1 rounded-lg text-xs sm:text-[13px] cursor-pointer transition-all duration-150 font-sans hover:bg-dangersoft'
 // 수락(연한 배경)과 짝을 이루는 거절 버튼 — 톤은 반대(빨강)지만 모양은 같은 연한 채움으로 맞춘다
 const BTN_SM_DANGER_SOFT =
   'bg-dangersoft text-danger border-none font-medium px-3 py-1.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:opacity-80'
@@ -46,7 +46,7 @@ const STATUS_PILL =
 
 const SECTION_LABEL = 'text-xs sm:text-[13px] text-dim mb-2'
 const LIST_CARD = 'bg-surface border border-border rounded-xl'
-const LIST_ROW = 'flex items-center gap-3 px-4 py-3 border-b border-surface2 last:border-b-0'
+const LIST_ROW = 'flex items-center gap-3 px-4 py-4 border-b border-surface2 last:border-b-0'
 
 /** 아바타 + 이름 + 이메일. 검색 결과·받은 요청·보낸 요청·친구 목록에서 같은 모양으로 쓴다. */
 function Person({ photoURL, displayName, email }: { photoURL?: string; displayName?: string; email?: string }) {

@@ -35,19 +35,23 @@ export default function PostCard({ post, isOwn, onDelete }: Props) {
 
   return (
     <div className="bg-surface border border-border rounded-[10px] px-4 py-3.5 sm:px-[22px] sm:py-5">
-      <div className="flex items-center gap-2 mb-3">
-        <Avatar url={post.authorPhotoURL} name={post.authorDisplayName} />
-        <span className="text-sm font-medium text-ink">{post.authorDisplayName || '이름 없음'}</span>
-        <span className="font-mono text-xs sm:text-[13px] text-dim ml-auto">{relativeDay(post.createdAt)}</span>
-        {isOwn && (
-          <button
-            onClick={onDelete}
-            aria-label="게시물 삭제"
-            className="sm:hidden w-[26px] h-[26px] flex-shrink-0 flex items-center justify-center rounded-md bg-transparent text-danger border border-border cursor-pointer transition-colors duration-200 hover:bg-dangersoft"
-          >
-            ×
-          </button>
-        )}
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="flex items-center gap-2">
+          <Avatar url={post.authorPhotoURL} name={post.authorDisplayName} />
+          <span className="text-sm font-medium text-ink">{post.authorDisplayName || '이름 없음'}</span>
+        </div>
+        <div className="flex items-center justify-end gap-2">
+          <span className="font-mono text-xs sm:text-[13px] text-dim">{relativeDay(post.createdAt)}</span>
+          {isOwn && (
+            <button
+              onClick={onDelete}
+              aria-label="게시물 삭제"
+              className="sm:hidden self-start -mt-3.5 -mr-2 w-[26px] h-[26px] flex-shrink-0 flex items-center justify-center rounded-md bg-transparent text-danger border-none cursor-pointer transition-colors duration-200 hover:bg-dangersoft"
+            >
+              ×
+            </button>
+          )}
+        </div>
       </div>
 
       {attachment.kind === 'quote' ? (
