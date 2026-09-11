@@ -231,7 +231,18 @@ export function useData(user: User | null) {
   const addQuote = useCallback(
     (data: Omit<Quote, 'id' | 'createdAt'>) => {
       const quote: Quote = { ...data, id: uid(), createdAt: new Date().toISOString() }
-      update((s) => ({ ...s, quotes: [...s.quotes, quote] }))
+      update((s) => ({
+        ...s,
+        quotes: [...s.quotes, quote],
+        // 읽고싶음 책에 문장을 저장했다는 건 이미 읽기 시작했다는 뜻이므로 읽는중으로 옮긴다.
+        books: data.bookId
+          ? s.books.map((b) =>
+              b.id === data.bookId && b.status === 'wishlist'
+                ? { ...b, status: 'reading', startedAt: b.startedAt ?? new Date().toISOString() }
+                : b,
+            )
+          : s.books,
+      }))
     },
     [update],
   )
