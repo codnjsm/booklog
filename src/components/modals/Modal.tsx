@@ -52,7 +52,8 @@ export default function Modal({ onClose, children, labelledBy }: Props) {
     // iOS 사파리가 키보드 위에 붙이는 입력창 이동 바(위/아래 화살표 + 완료)는 visualViewport
     // 계산에 안 잡힌다. 그만큼 안 빼주면 모달 패널 아래쪽이 그 바 뒤로 살짝 걸쳐 흰 모서리가
     // 바 틈새로 비친다. 텍스트 입력 중(=키보드가 떠 있을 때)에만 그 높이만큼 더 줄인다.
-    const INPUT_TOOLBAR_HEIGHT = 50
+    // index.css의 입력창 scroll-margin-bottom(24px)과 합쳐져 실제 여백이 되므로 크지 않게 잡는다.
+    const INPUT_TOOLBAR_HEIGHT = 24
     const sync = () => {
       if (!vv) return
       const active = document.activeElement
