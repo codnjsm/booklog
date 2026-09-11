@@ -15,6 +15,13 @@
   font-display: swap;
 }
 
+/* 모달에서 입력창에 포커스하면 Modal.tsx가 키보드 위로 scrollIntoView 한다.
+   여백 없이 딱 붙게 스크롤하면 키보드 바로 위 경계에 걸쳐 살짝 잘려 보이므로 여유를 둔다. */
+[role='dialog'] input,
+[role='dialog'] textarea {
+  scroll-margin-bottom: 24px;
+}
+
 /* 라이트가 기본값. 다크는 [data-theme="dark"] 로 전환 */
 :root {
   --bg: #fafafa;
