@@ -200,7 +200,7 @@ export default function CalendarTab({ books }: Props) {
           {selectedDate && (
             <button
               onClick={() => setSelectedDate(null)}
-              className="ml-auto text-[13px] sm:text-sm text-accent bg-transparent border-none cursor-pointer p-0"
+              className="ml-auto text-xs sm:text-[13px] font-medium px-2.5 py-1 rounded-full bg-accentsoft text-accent border-none cursor-pointer hover:opacity-80"
             >
               이 달 전체 보기
             </button>

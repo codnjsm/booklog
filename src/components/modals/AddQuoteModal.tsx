@@ -243,7 +243,7 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
                   </>
                 ) : (
                   <>
-                    <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-2 mb-1.5">
                       <label className="flex text-xs sm:text-[13px] uppercase tracking-[.05em] text-dim">
                         문장 <span className="text-danger">*</span>
                       </label>
@@ -251,7 +251,7 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
                         type="button"
                         onClick={() => triggerPhotoImport(i)}
                         disabled={ocrLoading}
-                        className="text-[13px] sm:text-sm text-accent bg-transparent border-none cursor-pointer pr-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="text-xs sm:text-[13px] font-medium px-2.5 py-1 rounded-full bg-accentsoft text-accent border-none cursor-pointer hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {ocrLoading ? '인식 중…' : '+ 사진으로 추가'}
                       </button>

@@ -177,7 +177,7 @@ export default function PublishPostModal({ user, books, quotes, onClose, onPubli
             <>
               <button
                 onClick={() => setPicked(null)}
-                className="flex items-center gap-1.5 text-[13px] sm:text-sm text-accent bg-transparent border-none cursor-pointer p-0 mb-3"
+                className="flex items-center gap-1 text-xs sm:text-[13px] font-medium px-2.5 py-1 rounded-full bg-accentsoft text-accent border-none cursor-pointer hover:opacity-80 mb-3"
               >
                 <span className="text-lg leading-none relative top-[-2px]">‹</span>
                 다른 걸 고르기
