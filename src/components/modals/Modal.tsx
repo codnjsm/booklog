@@ -62,6 +62,22 @@ export default function Modal({ onClose, children, labelledBy }: Props) {
     }
   }, [])
 
+  useEffect(() => {
+    // 포커스된 입력창이 키보드에 가려지면, 키보드가 올라오는 애니메이션이 끝나길 기다렸다가
+    // 그 입력창이 보이는 영역 안으로 들어오게 스크롤한다. 브라우저는 포커스만 옮길 뿐
+    // 이 스크롤을 대신 해주지 않는다.
+    const el = boxRef.current
+    if (!el) return
+    const onFocusIn = (e: FocusEvent) => {
+      const target = e.target
+      if (!(target instanceof HTMLElement)) return
+      if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') return
+      setTimeout(() => target.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 300)
+    }
+    el.addEventListener('focusin', onFocusIn)
+    return () => el.removeEventListener('focusin', onFocusIn)
+  }, [])
+
   const close = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) onClose()
   }
