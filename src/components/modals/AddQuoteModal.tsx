@@ -271,7 +271,9 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
                     />
                     <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                       <span className="text-xs sm:text-[13px] text-dim">형광펜</span>
-                      <div className="flex items-center gap-1">
+                      {/* 원형 아이콘은 자기 박스 정중앙이 곧 잉크 중심이지만, 한글 글자는 실제 획이
+                          줄박스 위쪽에 쏠려있어 items-center로 맞춰도 원이 살짝 처져 보인다. 눈에 맞게 보정. */}
+                      <div className="flex items-center gap-1 -translate-y-px">
                         {HIGHLIGHT_COLORS.map((c) => (
                           <button
                             key={c.id}
@@ -293,7 +295,7 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
                           <button
                             type="button"
                             onClick={() => clearHighlights(i)}
-                            className="text-[13px] sm:text-sm text-dim bg-transparent border-none cursor-pointer p-0 hover:text-ink"
+                            className="text-xs sm:text-[13px] text-danger bg-transparent border-none cursor-pointer p-0 hover:opacity-70"
                           >
                             모두 지우기
                           </button>
