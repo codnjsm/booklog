@@ -190,15 +190,17 @@ export default function CalendarTab({ books }: Props) {
       ))}
 
       <div className="mt-6">
-        <div className="flex items-baseline gap-2 mb-2.5 px-3">
+        <div className="flex items-baseline gap-2 mb-2.5 px-2.5">
           <h3 className="text-[13px] font-semibold text-ink">{listTitle}</h3>
           <span className="font-mono text-xs sm:text-[13px] text-dim">{listBooks.length}권</span>
-          <span className="text-xs sm:text-[13px] text-dim ml-auto">
-            읽은 날 ·{' '}
-            <span className="text-ink font-semibold bg-[linear-gradient(transparent_56%,var(--highlight)_56%)]">
-              {byDate.size}일
+          {!selectedDate && (
+            <span className="text-xs sm:text-[13px] text-dim ml-auto">
+              읽은 날 ·{' '}
+              <span className="text-ink font-semibold bg-[linear-gradient(transparent_56%,var(--highlight)_56%)]">
+                {byDate.size}일
+              </span>
             </span>
-          </span>
+          )}
           {selectedDate && (
             <button
               onClick={() => setSelectedDate(null)}
