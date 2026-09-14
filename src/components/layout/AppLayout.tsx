@@ -90,19 +90,36 @@ export default function AppLayout({
         <div className="flex-1" />
 
         <div className="flex flex-col gap-0.5 pt-3.5 border-t border-border">
+          {/* 더보기 탭의 테마 토글과 같은 형태 — 한 줄짜리 버튼은 눌러서 바뀌는 건지 알기 어렵다 */}
+          <div className="flex items-center gap-2 px-2.5 py-2 rounded-lg text-[13px] sm:text-sm text-dim">
+            <span className="flex-shrink-0">{theme === 'light' ? <IconSun /> : <IconMoon />}</span>
+            <span className="whitespace-nowrap">테마</span>
+            <span className="flex-1" />
+            <div className="flex flex-shrink-0 gap-0.5 p-0.5 rounded-lg bg-surface2 border border-border">
+              <button
+                onClick={() => {
+                  if (theme !== 'light') toggleTheme()
+                }}
+                className={`px-2 py-0.5 rounded-md text-xs whitespace-nowrap border-none cursor-pointer ${theme === 'light' ? 'bg-surface text-ink font-medium' : 'bg-transparent text-dim'}`}
+              >
+                라이트
+              </button>
+              <button
+                onClick={() => {
+                  if (theme !== 'dark') toggleTheme()
+                }}
+                className={`px-2 py-0.5 rounded-md text-xs whitespace-nowrap border-none cursor-pointer ${theme === 'dark' ? 'bg-surface text-ink font-medium' : 'bg-transparent text-dim'}`}
+              >
+                다크
+              </button>
+            </div>
+          </div>
           <button
             onClick={onExport}
             className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] sm:text-sm text-dim bg-transparent border-none cursor-pointer text-left hover:text-ink"
           >
             <IconExport />
             <span>기록 내보내기</span>
-          </button>
-          <button
-            onClick={toggleTheme}
-            className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] sm:text-sm text-dim bg-transparent border-none cursor-pointer text-left hover:text-ink"
-          >
-            {theme === 'light' ? <IconSun /> : <IconMoon />}
-            <span>{theme === 'light' ? '라이트 모드' : '다크 모드'}</span>
           </button>
           {user && (
             <button

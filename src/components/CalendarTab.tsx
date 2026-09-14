@@ -141,10 +141,6 @@ export default function CalendarTab({ books }: Props) {
         </button>
       </div>
 
-      <div className="text-xs sm:text-[13px] text-dim mb-1">
-        읽은 날 · <span className="text-ink font-semibold">{byDate.size}일</span>
-      </div>
-
       <div className="grid grid-cols-7">
         {DOW_LABELS.map((d) => (
           <div key={d} className="py-1.5 text-center text-[10px] sm:text-xs text-dim font-medium">
@@ -194,9 +190,15 @@ export default function CalendarTab({ books }: Props) {
       ))}
 
       <div className="mt-6">
-        <div className="flex items-baseline gap-2 mb-2.5">
+        <div className="flex items-baseline gap-2 mb-2.5 px-3">
           <h3 className="text-[13px] font-semibold text-ink">{listTitle}</h3>
           <span className="font-mono text-xs sm:text-[13px] text-dim">{listBooks.length}권</span>
+          <span className="text-xs sm:text-[13px] text-dim ml-auto">
+            읽은 날 ·{' '}
+            <span className="text-ink font-semibold bg-[linear-gradient(transparent_56%,var(--highlight)_56%)]">
+              {byDate.size}일
+            </span>
+          </span>
           {selectedDate && (
             <button
               onClick={() => setSelectedDate(null)}
