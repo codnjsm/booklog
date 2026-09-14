@@ -15,10 +15,17 @@ export default function Toast() {
   useEffect(() => {
     if (!toastKey) return
     setMounted(true)
-    setVisible(true)
+    // 숨은 상태가 한 번 그려진 다음에 보이게 해야 '등장' 전환이 실제로 재생된다.
+    // 같은 렌더에서 바로 visible=true로 두면 전환할 이전 상태가 없어 툭 튀어나온다.
+    let enterFrame = 0
+    const paintFrame = requestAnimationFrame(() => {
+      enterFrame = requestAnimationFrame(() => setVisible(true))
+    })
     const hideTimer = setTimeout(() => setVisible(false), 2200)
-    const unmountTimer = setTimeout(() => setMounted(false), 2600) // after 0.3s slide-down finishes
+    const unmountTimer = setTimeout(() => setMounted(false), 2600) // after 0.3s fade-out finishes
     return () => {
+      cancelAnimationFrame(paintFrame)
+      cancelAnimationFrame(enterFrame)
       clearTimeout(hideTimer)
       clearTimeout(unmountTimer)
     }
@@ -29,7 +36,9 @@ export default function Toast() {
     <div
       // 모바일은 하단 탭바 위 하단 중앙, PC(sm 이상)는 상단 중앙 — 등장 방향도 그에 맞춰
       // 모바일은 아래에서, PC는 위에서 슬라이드해 들어온다.
-      className={`fixed bottom-[calc(78px+env(safe-area-inset-bottom))] sm:bottom-auto sm:top-6 left-1/2 -translate-x-1/2 bg-surface text-ink pl-4 pr-5 py-3 border rounded-lg text-xs sm:text-[13px] z-[200] shadow-card flex items-center gap-2.5 transition-transform duration-300 ease-in-out ${type === 'error' ? 'border-danger' : 'border-border'} ${visible ? 'translate-y-0' : 'translate-y-[120%] sm:-translate-y-[120%]'}`}
+      // 화면 밖까지 밀어내는 대신 살짝 밀면서 같이 사라진다 — 토스트가 화면 가장자리에서
+      // 떨어져 있어 슬라이드만으로는 밖으로 빠져나가지 못하고 중간에 툭 끊겨 보인다.
+      className={`fixed bottom-[calc(78px+env(safe-area-inset-bottom))] sm:bottom-auto sm:top-6 left-1/2 -translate-x-1/2 bg-surface text-ink pl-4 pr-5 py-3 border rounded-lg text-xs sm:text-[13px] z-[200] shadow-card flex items-center gap-2.5 transition-[transform,opacity] duration-300 ease-out motion-reduce:transition-none ${type === 'error' ? 'border-danger' : 'border-border'} ${visible ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0 sm:-translate-y-2'}`}
     >
       {type === 'success' && (
         <span className={`${ICON_WRAP} bg-ok`}>
