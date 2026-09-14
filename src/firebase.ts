@@ -170,6 +170,17 @@ export const subscribeUserProfile = (uid: string, cb: (profile: UserProfile | nu
 }
 
 /**
+ * Functions 호출 실패 시 사용자에게 보여줄 메시지를 고른다.
+ * 우리 서버 코드가 던진 HttpsError는 항상 한국어 메시지라 그대로 보여줘도 되지만,
+ * App Check 검증 실패 같은 플랫폼 레벨 거부는 "Service Unavailable"처럼 영어 원문이 그대로 온다.
+ * 한글이 섞여 있으면 우리가 의도한 메시지로 보고, 아니면 안내 문구로 대체한다.
+ */
+export function friendlyErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof Error && /[가-힣]/.test(err.message)) return err.message
+  return fallback
+}
+
+/**
  * 카카오/사전 검색 프록시는 Firestore와 달리 Firebase SDK를 안 거치는 일반 fetch라
  * App Check 토큰이 자동으로 안 실린다. 여기서 직접 헤더에 넣어준다.
  */

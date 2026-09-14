@@ -33,6 +33,9 @@ const FORM_LABEL = 'flex text-xs sm:text-[13px] mb-1.5 uppercase tracking-[.05em
 const FORM_INPUT =
   'w-full bg-bg border border-border text-ink px-3 py-2 rounded-[7px] text-[13px] sm:text-[14px] font-sans placeholder:text-dim placeholder:opacity-50 focus:outline-none focus:border-accent'
 const FORM_TEXTAREA = `${FORM_INPUT} resize-none min-h-[90px] max-h-[500px] overflow-y-auto leading-[1.6]`
+// 문장 입력칸 앞에는 항상 이 카드의 삭제(×) 버튼이 absolute로 얹혀있어 DOM상 첫 형제가 아닐 수
+// 있다. :first-child에 기대는 대신, 구분선이 필요한 두 번째·세 번째 섹션에만 이 클래스를 준다.
+const FORM_SECTION = 'mt-4 pt-4 border-t border-border'
 
 /** 최소 높이는 유지하되 내용이 길어지면 500px까지 늘어나고, 그 이상은 내부 스크롤로 처리한다. */
 function autoResizeTextarea(el: HTMLTextAreaElement | null) {
@@ -210,7 +213,7 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
                   ×
                 </button>
               )}
-              <div className="mb-4">
+              <div>
                 {ocrPreview?.index === i ? (
                   <>
                     <label className="flex text-xs sm:text-[13px] uppercase tracking-[.05em] text-dim mb-1.5">
@@ -305,15 +308,18 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
                         <span className="text-xs sm:text-[13px] text-dim">칠할 부분을 드래그한 뒤 눌러주세요</span>
                       )}
                     </div>
-                    {entry.highlights?.length && entry.text ? (
-                      <div className="mt-2 rounded-[7px] border border-border bg-bg px-3 py-2 font-serif text-[13px] sm:text-[14px] leading-[1.8]">
-                        <HighlightedText text={entry.text} highlights={entry.highlights} />
-                      </div>
-                    ) : null}
                   </>
                 )}
               </div>
-              <div>
+              {ocrPreview?.index !== i && entry.highlights?.length && entry.text ? (
+                <div className={FORM_SECTION}>
+                  <div className="text-xs sm:text-[13px] mb-1 text-dim">미리보기</div>
+                  <div className="rounded-lg bg-surface2 px-3.5 py-3 font-serif text-[13px] sm:text-[14px] leading-[1.8]">
+                    <HighlightedText text={entry.text} highlights={entry.highlights} />
+                  </div>
+                </div>
+              ) : null}
+              <div className={FORM_SECTION}>
                 <label className={FORM_LABEL}>나의 생각</label>
                 <textarea
                   ref={(el) => autoResizeTextarea(el)}

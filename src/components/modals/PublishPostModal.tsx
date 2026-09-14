@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/react-query'
 import type { User } from 'firebase/auth'
 import Modal from './Modal'
 import type { Book, Quote, Post } from '../../types'
-import type { CreatedPost } from '../../firebase'
+import { friendlyErrorMessage, type CreatedPost } from '../../firebase'
 import { useAppUI } from '../../contexts/AppUIContext'
 import HighlightedText from '../HighlightedText'
 
@@ -78,7 +78,7 @@ export default function PublishPostModal({ user, books, quotes, onClose, onPubli
       })
       onClose()
     },
-    onError: (err) => showToast(err instanceof Error ? err.message : '공유 중 오류가 발생했어요', 'error'),
+    onError: (err) => showToast(friendlyErrorMessage(err, '네트워크 문제로 실패했어요. 다시 시도해주세요'), 'error'),
   })
 
   const captionValid = caption.trim().length > 0 && caption.trim().length <= 300
