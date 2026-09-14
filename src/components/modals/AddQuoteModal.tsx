@@ -151,6 +151,7 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
         (e.highlights ?? []).map((r) => ({
           start: Math.max(0, r.start - offset),
           end: Math.min(text.length, Math.max(0, r.end - offset)),
+          color: r.color,
         })),
       )
       onSave(
