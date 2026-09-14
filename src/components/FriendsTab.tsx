@@ -76,6 +76,20 @@ function Avatar({ url, name, size }: { url?: string; name: string; size: 'sm' | 
   )
 }
 
+/** 친구 책장 로딩 중 자리표시. BookCard와 골격이 같아서 데이터가 도착해도 레이아웃이 밀리지 않는다. */
+function BookCardSkeleton() {
+  return (
+    <div className="bg-surface border border-border rounded-[10px] overflow-hidden flex flex-row sm:flex-col animate-pulse motion-reduce:animate-none">
+      <div className="w-[90px] sm:w-full flex-shrink-0 sm:flex-shrink aspect-[2/3] bg-surface2" />
+      <div className="flex-1 sm:flex-none px-3.5 py-3 sm:pt-3 sm:pb-4 flex flex-col justify-start">
+        <div className="h-3 w-16 rounded bg-surface2 mb-2 sm:mb-[15px]" />
+        <div className="h-4 w-4/5 rounded bg-surface2 mb-2" />
+        <div className="h-3 w-1/2 rounded bg-surface2" />
+      </div>
+    </div>
+  )
+}
+
 type MainView = 'feed' | 'friends'
 
 function seg(view: MainView, active: MainView, onClick: () => void, label: string) {
@@ -139,14 +153,19 @@ export default function FriendsTab({
   const [viewingFriend, setViewingFriend] = useState<UserProfile | null>(null)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
 
-  const friendBooksQuery = useMutation({ mutationFn: onLoadFriendBooks })
+  // 같은 친구를 다시 열 때 매번 새로 불러오지 않도록 캐싱한다 (친구 피드와 동일한 패턴).
+  const friendBooksQuery = useQuery({
+    queryKey: ['friendShelf', viewingFriend?.uid],
+    queryFn: () => onLoadFriendBooks(viewingFriend?.uid ?? ''),
+    enabled: !!viewingFriend,
+    staleTime: 30_000,
+  })
   const loadingBooks = friendBooksQuery.isPending
   const friendData = friendBooksQuery.data ?? null
 
   const handleViewFriend = (friend: UserProfile) => {
     setViewingFriend(friend)
     setStatusFilter('all')
-    friendBooksQuery.mutate(friend.uid)
   }
 
   const filteredFriends = friends.filter((f) => {
@@ -179,10 +198,7 @@ export default function FriendsTab({
           <div className="flex items-center gap-2.5">
             <button
               className="bg-transparent border-none text-ink text-[28px] leading-none cursor-pointer px-1 flex items-center"
-              onClick={() => {
-                setViewingFriend(null)
-                friendBooksQuery.reset()
-              }}
+              onClick={() => setViewingFriend(null)}
             >
               ‹
             </button>
@@ -202,15 +218,17 @@ export default function FriendsTab({
                     statusFilter === s.id ? 'bg-surface text-ink font-medium shadow-card' : 'bg-transparent text-dim'
                   }`}
                 >
-                  {s.label} <span className="text-dim">{count}</span>
+                  {s.label} {!loadingBooks && <span className="text-dim">{count}</span>}
                 </button>
               )
             })}
           </div>
         </div>
         {loadingBooks ? (
-          <div className="text-center py-[60px] px-5 text-dim bg-surface border border-dashed border-border rounded-[10px]">
-            <p>불러오는 중…</p>
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5 sm:gap-[18px]">
+            {Array.from({ length: 4 }, (_, i) => (
+              <BookCardSkeleton key={i} />
+            ))}
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-[60px] px-5 text-dim bg-surface border border-dashed border-border rounded-[10px]">
