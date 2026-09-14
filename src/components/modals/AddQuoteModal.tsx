@@ -1,10 +1,10 @@
 import { useRef, useState } from 'react'
 import Modal from './Modal'
-import type { Book, Quote } from '../../types'
+import type { Book, Quote, HighlightColor } from '../../types'
 import { useAppUI } from '../../contexts/AppUIContext'
 import { ocrBookPage } from '../../firebase'
 import { fileToResizedBase64 } from '../../lib/image'
-import HighlightedText, { mergeRanges } from '../HighlightedText'
+import HighlightedText, { mergeRanges, HIGHLIGHT_COLORS } from '../HighlightedText'
 
 interface Props {
   books: Book[]
@@ -68,11 +68,13 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
   const [ocrLoading, setOcrLoading] = useState(false)
   // 사진에서 인식한 텍스트를 바로 문장 칸에 넣지 않고, 전체를 쓸지 일부만 골라 쓸지 먼저 확인받는다.
   const [ocrPreview, setOcrPreview] = useState<{ index: number; text: string } | null>(null)
+  // 마지막으로 고른 형광펜 색. 매번 다시 고르지 않아도 되게 다음 칠하기에도 그대로 쓴다.
+  const [pickedColor, setPickedColor] = useState<HighlightColor>('lime')
 
   const updateEntry = (i: number, field: 'text' | 'note', val: string) =>
     setEntries((prev) => prev.map((e, idx) => (idx === i ? { ...e, [field]: val } : e)))
 
-  const markHighlight = (i: number) => {
+  const markHighlight = (i: number, color: HighlightColor) => {
     const el = textRefs.current[i]
     if (!el) return
     const { selectionStart: start, selectionEnd: end } = el
@@ -80,9 +82,10 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
       showToast('형광펜을 칠할 부분을 먼저 드래그해주세요')
       return
     }
+    setPickedColor(color)
     setEntries((prev) =>
       prev.map((e, idx) =>
-        idx === i ? { ...e, highlights: mergeRanges([...(e.highlights ?? []), { start, end }]) } : e,
+        idx === i ? { ...e, highlights: mergeRanges([...(e.highlights ?? []), { start, end, color }]) } : e,
       ),
     )
   }
@@ -267,15 +270,23 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
                       className={`${FORM_TEXTAREA} mb-0`}
                     />
                     <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                      <button
-                        type="button"
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => markHighlight(i)}
-                        className={`${BTN_SMALL_SECONDARY} flex items-center gap-1.5`}
-                      >
-                        <span className="w-3 h-2 rounded-sm bg-highlight" />
-                        형광펜
-                      </button>
+                      <span className="text-xs sm:text-[13px] text-dim">형광펜</span>
+                      <div className="flex items-center gap-1">
+                        {HIGHLIGHT_COLORS.map((c) => (
+                          <button
+                            key={c.id}
+                            type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => markHighlight(i, c.id)}
+                            aria-label={`${c.label} 형광펜`}
+                            title={c.label}
+                            className={`w-5 h-5 rounded-full border cursor-pointer transition-transform duration-100 ${
+                              pickedColor === c.id ? 'border-ink scale-110' : 'border-border'
+                            }`}
+                            style={{ background: `var(--highlight-${c.id})` }}
+                          />
+                        ))}
+                      </div>
                       {entry.highlights?.length ? (
                         <>
                           <span className="font-mono text-xs sm:text-[13px] text-dim">{entry.highlights.length}곳</span>

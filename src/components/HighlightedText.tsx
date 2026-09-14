@@ -1,17 +1,39 @@
-import type { Quote } from '../types'
+import type { Quote, HighlightColor } from '../types'
 
-type Range = { start: number; end: number }
+type Range = { start: number; end: number; color?: HighlightColor }
 
-// 겹치거나 맞닿은 구간은 하나로 합친다. 항상 시작 위치 순으로 정렬해서 돌려준다.
+export const HIGHLIGHT_COLORS: { id: HighlightColor; label: string }[] = [
+  { id: 'lime', label: '연두' },
+  { id: 'pink', label: '핑크' },
+  { id: 'sky', label: '하늘' },
+  { id: 'mint', label: '민트' },
+  { id: 'lavender', label: '라벤더' },
+]
+
+// 겹치거나 맞닿은 구간은 하나로 합친다. 단, 색이 다르면 서로 다른 형광펜으로 보고 합치지 않는다.
+// (색이 다른 구간끼리 실제로 겹치는 경우의 렌더링은 HighlightedText가 따로 처리한다.)
+// 항상 시작 위치 순으로 정렬해서 돌려준다.
 export function mergeRanges(ranges: Range[]): Range[] {
-  const sorted = [...ranges].filter((r) => r.end > r.start).sort((a, b) => a.start - b.start)
-  const merged: Range[] = []
-  for (const cur of sorted) {
-    const last = merged[merged.length - 1]
-    if (last && cur.start <= last.end) last.end = Math.max(last.end, cur.end)
-    else merged.push({ ...cur })
+  const groups = new Map<string, Range[]>()
+  for (const r of ranges) {
+    if (r.end <= r.start) continue
+    const key = r.color ?? 'lime'
+    const list = groups.get(key)
+    if (list) list.push(r)
+    else groups.set(key, [r])
   }
-  return merged
+  const merged: Range[] = []
+  for (const group of groups.values()) {
+    const sorted = [...group].sort((a, b) => a.start - b.start)
+    const out: Range[] = []
+    for (const cur of sorted) {
+      const last = out[out.length - 1]
+      if (last && cur.start <= last.end) last.end = Math.max(last.end, cur.end)
+      else out.push({ ...cur })
+    }
+    merged.push(...out)
+  }
+  return merged.sort((a, b) => a.start - b.start)
 }
 
 interface Props {
@@ -25,7 +47,7 @@ export default function HighlightedText({ text, highlights }: Props) {
   const ranges = mergeRanges(
     (highlights ?? []).map((r) => {
       const start = Math.max(0, Math.min(r.start, text.length))
-      return { start, end: Math.max(start, Math.min(r.end, text.length)) }
+      return { start, end: Math.max(start, Math.min(r.end, text.length)), color: r.color }
     }),
   )
   if (ranges.length === 0) return <>{text}</>
@@ -33,10 +55,17 @@ export default function HighlightedText({ text, highlights }: Props) {
   const parts: React.ReactNode[] = []
   let cursor = 0
   ranges.forEach((r, i) => {
-    if (r.start > cursor) parts.push(text.slice(cursor, r.start))
+    // 색이 다른 구간끼리 겹치면 먼저 그려진(=앞서 시작한) 구간을 우선한다.
+    const start = Math.max(r.start, cursor)
+    if (start >= r.end) return
+    if (start > cursor) parts.push(text.slice(cursor, start))
     parts.push(
-      <span key={i} className="bg-[linear-gradient(transparent_56%,var(--highlight)_56%)]">
-        {text.slice(r.start, r.end)}
+      <span
+        key={i}
+        style={{ '--hl-color': `var(--highlight-${r.color ?? 'lime'})` } as React.CSSProperties}
+        className="bg-[linear-gradient(transparent_56%,var(--hl-color)_56%)]"
+      >
+        {text.slice(start, r.end)}
       </span>,
     )
     cursor = r.end

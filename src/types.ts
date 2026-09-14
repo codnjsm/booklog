@@ -17,6 +17,9 @@ export interface Book {
   isPrivate?: boolean
 }
 
+/** 형광펜 색상 키. 실제 색상값은 index.css의 --highlight-{색} 토큰(테마별)이 갖는다. */
+export type HighlightColor = 'lime' | 'pink' | 'sky' | 'mint' | 'lavender'
+
 export interface Quote {
   id: string
   bookId: string | null
@@ -25,7 +28,8 @@ export interface Quote {
   tags: string[]
   note: string
   createdAt: string
-  highlights?: { start: number; end: number }[]
+  /** color 없는 구간(과거 데이터)은 lime으로 취급한다. */
+  highlights?: { start: number; end: number; color?: HighlightColor }[]
 }
 
 export interface Word {
@@ -92,7 +96,7 @@ export type PostAttachment =
   | {
       kind: 'quote'
       quoteText: string
-      quoteHighlights: { start: number; end: number }[] | null
+      quoteHighlights: { start: number; end: number; color?: HighlightColor }[] | null
       bookTitle: string | null
       bookAuthor: string | null
     }

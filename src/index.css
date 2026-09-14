@@ -39,6 +39,12 @@
   --danger-soft: #fef2f2;
   --ok: #16a34a;
   --highlight: #ddf247;
+  /* 인용구 형광펜 색상 5종. 뒤 글씨가 잘 보이도록 반투명(lime만 55%, 나머지는 44%)으로 뒀다 */
+  --highlight-lime: rgba(221, 242, 71, 0.55);
+  --highlight-pink: rgba(231, 106, 164, 0.44);
+  --highlight-sky: rgba(106, 197, 231, 0.44);
+  --highlight-mint: rgba(106, 231, 168, 0.44);
+  --highlight-lavender: rgba(152, 106, 231, 0.44);
   --shadow: 0 1px 2px rgba(24, 24, 27, 0.04), 0 8px 24px rgba(24, 24, 27, 0.06);
   /* 카드 그림자(--shadow)보다 진하게 — 배경 위에 떠 있는 원형 버튼(FAB)용 */
   --shadow-fab: 0 6px 18px rgba(24, 24, 27, 0.32), 0 2px 5px rgba(24, 24, 27, 0.2);
@@ -62,6 +68,11 @@
   --danger-soft: rgba(248, 113, 113, 0.14);
   --ok: #4ade80;
   --highlight: rgba(221, 242, 71, 0.3);
+  --highlight-lime: rgba(221, 242, 71, 0.3);
+  --highlight-pink: rgba(231, 106, 164, 0.35);
+  --highlight-sky: rgba(106, 197, 231, 0.35);
+  --highlight-mint: rgba(106, 231, 168, 0.35);
+  --highlight-lavender: rgba(152, 106, 231, 0.35);
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 28px rgba(0, 0, 0, 0.35);
   --shadow-fab: 0 6px 18px rgba(0, 0, 0, 0.5), 0 2px 5px rgba(0, 0, 0, 0.35);
   --logo: #f4f4f5;
