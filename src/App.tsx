@@ -135,7 +135,7 @@ function AppShell() {
     }
   }, [signIn, showToast, changeTab])
   const handleSignOut = useCallback(async () => {
-    if (!confirm('로그아웃할까요?\n이 기기의 데이터는 그대로 남아있어요.')) return
+    if (!confirm('로그아웃할까요?\n이 계정의 데이터는 그대로 남아있어요.')) return
     await signOut()
     showToast('로그아웃됐어요', 'success')
   }, [signOut, showToast])
