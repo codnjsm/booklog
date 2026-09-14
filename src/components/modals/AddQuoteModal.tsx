@@ -295,7 +295,7 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
                           <button
                             type="button"
                             onClick={() => clearHighlights(i)}
-                            className="text-xs sm:text-[13px] text-danger bg-transparent border-none cursor-pointer p-0 hover:opacity-70"
+                            className="text-xs sm:text-[13px] font-medium px-2.5 py-1 rounded-full bg-dangersoft text-danger border-none cursor-pointer hover:opacity-80"
                           >
                             모두 지우기
                           </button>
