@@ -105,7 +105,7 @@ export default function AddFriendModal({ user, friends, incoming, outgoing, onSe
             </span>
             <input
               type="email"
-              placeholder="친구의 이메일 앞부분 입력…"
+              placeholder="친구의 이메일 앞부분 입력"
               value={emailInput}
               onChange={(e) => handleInput(e.target.value)}
               autoFocus

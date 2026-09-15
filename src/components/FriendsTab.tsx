@@ -390,7 +390,7 @@ export default function FriendsTab({
                   </span>
                   <input
                     type="text"
-                    placeholder="이름 또는 이메일로 찾기…"
+                    placeholder="이름 또는 이메일로 찾기"
                     value={friendFilter}
                     onChange={(e) => setFriendFilter(e.target.value)}
                     className="flex-1 min-w-0 bg-transparent border-none text-ink py-[9px] text-sm sm:text-[15px] font-sans placeholder:text-dim focus:outline-none"

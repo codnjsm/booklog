@@ -268,7 +268,7 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
                         textRefs.current[i] = el
                         autoResizeTextarea(el)
                       }}
-                      placeholder="간직하고 싶은 문장을 적어보세요…"
+                      placeholder="간직하고 싶은 문장을 적어보세요"
                       value={entry.text}
                       onChange={(e) => updateEntry(i, 'text', e.target.value)}
                       className={`${FORM_TEXTAREA} mb-0`}
@@ -323,7 +323,7 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
                 <label className={FORM_LABEL}>나의 생각</label>
                 <textarea
                   ref={(el) => autoResizeTextarea(el)}
-                  placeholder="이 문장에 대한 느낌이나 생각…"
+                  placeholder="이 문장에 대한 느낌이나 생각"
                   value={entry.note}
                   onChange={(e) => updateEntry(i, 'note', e.target.value)}
                   className={`${FORM_TEXTAREA} min-h-[60px] mb-0`}

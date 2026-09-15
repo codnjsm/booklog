@@ -132,7 +132,7 @@ export default function ManualBookModal({ prefill, editId, books, onClose, onSav
               <label className={FORM_LABEL}>표지 이미지 URL</label>
               <input
                 type="text"
-                placeholder="https://..."
+                placeholder="https://"
                 value={cover}
                 onChange={(e) => setCover(e.target.value)}
                 className={FORM_INPUT}
@@ -199,7 +199,7 @@ export default function ManualBookModal({ prefill, editId, books, onClose, onSav
               <label className={FORM_LABEL}>독후감 / 메모</label>
               <textarea
                 ref={(el) => autoResizeTextarea(el)}
-                placeholder="이 책에 대한 생각을 자유롭게 적어보세요…"
+                placeholder="이 책에 대한 생각을 자유롭게 적어보세요"
                 value={review}
                 onChange={(e) => setReview(e.target.value)}
                 className={FORM_TEXTAREA}
