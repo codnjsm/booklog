@@ -75,11 +75,11 @@ Firestore 컬렉션:
 
 ## 인용구 형광펜
 
-`Quote.highlights?: { start: number; end: number }[]` — 문장 안에서 사용자가 표시한 구간(복수 가능)을 저장.
+`Quote.highlights?: { start: number; end: number; color?: HighlightColor }[]` — 문장 안에서 사용자가 표시한 구간(복수 가능)을 저장. `HighlightColor`는 `lime | pink | sky | mint | lavender` 5종(`types.ts`), `color` 없는 구간(과거 데이터)은 lime으로 취급.
 
-- 저장 시 겹치거나 맞닿은 구간은 하나로 합침 (`HighlightedText.tsx`의 `mergeRanges`)
+- 저장 시 겹치거나 맞닿은 구간은 같은 색끼리만 하나로 합침 (`HighlightedText.tsx`의 `mergeRanges`)
 - 렌더 시 인덱스를 항상 현재 문장 길이로 clamp (문장을 나중에 수정해도 깨지지 않게)
-- `AddQuoteModal`에서 textarea 선택 후 지정. 저장 시 `text.trim()`으로 잘려나간 만큼 인덱스 보정
+- `AddQuoteModal`에서 textarea 선택 후 색상을 골라 지정. 저장 시 `text.trim()`으로 잘려나간 만큼 인덱스 보정
 - `Quote.tags` 필드는 남아있지만 입력 UI는 없음 (태그 기능은 제거됨, 항상 빈 배열로 저장)
 
 ## 외부 API
