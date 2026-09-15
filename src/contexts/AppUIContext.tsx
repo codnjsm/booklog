@@ -79,9 +79,12 @@ export function AppUIProvider({ children }: { children: ReactNode }) {
   const [searchParams, setSearchParams] = useSearchParams()
 
   const [localModal, setLocalModal] = useState<LocalModal>({ type: 'none' })
-  const [theme, setTheme] = useState<'dark' | 'light'>(
-    () => (localStorage.getItem(THEME_KEY) as 'dark' | 'light') || 'light',
-  )
+  // 저장된 값이 없으면(첫 방문) 기기의 다크모드 설정을 기본값으로 따른다.
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    const saved = localStorage.getItem(THEME_KEY) as 'dark' | 'light' | null
+    if (saved) return saved
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  })
   const [toast, setToast] = useState<ToastState | null>(null)
   const [loginDismissed, setLoginDismissed] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
