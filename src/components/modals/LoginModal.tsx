@@ -133,7 +133,9 @@ export default function LoginModal({
             ) : (
               <form onSubmit={handleResetSubmit}>
                 <div className={FORM_GROUP}>
-                  <label className={FORM_LABEL}>이메일</label>
+                  {/* 로그인·가입 화면과 달리 "아무 이메일"이 아니라 "그때 그 이메일"이어야 한다는 걸
+                      라벨에서부터 알린다. */}
+                  <label className={FORM_LABEL}>가입 이메일</label>
                   <input
                     type="email"
                     required
