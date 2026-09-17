@@ -3,7 +3,8 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import type { User } from 'firebase/auth'
 import type { UserProfile, FriendRequest } from '../../types'
 import { useAppUI } from '../../contexts/AppUIContext'
-import { IconSearch } from '../layout/icons'
+import { authErrorMessage } from '../../firebase'
+import { IconSearch, IconLock } from '../layout/icons'
 import Modal from './Modal'
 
 const MODAL_PANEL =
@@ -31,10 +32,22 @@ interface Props {
   outgoing: FriendRequest[]
   onSearch: (email: string) => Promise<UserProfile[]>
   onSendRequest: (toUid: string) => void
+  onSendVerification: () => Promise<void>
+  onRefreshUser: () => Promise<boolean>
   onClose: () => void
 }
 
-export default function AddFriendModal({ user, friends, incoming, outgoing, onSearch, onSendRequest, onClose }: Props) {
+export default function AddFriendModal({
+  user,
+  friends,
+  incoming,
+  outgoing,
+  onSearch,
+  onSendRequest,
+  onSendVerification,
+  onRefreshUser,
+  onClose,
+}: Props) {
   const { showToast } = useAppUI()
   const [emailInput, setEmailInput] = useState('')
   // 입력할 때마다 서버를 부르지 않도록, 책 검색(AddBookModal)과 같은 방식으로 디바운스한다
@@ -86,6 +99,76 @@ export default function AddFriendModal({ user, friends, incoming, outgoing, onSe
 
   const typed = emailInput.trim()
   const tooShort = typed.length > 0 && typed.length < MIN_SEARCH_LENGTH
+
+  const [verifySending, setVerifySending] = useState(false)
+  const [verifySent, setVerifySent] = useState(false)
+  const [verifyChecking, setVerifyChecking] = useState(false)
+
+  const handleSendVerification = async () => {
+    setVerifySending(true)
+    try {
+      await onSendVerification()
+      setVerifySent(true)
+    } catch (err) {
+      const { msg, type } = authErrorMessage(err)
+      showToast(msg, type)
+    } finally {
+      setVerifySending(false)
+    }
+  }
+
+  const handleCheckVerified = async () => {
+    setVerifyChecking(true)
+    const verified = await onRefreshUser()
+    setVerifyChecking(false)
+    if (!verified) showToast('아직 인증되지 않았어요. 메일함을 확인해주세요', 'info')
+  }
+
+  // 타인 이메일로 가입해 검색·추가에서 그 사람 행세를 할 수 있어서, 이 두 동작만 인증 뒤로 미룬다.
+  // 혼자 쓰는 기능(책·문장·기록)은 이 검사와 무관하게 계속 쓸 수 있다.
+  if (user && !user.emailVerified) {
+    return (
+      <Modal onClose={onClose} labelledBy="add-friend-modal-title">
+        <div className={MODAL_PANEL}>
+          <div className={MODAL_HEADER}>
+            <h3 id="add-friend-modal-title" className="font-sans text-base font-semibold">
+              친구 추가
+            </h3>
+            <button className={MODAL_CLOSE} onClick={onClose} aria-label="닫기">
+              ×
+            </button>
+          </div>
+          <div className={`${MODAL_BODY} text-center py-10`}>
+            <div className="w-11 h-11 mx-auto mb-3 rounded-full bg-surface2 flex items-center justify-center text-dim">
+              <IconLock size={20} />
+            </div>
+            <h4 className="font-sans text-ink mb-1.5 text-sm sm:text-[15px]">이메일 인증이 필요해요</h4>
+            <p className="text-xs sm:text-[13px] text-dim mb-5 leading-relaxed">
+              친구를 찾고 추가하려면 이메일 인증이 필요해요.
+              <br />
+              혼자 쓰는 기능은 인증 없이 계속 사용할 수 있어요.
+            </p>
+            {!verifySent ? (
+              <button className={BTN_SM} onClick={handleSendVerification} disabled={verifySending}>
+                {verifySending ? '보내는 중…' : '인증 메일 받기'}
+              </button>
+            ) : (
+              <div className="flex flex-col items-center gap-3">
+                <p className="text-xs sm:text-[13px] text-ink bg-surface2 rounded-lg px-4 py-3 leading-relaxed text-left">
+                  <b>{user.email}</b>로 보냈어요. 발신자는 <b>Booklog</b>
+                  (noreply@reading-notes-6935e.firebaseapp.com)예요 — Google Firebase를 통해 보내서 주소가 낯설게 보일
+                  수 있어요. 메일이 안 보이면 스팸함도 확인해주세요.
+                </p>
+                <button className={BTN_SM} onClick={handleCheckVerified} disabled={verifyChecking}>
+                  {verifyChecking ? '확인 중…' : '인증했어요, 새로고침'}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </Modal>
+    )
+  }
 
   return (
     <Modal onClose={onClose} labelledBy="add-friend-modal-title">

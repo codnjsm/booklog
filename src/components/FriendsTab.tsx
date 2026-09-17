@@ -118,7 +118,7 @@ export default function FriendsTab({
   onLoadFriendFeed,
   onDeletePost,
 }: Props) {
-  const { openPublishPost, openAddFriend, showToast } = useAppUI()
+  const { openPublishPost, openAddFriend, openLogin, showToast } = useAppUI()
   const queryClient = useQueryClient()
   const [view, setView] = useState<MainView>('friends')
 
@@ -183,7 +183,13 @@ export default function FriendsTab({
           <IconFriends size={22} />
         </div>
         <h3 className="font-sans text-ink mb-1.5 text-sm sm:text-[15px]">로그인이 필요해요</h3>
-        <p className="text-xs sm:text-[13px]">친구 기능은 로그인 후 사용할 수 있어요</p>
+        <p className="text-xs sm:text-[13px] mb-4">친구 기능은 로그인 후 사용할 수 있어요</p>
+        <button
+          onClick={() => openLogin()}
+          className="text-[13px] sm:text-sm font-medium px-4 py-2 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover"
+        >
+          로그인
+        </button>
       </div>
     )
   }

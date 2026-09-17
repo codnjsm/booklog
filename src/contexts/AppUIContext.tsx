@@ -14,6 +14,8 @@ export type Modal =
   | { type: 'publishPost' }
   | { type: 'addFriend' }
   | { type: 'welcome' }
+  /** reason이 'promote'면 로그인/가입 폼 위에 "기록이 쌓이고 있어요" 안내를 얹는다. */
+  | { type: 'login'; reason?: 'promote' }
 
 // Modals that aren't worth a shareable URL (transient create/edit flows) stay in local state.
 type LocalModal = Exclude<Modal, { type: 'bookDetail' }>
@@ -41,6 +43,7 @@ interface AppUIValue {
   openPublishPost: () => void
   openAddFriend: () => void
   openWelcome: () => void
+  openLogin: (reason?: 'promote') => void
   closeModal: () => void
 
   theme: 'dark' | 'light'
@@ -48,9 +51,6 @@ interface AppUIValue {
 
   toast: ToastState | null
   showToast: (msg: string, type?: ToastType) => void
-
-  loginDismissed: boolean
-  dismissLogin: () => void
 
   userMenuOpen: boolean
   toggleUserMenu: () => void
@@ -86,7 +86,6 @@ export function AppUIProvider({ children }: { children: ReactNode }) {
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
   })
   const [toast, setToast] = useState<ToastState | null>(null)
-  const [loginDismissed, setLoginDismissed] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
 
   const tab: Tab = PATH_TABS[location.pathname] ?? 'home'
@@ -169,10 +168,16 @@ export function AppUIProvider({ children }: { children: ReactNode }) {
     clearBookParam()
     setLocalModal({ type: 'welcome' })
   }, [clearBookParam])
+  const openLogin = useCallback(
+    (reason?: 'promote') => {
+      clearBookParam()
+      setLocalModal({ type: 'login', reason })
+    },
+    [clearBookParam],
+  )
 
   const toggleTheme = useCallback(() => setTheme((t) => (t === 'light' ? 'dark' : 'light')), [])
   const showToast = useCallback((msg: string, type: ToastType = 'info') => setToast({ msg, type, key: Date.now() }), [])
-  const dismissLogin = useCallback(() => setLoginDismissed(true), [])
   const toggleUserMenu = useCallback(() => setUserMenuOpen((o) => !o), [])
   const closeUserMenu = useCallback(() => setUserMenuOpen(false), [])
 
@@ -189,13 +194,12 @@ export function AppUIProvider({ children }: { children: ReactNode }) {
       openPublishPost,
       openAddFriend,
       openWelcome,
+      openLogin,
       closeModal,
       theme,
       toggleTheme,
       toast,
       showToast,
-      loginDismissed,
-      dismissLogin,
       userMenuOpen,
       toggleUserMenu,
       closeUserMenu,
@@ -212,13 +216,12 @@ export function AppUIProvider({ children }: { children: ReactNode }) {
       openPublishPost,
       openAddFriend,
       openWelcome,
+      openLogin,
       closeModal,
       theme,
       toggleTheme,
       toast,
       showToast,
-      loginDismissed,
-      dismissLogin,
       userMenuOpen,
       toggleUserMenu,
       closeUserMenu,

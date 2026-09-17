@@ -8,6 +8,8 @@ interface Props {
   user: User | null
   syncStatus: SyncStatus
   incomingCount: number
+  /** 게스트가 이 브라우저에만 쌓아둔 기록 수(책+문장+단어). 로그인을 권할 때 위험을 구체적으로 보여준다. */
+  recordCount: number
   onExport: () => void
   onSignOut: () => void
   onSignIn: () => void
@@ -16,7 +18,15 @@ interface Props {
 const ROW =
   'w-full flex items-center gap-3 px-4 py-3.5 bg-surface border border-border rounded-xl text-left cursor-pointer'
 
-export default function MoreTab({ user, syncStatus, incomingCount, onExport, onSignOut, onSignIn }: Props) {
+export default function MoreTab({
+  user,
+  syncStatus,
+  incomingCount,
+  recordCount,
+  onExport,
+  onSignOut,
+  onSignIn,
+}: Props) {
   const { changeTab, theme, toggleTheme, openWelcome } = useAppUI()
 
   const syncLabel = syncStatus === 'saving' ? '저장 중…' : syncStatus === 'error' ? '저장 실패' : '동기화됨'
@@ -57,7 +67,13 @@ export default function MoreTab({ user, syncStatus, incomingCount, onExport, onS
             </span>
             <span className="flex-1 flex flex-col gap-0.5">
               <span className="text-[15px] font-semibold text-ink">로그인</span>
-              <span className="text-xs sm:text-[13px] text-dim">여러 기기에서 동기화하려면 로그인이 필요해요</span>
+              {/* 기록이 쌓인 뒤로는 "동기화하면 좋다"가 아니라 "지금 잃을 수 있다"가 사실에 가깝다.
+                  로그인할 때까지 계속 남아 있는 상태라, 모달로 한 번 알리는 대신 여기에 상시 표시한다. */}
+              <span className="text-xs sm:text-[13px] text-dim">
+                {recordCount > 0
+                  ? `기록 ${recordCount}개가 이 브라우저에만 저장돼 있어요`
+                  : '여러 기기에서 동기화하려면 로그인이 필요해요'}
+              </span>
             </span>
             <IconChevronRight />
           </button>

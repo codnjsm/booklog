@@ -1,10 +1,17 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query'
 import { BrowserRouter } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
 import { useData } from './hooks/useData'
 import { useFriends } from './hooks/useFriends'
-import { upsertUserProfile } from './firebase'
+import {
+  upsertUserProfile,
+  authErrorMessage,
+  signUpWithEmail,
+  signInWithEmail,
+  sendPasswordReset,
+  sendVerificationEmail,
+} from './firebase'
 import type { Post } from './types'
 import { AppUIProvider, useAppUI } from './contexts/AppUIContext'
 import AppLayout from './components/layout/AppLayout'
@@ -14,7 +21,7 @@ import CollectionTab from './components/CollectionTab'
 import RecordsTab from './components/RecordsTab'
 import FriendsTab from './components/FriendsTab'
 import MoreTab from './components/MoreTab'
-import LoginOverlay from './components/LoginOverlay'
+import LoginModal from './components/modals/LoginModal'
 import Toast from './components/Toast'
 import AddBookModal from './components/modals/AddBookModal'
 import ManualBookModal from './components/modals/ManualBookModal'
@@ -28,6 +35,16 @@ import WelcomeModal from './components/modals/WelcomeModal'
 const queryClient = new QueryClient()
 // 이 브라우저에서 기능 소개를 한 번 본 뒤 남겨두는 표시.
 const WELCOME_SEEN_KEY = 'reading-notes-welcome-seen-v1'
+// 로그인 권유 모달을 이미 한 번 보여줬는지 남겨두는 표시. 한 번 뜨면 다시 안 띄운다.
+const PROMOTE_SHOWN_KEY = 'reading-notes-promote-shown-v1'
+// 책 3권 또는 문장 3개를 넘긴 게스트에게 로그인을 권한다 — 잃을 게 생긴 시점에만 묻는다.
+const PROMOTE_THRESHOLD = 3
+
+// 카카오톡·인스타그램 등 인앱 브라우저는 구글 로그인 팝업을 차단한다. Chrome/Safari로 유도해야 한다.
+function isInAppBrowser() {
+  const ua = navigator.userAgent
+  return /NAVER|KAKAOTALK|Instagram|FBAN|FBAV|Line\/|MicroMessenger|Snapchat/i.test(ua)
+}
 
 export default function App() {
   return (
@@ -42,7 +59,7 @@ export default function App() {
 }
 
 function AppShell() {
-  const { user, loading, signIn, signOut, cachedName } = useAuth()
+  const { user, loading, signIn, signOut, cachedName, refreshUser } = useAuth()
   const {
     state,
     syncStatus,
@@ -71,33 +88,52 @@ function AppShell() {
     publishPost,
     removePost,
   } = useFriends(user)
-  const {
-    tab,
-    modal,
-    showToast,
-    loginDismissed,
-    dismissLogin,
-    openManualBook,
-    openAddQuote,
-    openWelcome,
-    closeModal,
-    changeTab,
-  } = useAppUI()
+  const { tab, modal, showToast, openManualBook, openAddQuote, openWelcome, openLogin, closeModal, changeTab } =
+    useAppUI()
   const queryClient = useQueryClient()
 
-  // 첫 진입에는 로그인 창이 먼저다. 로그인하거나 "나중에"로 넘긴 뒤에야 기능 소개를 띄운다.
-  const showLogin = !loading && !user && !loginDismissed
-
   useEffect(() => {
-    if (loading || showLogin) return
+    if (loading) return
     if (localStorage.getItem(WELCOME_SEEN_KEY)) return
     openWelcome()
-  }, [loading, showLogin, openWelcome])
+  }, [loading, openWelcome])
 
   const closeWelcome = useCallback(() => {
     localStorage.setItem(WELCOME_SEEN_KEY, '1')
     closeModal()
   }, [closeModal])
+
+  // 게스트가 책 3권 또는 문장 3개를 넘기면, 화면이 정리된 뒤 로그인을 한 번 권한다.
+  // "넘긴 순간"이 아니라 "그 이후 처음 모달이 다 닫혔을 때"를 기다린다 — 저장 완료 토스트에
+  // 곧바로 또 모달이 겹치면 그 자체가 지금 고치려는 문제(요구가 들이닥친다)와 같아진다.
+  const promotePendingRef = useRef(false)
+  const prevCountsRef = useRef({ books: 0, quotes: 0 })
+
+  useEffect(() => {
+    if (loading || user) return
+    if (localStorage.getItem(PROMOTE_SHOWN_KEY)) return
+    const prev = prevCountsRef.current
+    const crossed =
+      (prev.books < PROMOTE_THRESHOLD && state.books.length >= PROMOTE_THRESHOLD) ||
+      (prev.quotes < PROMOTE_THRESHOLD && state.quotes.length >= PROMOTE_THRESHOLD)
+    if (crossed) promotePendingRef.current = true
+    prevCountsRef.current = { books: state.books.length, quotes: state.quotes.length }
+  }, [state.books.length, state.quotes.length, user, loading])
+
+  useEffect(() => {
+    if (!promotePendingRef.current || loading) return
+    if (user) {
+      promotePendingRef.current = false
+      return
+    }
+    if (modal.type !== 'none') return
+    const timer = setTimeout(() => {
+      promotePendingRef.current = false
+      localStorage.setItem(PROMOTE_SHOWN_KEY, '1')
+      openLogin('promote')
+    }, 900)
+    return () => clearTimeout(timer)
+  }, [modal.type, user, loading, openLogin])
 
   useEffect(() => {
     if (!user) return
@@ -121,19 +157,35 @@ function AppShell() {
     },
     [updateBook, showToast],
   )
-  const handleSignIn = useCallback(async () => {
+  // 구글 로그인 시도는 여기 한 곳에만 있다 — 로그인 진입점(더보기·사이드바·친구탭·승격 모달)이
+  // 몇 곳이든 전부 이 함수를 부르므로, 인앱 브라우저 차단도 여기서 한 번만 확인하면 된다.
+  const handleSignIn = useCallback(async (): Promise<'ok' | 'blocked' | 'error'> => {
+    if (isInAppBrowser()) return 'blocked'
     try {
       await signIn()
       // 다른 계정으로 갈아타도 이전 세션이 보던 탭(예: 친구탭)에 그대로 남지 않도록 홈으로 보낸다.
       changeTab('home')
+      return 'ok'
     } catch (e) {
-      const err = e as { code?: string }
-      showToast(
-        err.code === 'auth/popup-closed-by-user' ? '로그인이 취소됐어요' : '로그인 중 오류가 발생했어요',
-        err.code === 'auth/popup-closed-by-user' ? 'info' : 'error',
-      )
+      const { msg, type } = authErrorMessage(e)
+      showToast(msg, type)
+      return 'error'
     }
   }, [signIn, showToast, changeTab])
+  const handleEmailSignUp = useCallback(
+    async (name: string, email: string, password: string) => {
+      await signUpWithEmail(name, email, password)
+      changeTab('home')
+    },
+    [changeTab],
+  )
+  const handleEmailSignIn = useCallback(
+    async (email: string, password: string) => {
+      await signInWithEmail(email, password)
+      changeTab('home')
+    },
+    [changeTab],
+  )
   const handleSignOut = useCallback(async () => {
     if (!confirm('로그아웃할까요?\n이 계정의 데이터는 그대로 남아있어요.')) return
     await signOut()
@@ -194,9 +246,10 @@ function AppShell() {
           user={user}
           syncStatus={syncStatus}
           incomingCount={incoming.length}
+          recordCount={state.books.length + state.quotes.length + state.words.length}
           onExport={handleExport}
           onSignOut={handleSignOut}
-          onSignIn={handleSignIn}
+          onSignIn={() => openLogin()}
         />
       )}
 
@@ -313,17 +366,20 @@ function AppShell() {
           outgoing={outgoing}
           onSearch={searchUser}
           onSendRequest={sendRequest}
+          onSendVerification={sendVerificationEmail}
+          onRefreshUser={refreshUser}
           onClose={closeModal}
         />
       )}
 
-      {showLogin && (
-        <LoginOverlay
-          onSignIn={handleSignIn}
-          onDismiss={() => {
-            dismissLogin()
-            showToast('로그인 없이 사용 중 · 이 브라우저에만 저장돼요')
-          }}
+      {modal.type === 'login' && (
+        <LoginModal
+          reason={modal.reason}
+          onClose={closeModal}
+          onGoogleSignIn={handleSignIn}
+          onEmailSignUp={handleEmailSignUp}
+          onEmailSignIn={handleEmailSignIn}
+          onPasswordReset={sendPasswordReset}
         />
       )}
 

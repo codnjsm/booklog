@@ -1,6 +1,18 @@
 import { initializeApp } from 'firebase/app'
 import { initializeAppCheck, ReCaptchaEnterpriseProvider, getToken, type AppCheck } from 'firebase/app-check'
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, type User } from 'firebase/auth'
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut,
+  onAuthStateChanged,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+  sendEmailVerification,
+  updateProfile,
+  type User,
+} from 'firebase/auth'
 import {
   getFirestore,
   doc,
@@ -41,6 +53,8 @@ if (RECAPTCHA_SITE_KEY) {
   })
 }
 export const auth = getAuth(app)
+// 인증 메일·비밀번호 재설정 메일이 Firebase의 한국어 기본 템플릿으로 나가게 한다.
+auth.languageCode = 'ko'
 export const db = getFirestore(app)
 const functions = getFunctions(app, 'asia-northeast3')
 const provider = new GoogleAuthProvider()
@@ -49,6 +63,47 @@ provider.setCustomParameters({ prompt: 'select_account' })
 export const signIn = () => signInWithPopup(auth, provider).then((r) => r.user)
 export const signOutUser = () => signOut(auth)
 export const onAuthChange = (cb: (user: User | null) => void) => onAuthStateChanged(auth, cb)
+
+/** 이메일/비밀번호로 새 계정을 만든다. 표시 이름은 가입 시점에 같이 받지 않는 값이라 직접 설정해준다. */
+export const signUpWithEmail = async (name: string, email: string, password: string): Promise<User> => {
+  const cred = await createUserWithEmailAndPassword(auth, email, password)
+  await updateProfile(cred.user, { displayName: name })
+  return cred.user
+}
+
+export const signInWithEmail = (email: string, password: string): Promise<User> =>
+  signInWithEmailAndPassword(auth, email, password).then((r) => r.user)
+
+export const sendPasswordReset = (email: string): Promise<void> => sendPasswordResetEmail(auth, email)
+
+/**
+ * 친구 기능(검색·추가)을 쓰기 전에 이메일 인증을 받는다. 가입 직후 자동으로 보내지 않고
+ * 사용자가 직접 요청할 때만 보낸다 — 예상 못 한 메일은 발신 도메인이 낯설어 피싱으로 오인되기 쉽다.
+ */
+export const sendVerificationEmail = (): Promise<void> => {
+  if (!auth.currentUser) return Promise.reject(new Error('로그인이 필요합니다'))
+  return sendEmailVerification(auth.currentUser)
+}
+
+/** Firebase Auth 에러 코드를 한국어 안내로 바꾼다. 구글 팝업과 이메일 로그인/가입 양쪽에서 쓴다. */
+const AUTH_ERROR_MESSAGES: Record<string, { msg: string; type: 'info' | 'error' }> = {
+  'auth/popup-closed-by-user': { msg: '로그인이 취소됐어요', type: 'info' },
+  'auth/email-already-in-use': { msg: '이미 가입된 이메일이에요. 로그인해주세요', type: 'error' },
+  'auth/invalid-email': { msg: '이메일 형식이 올바르지 않아요', type: 'error' },
+  'auth/weak-password': { msg: '비밀번호는 6자 이상이어야 해요', type: 'error' },
+  'auth/wrong-password': { msg: '비밀번호가 맞지 않아요', type: 'error' },
+  'auth/invalid-credential': { msg: '이메일 또는 비밀번호가 맞지 않아요', type: 'error' },
+  'auth/user-not-found': { msg: '가입되지 않은 이메일이에요', type: 'error' },
+  'auth/too-many-requests': { msg: '너무 많이 시도했어요. 잠시 후 다시 시도해주세요', type: 'error' },
+  'auth/account-exists-with-different-credential': { msg: '이미 다른 방식으로 가입된 이메일이에요', type: 'error' },
+  'auth/network-request-failed': { msg: '네트워크 연결을 확인해주세요', type: 'error' },
+}
+
+export function authErrorMessage(err: unknown): { msg: string; type: 'info' | 'error' } {
+  const code = (err as { code?: string } | null | undefined)?.code
+  if (code && AUTH_ERROR_MESSAGES[code]) return AUTH_ERROR_MESSAGES[code]
+  return { msg: '오류가 발생했어요. 다시 시도해주세요', type: 'error' }
+}
 
 export const loadUserData = async (userId: string): Promise<AppState | null> => {
   const snap = await getDoc(doc(db, 'reading-notes', userId))

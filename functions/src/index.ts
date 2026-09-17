@@ -122,6 +122,11 @@ export const findUserByEmail = onCall({ region: 'asia-northeast3', enforceAppChe
   if (!req.auth) {
     throw new HttpsError('unauthenticated', '로그인이 필요합니다')
   }
+  // 남의 이메일로 가입해 놓고 회원 검색으로 신원을 확인해가며 접근하는 걸 막는다.
+  // 친구 요청 생성(firestore.rules)에도 같은 조건이 있다.
+  if (!req.auth.token.email_verified) {
+    throw new HttpsError('permission-denied', '이메일 인증 후 이용할 수 있어요')
+  }
   return findUserByEmailHandler(req.auth.uid, req.data?.email)
 })
 

@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useCallback, useState, useEffect } from 'react'
 import type { User } from 'firebase/auth'
-import { onAuthChange, signIn, signOutUser } from '../firebase'
+import { auth, onAuthChange, signIn, signOutUser } from '../firebase'
 
 const DISPLAY_NAME_KEY = 'reading-notes-display-name'
 
@@ -26,5 +26,15 @@ export function useAuth() {
     })
   }, [])
 
-  return { user, loading, signIn, signOut: signOutUser, cachedName }
+  // 이메일 인증 여부(emailVerified)를 확인하려고 부른다. reload()는 서버 값을 같은 User 인스턴스에
+  // 제자리로 채워 넣을 뿐이라 참조가 그대로면 리렌더가 안 일어난다. 얕은 복사로 참조를 바꿔서 반영한다.
+  const refreshUser = useCallback(async (): Promise<boolean> => {
+    if (!auth.currentUser) return false
+    await auth.currentUser.reload()
+    const fresh = auth.currentUser
+    setUser(fresh ? ({ ...fresh } as User) : null)
+    return fresh?.emailVerified ?? false
+  }, [])
+
+  return { user, loading, signIn, signOut: signOutUser, cachedName, refreshUser }
 }

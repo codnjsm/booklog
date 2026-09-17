@@ -41,7 +41,10 @@ service cloud.firestore {
 
       // 보내는 사람만 만들 수 있고, 반드시 pending 으로만 시작한다.
       // 문서 ID를 {fromUid}_{toUid} 로 강제해서 남의 이름으로 만들지 못하게 한다.
+      // 이메일 인증(email_verified)까지 요구하는 이유: 남의 이메일로 가입해서 그 사람 행세로
+      // 친구 요청을 보낼 수 있으면 안 된다. 구글 로그인 사용자는 항상 인증된 상태로 들어온다.
       allow create: if signedIn()
+                    && request.auth.token.email_verified == true
                     && request.auth.uid == request.resource.data.fromUid
                     && request.resource.data.toUid is string
                     && request.resource.data.toUid != request.auth.uid

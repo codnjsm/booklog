@@ -47,9 +47,11 @@ export default function AppLayout({
   onExport,
   children,
 }: Props) {
-  const { tab, changeTab, theme, toggleTheme } = useAppUI()
+  const { tab, changeTab, theme, toggleTheme, openLogin } = useAppUI()
 
   const counts: Partial<Record<Tab, number>> = { books: bookCount, collection: collectionCount }
+  // 책 + 문장/단어. 로그인 안 한 사람에게 "지금 이 브라우저에만 있는 양"을 알리는 데 쓴다.
+  const recordCount = bookCount + collectionCount
   const syncLabel = syncStatus === 'saving' ? '저장 중…' : syncStatus === 'error' ? '저장 실패' : '동기화됨'
   const syncColor = syncStatus === 'saving' ? 'bg-accent' : syncStatus === 'error' ? 'bg-danger' : 'bg-ok'
 
@@ -121,7 +123,7 @@ export default function AppLayout({
             <IconExport />
             <span>기록 내보내기</span>
           </button>
-          {user && (
+          {user ? (
             <button
               onClick={() => changeTab('more')}
               className="flex items-center gap-2.5 p-2.5 mt-1.5 rounded-lg bg-surface2 border-none cursor-pointer text-left w-full"
@@ -146,6 +148,23 @@ export default function AppLayout({
                   <span className={`w-1.5 h-1.5 rounded-full ${syncColor}`} />
                   <span className="font-mono text-[9px] text-dim">{syncLabel}</span>
                 </span>
+              </span>
+            </button>
+          ) : (
+            // 오버레이가 없어진 뒤 PC에서 로그인으로 갈 수 있는 유일한 경로 — 더보기 탭은
+            // 로그인해야만 사이드바 메뉴에 잡히므로, 비로그인 상태에선 이 자리가 그 역할을 대신한다.
+            <button
+              onClick={() => openLogin()}
+              className="flex items-center gap-2.5 p-2.5 mt-1.5 rounded-lg bg-surface2 border-none cursor-pointer text-left w-full"
+            >
+              <span className="w-7 h-7 rounded-full bg-surface text-dim flex items-center justify-center flex-shrink-0">
+                <IconFriends size={14} />
+              </span>
+              <span className="flex flex-col gap-px min-w-0">
+                <span className="text-xs sm:text-[13px] font-medium text-ink">로그인</span>
+                {/* 기록이 있는 동안에는 계속 보이게 둔다 — 로그인 전까지 사실인 상태라
+                    한 번 띄우고 마는 모달보다 여기가 맞다. 사이드바가 좁아 문구는 짧게. */}
+                {recordCount > 0 && <span className="text-[10px] text-dim leading-tight">이 브라우저에만 저장됨</span>}
               </span>
             </button>
           )}
