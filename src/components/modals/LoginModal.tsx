@@ -122,7 +122,9 @@ export default function LoginModal({
             resetSent ? (
               <div>
                 <p className="text-xs sm:text-[13px] text-ink leading-relaxed mb-4">
-                  <b>{email}</b>로 재설정 메일을 보냈어요. 메일함(스팸함 포함)을 확인해주세요.
+                  <b>{email}</b>로 재설정 메일을 보냈어요.
+                  <br />
+                  메일함(스팸함 포함)을 확인해주세요.
                 </p>
                 <button className={BTN_SECONDARY} onClick={() => setMode('login')}>
                   로그인으로 돌아가기
