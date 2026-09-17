@@ -249,13 +249,29 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
           )}
         </div>
 
-        {/* 오늘의 문장 */}
-        <div className={`${CARD} px-5 py-4 flex flex-col gap-3`}>
+        {/* 오늘의 문장. 문장이 2개 이상이면 카드 전체를 눌러도 다른 문장으로(랜덤) 넘어간다 —
+            새로고침 아이콘은 좁은 타깃이라 카드 자체를 누르는 게 더 자연스럽다. */}
+        <div
+          className={`${CARD} px-5 py-4 flex flex-col gap-3 ${
+            todayQuote && quotes.length > 1 ? 'cursor-pointer transition-colors duration-150 hover:border-accent' : ''
+          }`}
+          onClick={() => {
+            if (quotes.length <= 1) return
+            setQuoteIdx((i) => {
+              const current = ((i % quotes.length) + quotes.length) % quotes.length
+              const next = Math.floor(Math.random() * (quotes.length - 1))
+              return next >= current ? next + 1 : next
+            })
+          }}
+        >
           <div className="flex items-center justify-between">
             <div className={LABEL}>TODAY&rsquo;S QUOTE</div>
             {quotes.length > 1 && (
               <button
-                onClick={() => setQuoteIdx((i) => i + 1)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setQuoteIdx((i) => i + 1)
+                }}
                 aria-label="다른 문장 보기"
                 title="다른 문장 보기"
                 className="text-dim bg-transparent border-none cursor-pointer p-0 hover:text-ink"
@@ -274,7 +290,10 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
                 </div>
               </div>
               <button
-                onClick={() => quoteBook && openBookDetail(quoteBook.id)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  if (quoteBook) openBookDetail(quoteBook.id)
+                }}
                 className="self-start text-left bg-transparent border-none p-0 text-xs sm:text-[13px] text-dim cursor-pointer hover:text-ink"
               >
                 {quoteBook?.title ?? '출처 미상'}
