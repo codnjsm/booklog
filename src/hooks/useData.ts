@@ -83,6 +83,8 @@ export function useData(user: User | null) {
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('synced')
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const cloudLoadedRef = useRef(false)
+  // 로그인 상태에서 로그아웃한 경우에만 화면을 비운다 — 처음부터 게스트였던 방문자는 그대로 둔다.
+  const wasLoggedInRef = useRef(false)
 
   // 소유자 꼬리표가 생기기 전(2026-09-09 이전)에 저장된 로컬 데이터는 누구 것인지 알 수 없다.
   // 딱 한 번 unknown으로 찍어서 어느 계정에도 올라가지 않게 한다. 이후 게스트가 새로 쓴 데이터는
@@ -105,8 +107,19 @@ export function useData(user: User | null) {
   useEffect(() => {
     if (!user) {
       cloudLoadedRef.current = false
+      // 로그아웃 직후에만 비운다. 클라우드 데이터는 그대로 남아 있으니 다시 로그인하면 복원된다 —
+      // 안 비우면 로그아웃해도 방금 보던 계정의 책·문장이 화면에 그대로 남아, 기기를 같이 쓰는
+      // 사람에게 노출된다.
+      if (wasLoggedInRef.current) {
+        const empty: AppState = { books: [], quotes: [], words: [] }
+        setStateRaw(empty)
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(empty))
+        setLocalOwnerUid(null)
+      }
+      wasLoggedInRef.current = false
       return
     }
+    wasLoggedInRef.current = true
     if (cloudLoadedRef.current) return
     cloudLoadedRef.current = true
 
