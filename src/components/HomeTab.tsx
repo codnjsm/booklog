@@ -165,18 +165,18 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
         <div className="hidden sm:block w-px self-stretch bg-border" />
 
         <div className="grid grid-cols-3 gap-4 flex-1 pt-4 sm:pt-0 border-t sm:border-t-0 border-border">
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-3 text-center sm:text-left">
             <span className="text-[22px] sm:text-[25px] font-semibold leading-none">{doneThisMonth}</span>
             <span className="font-mono text-[10px] text-dim">이번 달 완독</span>
           </div>
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-3 text-center sm:text-left">
             <span className="text-[22px] sm:text-[25px] font-semibold leading-none">
               {recordedDaysThisWeek({ books, quotes, words })}
               <span className="text-dim">/7</span>
             </span>
             <span className="font-mono text-[10px] text-dim">이번 주 기록한 날</span>
           </div>
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-3 text-center sm:text-left">
             <span className="text-[22px] sm:text-[25px] font-semibold leading-none">{quotes.length}</span>
             <span className="font-mono text-[10px] text-dim">모은 문장</span>
           </div>
