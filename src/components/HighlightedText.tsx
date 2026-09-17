@@ -36,6 +36,24 @@ export function mergeRanges(ranges: Range[]): Range[] {
   return merged.sort((a, b) => a.start - b.start)
 }
 
+/**
+ * ranges에서 cut 구간을 도려낸다. 걸쳐 있는 구간은 앞뒤 남은 부분으로 쪼개지고, 완전히 덮이면 사라진다.
+ * 같은 자리를 다른 색으로 다시 칠할 때 쓴다 — 지우지 않고 덧칠하면 색만 다른 구간이 겹쳐 쌓이고,
+ * 렌더는 먼저 시작한 구간을 우선하므로 처음 칠한 색이 계속 이겨서 색이 안 바뀐 것처럼 보인다.
+ */
+export function subtractRange(ranges: Range[], cut: { start: number; end: number }): Range[] {
+  const out: Range[] = []
+  for (const r of ranges) {
+    if (r.end <= cut.start || r.start >= cut.end) {
+      out.push(r)
+      continue
+    }
+    if (r.start < cut.start) out.push({ ...r, end: cut.start })
+    if (r.end > cut.end) out.push({ ...r, start: cut.end })
+  }
+  return out
+}
+
 interface Props {
   text: string
   highlights?: Quote['highlights']

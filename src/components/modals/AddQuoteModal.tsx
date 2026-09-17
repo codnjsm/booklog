@@ -4,7 +4,7 @@ import type { Book, Quote, HighlightColor } from '../../types'
 import { useAppUI } from '../../contexts/AppUIContext'
 import { ocrBookPage } from '../../firebase'
 import { fileToResizedBase64 } from '../../lib/image'
-import HighlightedText, { mergeRanges, HIGHLIGHT_COLORS } from '../HighlightedText'
+import HighlightedText, { mergeRanges, subtractRange, HIGHLIGHT_COLORS } from '../HighlightedText'
 
 interface Props {
   books: Book[]
@@ -88,7 +88,14 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
     setPickedColor(color)
     setEntries((prev) =>
       prev.map((e, idx) =>
-        idx === i ? { ...e, highlights: mergeRanges([...(e.highlights ?? []), { start, end, color }]) } : e,
+        idx === i
+          ? {
+              // 칠하려는 자리에 이미 있던 구간은 먼저 도려낸다. 안 그러면 색만 다른 구간이 겹쳐 쌓여서
+              // 처음 칠한 색이 계속 이기고, 다시 눌러도 색이 안 바뀐다.
+              ...e,
+              highlights: mergeRanges([...subtractRange(e.highlights ?? [], { start, end }), { start, end, color }]),
+            }
+          : e,
       ),
     )
   }
