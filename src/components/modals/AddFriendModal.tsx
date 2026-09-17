@@ -9,6 +9,9 @@ import Modal from './Modal'
 
 const MODAL_PANEL =
   'bg-surface border border-border rounded-2xl w-full max-w-full min-h-[min(500px,90%)] sm:min-h-0 sm:max-w-[560px] max-h-[92%] sm:max-h-[90%] overflow-y-auto overscroll-contain touch-auto shadow-card'
+// 이메일 인증 안내는 내용이 짧아서, 다른 화면과 같은 최소 높이(500px)를 주면 아래에 빈 공간만 남는다.
+const MODAL_PANEL_COMPACT =
+  'bg-surface border border-border rounded-2xl w-full max-w-full sm:max-w-[560px] max-h-[92%] sm:max-h-[90%] overflow-y-auto overscroll-contain touch-auto shadow-card'
 const MODAL_HEADER =
   'sticky top-0 z-10 bg-surface pt-3.5 px-[18px] pb-3 sm:pt-[22px] sm:px-6 sm:pb-4 border-b border-border flex justify-between items-center'
 const MODAL_CLOSE = 'bg-transparent border-none text-dim text-lg cursor-pointer leading-none px-2 py-1 hover:text-ink'
@@ -129,7 +132,7 @@ export default function AddFriendModal({
   if (user && !user.emailVerified) {
     return (
       <Modal onClose={onClose} labelledBy="add-friend-modal-title">
-        <div className={MODAL_PANEL}>
+        <div className={MODAL_PANEL_COMPACT}>
           <div className={MODAL_HEADER}>
             <h3 id="add-friend-modal-title" className="font-sans text-base font-semibold">
               친구 추가
