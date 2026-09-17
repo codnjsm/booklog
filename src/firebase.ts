@@ -88,7 +88,7 @@ export const sendVerificationEmail = (): Promise<void> => {
 /** Firebase Auth 에러 코드를 한국어 안내로 바꾼다. 구글 팝업과 이메일 로그인/가입 양쪽에서 쓴다. */
 const AUTH_ERROR_MESSAGES: Record<string, { msg: string; type: 'info' | 'error' }> = {
   'auth/popup-closed-by-user': { msg: '로그인이 취소됐어요', type: 'info' },
-  'auth/email-already-in-use': { msg: '이미 가입된 이메일이에요. 로그인해주세요', type: 'error' },
+  'auth/email-already-in-use': { msg: '이미 가입된 이메일이에요', type: 'error' },
   'auth/invalid-email': { msg: '이메일 형식이 올바르지 않아요', type: 'error' },
   'auth/weak-password': { msg: '비밀번호는 6자 이상이어야 해요', type: 'error' },
   'auth/wrong-password': { msg: '비밀번호가 맞지 않아요', type: 'error' },

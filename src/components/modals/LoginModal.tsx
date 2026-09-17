@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Modal from './Modal'
 import { authErrorMessage } from '../../firebase'
 import { useAppUI } from '../../contexts/AppUIContext'
+import { IconEye, IconEyeOff } from '../layout/icons'
 
 const MODAL_PANEL =
   'bg-surface border border-border rounded-2xl w-full max-w-full sm:max-w-[420px] max-h-[92%] sm:max-h-[90%] overflow-y-auto overscroll-contain touch-auto shadow-card'
@@ -13,6 +14,8 @@ const FORM_GROUP = 'mb-3.5'
 const FORM_LABEL = 'flex text-xs sm:text-[13px] mb-2 uppercase tracking-[.05em] text-dim'
 const FORM_INPUT =
   'w-full bg-bg border border-border text-ink px-3 py-2 rounded-[7px] text-[13px] sm:text-[14px] font-sans placeholder:text-dim placeholder:opacity-50 focus:outline-none focus:border-accent'
+const PASSWORD_TOGGLE =
+  'absolute right-2.5 top-1/2 -translate-y-1/2 bg-transparent border-none text-dim cursor-pointer p-0 flex items-center hover:text-ink'
 const BTN =
   'w-full bg-ink text-bg border-none px-4 py-2.5 rounded-lg text-[13px] sm:text-sm cursor-pointer hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed'
 const BTN_SECONDARY =
@@ -45,9 +48,12 @@ export default function LoginModal({
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [passwordConfirm, setPasswordConfirm] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [inAppBlocked, setInAppBlocked] = useState(false)
   const [resetSent, setResetSent] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false)
 
   const handleGoogleClick = async () => {
     setSubmitting(true)
@@ -59,6 +65,10 @@ export default function LoginModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (mode === 'signup' && password !== passwordConfirm) {
+      showToast('비밀번호가 일치하지 않아요', 'error')
+      return
+    }
     setSubmitting(true)
     try {
       if (mode === 'signup') await onEmailSignUp(name.trim(), email.trim(), password)
@@ -225,15 +235,48 @@ export default function LoginModal({
                 </div>
                 <div className={FORM_GROUP}>
                   <label className={FORM_LABEL}>비밀번호</label>
-                  <input
-                    type="password"
-                    required
-                    minLength={mode === 'signup' ? 6 : undefined}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className={FORM_INPUT}
-                  />
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      minLength={mode === 'signup' ? 6 : undefined}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className={`${FORM_INPUT} pr-9`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 보기'}
+                      className={PASSWORD_TOGGLE}
+                    >
+                      {showPassword ? <IconEyeOff size={16} /> : <IconEye size={16} />}
+                    </button>
+                  </div>
                 </div>
+                {mode === 'signup' && (
+                  <div className={FORM_GROUP}>
+                    <label className={FORM_LABEL}>비밀번호 확인</label>
+                    <div className="relative">
+                      <input
+                        type={showPasswordConfirm ? 'text' : 'password'}
+                        required
+                        minLength={6}
+                        value={passwordConfirm}
+                        onChange={(e) => setPasswordConfirm(e.target.value)}
+                        className={`${FORM_INPUT} pr-9`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPasswordConfirm((v) => !v)}
+                        aria-label={showPasswordConfirm ? '비밀번호 숨기기' : '비밀번호 보기'}
+                        className={PASSWORD_TOGGLE}
+                      >
+                        {showPasswordConfirm ? <IconEyeOff size={16} /> : <IconEye size={16} />}
+                      </button>
+                    </div>
+                  </div>
+                )}
                 {mode === 'login' && (
                   <button type="button" className={`${LINK_BTN} mb-3.5`} onClick={() => setMode('reset')}>
                     비밀번호를 잊으셨나요?

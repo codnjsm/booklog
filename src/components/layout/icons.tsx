@@ -120,6 +120,22 @@ export const IconLock = ({ size = 16 }: Props) => (
   </svg>
 )
 
+export const IconEye = ({ size = 16 }: Props) => (
+  <svg {...base(size)}>
+    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+)
+
+export const IconEyeOff = ({ size = 16 }: Props) => (
+  <svg {...base(size)}>
+    <path d="M9.9 5.2A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a16.3 16.3 0 0 1-3.2 4.1" />
+    <path d="M6.6 6.6C4 8.3 2 12 2 12s3.5 7 10 7a9.7 9.7 0 0 0 4.4-1" />
+    <path d="M9.9 14.1a3 3 0 0 0 4.2-4.2" />
+    <path d="M2 2l20 20" />
+  </svg>
+)
+
 export const IconQuote = ({ size = 18 }: Props) => (
   <svg {...base(size)}>
     <path d="M6 8c-1.5 1-2.2 2.6-2.2 4.3 0 1.5.9 2.4 2 2.4s2-.9 2-2.2c0-.9-.5-1.6-1.3-1.9.2-1 .9-1.8 1.8-2.3z" />
