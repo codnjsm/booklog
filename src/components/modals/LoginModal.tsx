@@ -140,6 +140,11 @@ export default function LoginModal({
                     onChange={(e) => setEmail(e.target.value)}
                     className={FORM_INPUT}
                   />
+                  {/* 재설정은 이메일이 유일한 단서다. 여기 온 사람은 이미 로그인을 못 하고 있으므로,
+                      헛수고를 줄이도록 사실대로 알리고 구글 가입 가능성을 확인하게 한다. */}
+                  <p className="mt-2 text-xs text-dim leading-relaxed">
+                    이메일이 기억나지 않으면 비밀번호를 재설정할 수 없어요. 구글로 가입한 건 아닌지 확인해보세요.
+                  </p>
                 </div>
                 <div className="flex flex-col gap-2">
                   <button type="submit" className={BTN} disabled={submitting}>
