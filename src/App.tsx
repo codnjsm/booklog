@@ -125,9 +125,12 @@ function AppShell() {
   const recordCount = state.books.length + state.quotes.length + state.words.length
 
   useEffect(() => {
-    if (loading || user) return
+    if (loading) return
     const threshold = nextPromoteAt()
-    if (prevCountRef.current < threshold && recordCount >= threshold) promotePendingRef.current = recordCount
+    // 권하는 건 게스트일 때만이지만, 기준값은 로그인 중에도 계속 따라간다.
+    // 로그아웃 직후에는 user가 null이 된 렌더에 계정 기록이 잠깐 남아 있는데(비우는 건 다음 렌더),
+    // 기준값이 게스트 시절 값에 멈춰 있으면 그 찰나를 "게스트가 기록을 채웠다"로 오인한다.
+    if (!user && prevCountRef.current < threshold && recordCount >= threshold) promotePendingRef.current = recordCount
     prevCountRef.current = recordCount
   }, [recordCount, user, loading])
 
