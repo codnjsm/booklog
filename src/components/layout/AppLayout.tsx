@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import type { User } from 'firebase/auth'
 import { useAppUI, type Tab } from '../../contexts/AppUIContext'
 import type { SyncStatus } from '../../hooks/useData'
+import { isStorageAtRiskBrowser } from '../../lib/browser'
 import {
   IconHome,
   IconBooks,
@@ -163,8 +164,13 @@ export default function AppLayout({
               <span className="flex flex-col gap-px min-w-0">
                 <span className="text-xs sm:text-[13px] font-medium text-ink">로그인</span>
                 {/* 기록이 있는 동안에는 계속 보이게 둔다 — 로그인 전까지 사실인 상태라
-                    한 번 띄우고 마는 모달보다 여기가 맞다. 사이드바가 좁아 문구는 짧게. */}
-                {recordCount > 0 && <span className="text-[10px] text-dim leading-tight">이 브라우저에만 저장됨</span>}
+                    한 번 띄우고 마는 모달보다 여기가 맞다. 사이드바가 좁아 문구는 짧게.
+                    Safari·아이폰은 7일 미접속 시 브라우저가 알아서 지울 수 있어 위험을 구체적으로 알린다. */}
+                {recordCount > 0 && (
+                  <span className="text-[10px] text-dim leading-tight">
+                    {isStorageAtRiskBrowser() ? '7일 넘게 안 들어오면 사라져요' : '이 브라우저에만 저장됨'}
+                  </span>
+                )}
               </span>
             </button>
           )}

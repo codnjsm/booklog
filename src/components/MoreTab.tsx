@@ -1,6 +1,7 @@
 import type { User } from 'firebase/auth'
 import type { SyncStatus } from '../hooks/useData'
 import { useAppUI } from '../contexts/AppUIContext'
+import { isStorageAtRiskBrowser } from '../lib/browser'
 import PageHeader from './layout/PageHeader'
 import { IconFriends, IconExport, IconSun, IconMoon, IconSignOut, IconChevronRight, IconBooks } from './layout/icons'
 
@@ -68,10 +69,13 @@ export default function MoreTab({
             <span className="flex-1 flex flex-col gap-0.5">
               <span className="text-[15px] font-semibold text-ink">로그인</span>
               {/* 기록이 쌓인 뒤로는 "동기화하면 좋다"가 아니라 "지금 잃을 수 있다"가 사실에 가깝다.
-                  로그인할 때까지 계속 남아 있는 상태라, 모달로 한 번 알리는 대신 여기에 상시 표시한다. */}
+                  로그인할 때까지 계속 남아 있는 상태라, 모달로 한 번 알리는 대신 여기에 상시 표시한다.
+                  Safari·아이폰은 7일 미접속 시 브라우저가 알아서 지울 수 있어 위험을 구체적으로 알린다. */}
               <span className="text-xs sm:text-[13px] text-dim">
                 {recordCount > 0
-                  ? `기록 ${recordCount}개가 이 브라우저에만 저장돼 있어요`
+                  ? isStorageAtRiskBrowser()
+                    ? `기록 ${recordCount}개가 이 브라우저에만 저장돼 있어요. 7일 넘게 접속 안 하면 사라질 수 있어요`
+                    : `기록 ${recordCount}개가 이 브라우저에만 저장돼 있어요`
                   : '여러 기기에서 동기화하려면 로그인이 필요해요'}
               </span>
             </span>
