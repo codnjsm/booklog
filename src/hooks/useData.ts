@@ -111,6 +111,9 @@ export function useData(user: User | null) {
   const cloudLoadedRef = useRef(false)
   // 로그인 상태에서 로그아웃한 경우에만 화면을 비운다 — 처음부터 게스트였던 방문자는 그대로 둔다.
   const wasLoggedInRef = useRef(false)
+  // 마지막으로 클라우드에 안전하게 반영된 걸로 확인된 기록 수. 로컬 저장소가 어떤 이유로든
+  // 리셋된 채로 저장이 실행되면, 이 값과 비교해 갑자기 크게 줄었는지 감지한다.
+  const lastSyncedCountRef = useRef<number | null>(null)
 
   // 소유자 꼬리표가 생기기 전(2026-09-09 이전)에 저장된 로컬 데이터는 누구 것인지 알 수 없다.
   // 딱 한 번 unknown으로 찍어서 어느 계정에도 올라가지 않게 한다. 이후 게스트가 새로 쓴 데이터는
@@ -171,7 +174,10 @@ export function useData(user: User | null) {
           // 같은 계정으로 오프라인에서 고친 게 더 최신이면 클라우드로 덮어쓰지 않는다.
           // 게스트 기록에는 이 보호를 적용하지 않는다 — 그건 이 계정의 오프라인 편집분이 아니라서,
           // 그대로 두면 다음 저장 때 계정에 있던 기록을 통째로 밀어낸다.
-          if (localIsSameAccount && local.updatedAt && cloud.updatedAt && local.updatedAt > cloud.updatedAt) return
+          if (localIsSameAccount && local.updatedAt && cloud.updatedAt && local.updatedAt > cloud.updatedAt) {
+            lastSyncedCountRef.current = countRecords(local)
+            return
+          }
 
           // 로그인 없이 쌓아둔 기록과 계정 기록이 둘 다 있으면 한쪽을 임의로 고르지 않고 물어본다.
           // 자동으로 고르면 어느 쪽이든 한쪽이 통째로 사라진다.
@@ -185,6 +191,7 @@ export function useData(user: User | null) {
             const next = stripLegacySeed(keepBoth ? mergeStates(cloudState, local) : cloudState)
             setStateRaw(next)
             localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+            lastSyncedCountRef.current = countRecords(next)
             if (keepBoth || next !== cloudState) saveUserData(user.uid, JSON.parse(JSON.stringify(next)))
             return
           }
@@ -192,6 +199,7 @@ export function useData(user: User | null) {
           const merged = stripLegacySeed(cloudState)
           setStateRaw(merged)
           localStorage.setItem(STORAGE_KEY, JSON.stringify(merged))
+          lastSyncedCountRef.current = countRecords(merged)
           // 클라우드에 남아 있던 데모 데이터도 같이 걷어낸다
           if (merged !== cloudState) saveUserData(user.uid, JSON.parse(JSON.stringify(merged)))
         } else if (localIsForeign) {
@@ -199,9 +207,11 @@ export function useData(user: User | null) {
           const empty: AppState = { books: [], quotes: [], words: [] }
           setStateRaw(empty)
           localStorage.setItem(STORAGE_KEY, JSON.stringify(empty))
+          lastSyncedCountRef.current = 0
         } else {
           // 계정이 비어 있으면 이 브라우저에 쌓아둔 기록을 그대로 올린다(단어만 있어도 올린다).
           const local = getInitialState()
+          lastSyncedCountRef.current = countRecords(local)
           if (hasRecords(local)) {
             saveUserData(user.uid, JSON.parse(JSON.stringify(local)))
           }
@@ -221,8 +231,26 @@ export function useData(user: User | null) {
       // JSON round-trip strips undefined fields so Firestore doesn't reject them
       const clean: AppState = JSON.parse(JSON.stringify(stamped))
       timerRef.current = setTimeout(async () => {
+        // 로컬 저장소가 어떤 이유로든 리셋된 채로 저장이 실행되면, 그 순간의 (줄어든) 상태가
+        // 클라우드에 있던 기록을 통째로 덮어쓴다. 마지막으로 확인된 기록 수의 절반 밑으로
+        // 갑자기 떨어지면 실수일 가능성이 높다고 보고 한 번 확인한다.
+        const baseline = lastSyncedCountRef.current
+        const nextCount = countRecords(clean)
+        if (baseline !== null && baseline > 0 && nextCount < baseline / 2) {
+          const proceed = confirm(
+            `클라우드에 저장돼 있던 기록은 ${baseline}개인데, 지금 저장하려는 건 ${nextCount}개예요.\n` +
+              `기록이 갑자기 많이 줄어든 것 같아 확인차 여쭤봅니다.\n\n` +
+              `확인 — 그래도 이대로 저장합니다\n` +
+              `취소 — 저장하지 않습니다 (새로고침해서 다시 확인해보세요)`,
+          )
+          if (!proceed) {
+            setSyncStatus('error')
+            return
+          }
+        }
         try {
           await saveUserData(user.uid, clean)
+          lastSyncedCountRef.current = nextCount
           setSyncStatus('synced')
         } catch {
           setSyncStatus('error')
