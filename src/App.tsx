@@ -35,10 +35,23 @@ import WelcomeModal from './components/modals/WelcomeModal'
 const queryClient = new QueryClient()
 // 이 브라우저에서 기능 소개를 한 번 본 뒤 남겨두는 표시.
 const WELCOME_SEEN_KEY = 'reading-notes-welcome-seen-v1'
-// 로그인 권유 모달을 이미 한 번 보여줬는지 남겨두는 표시. 한 번 뜨면 다시 안 띄운다.
-const PROMOTE_SHOWN_KEY = 'reading-notes-promote-shown-v1'
-// 책 3권 또는 문장 3개를 넘긴 게스트에게 로그인을 권한다 — 잃을 게 생긴 시점에만 묻는다.
-const PROMOTE_THRESHOLD = 3
+// 로그인 권유 모달을 마지막으로 띄웠을 때의 기록 개수. 없으면 아직 한 번도 안 띄운 것.
+const PROMOTE_SHOWN_AT_KEY = 'reading-notes-promote-shown-at-v1'
+// 예전 버전에서 쓰던 표시("띄웠다" 여부만 저장). 마이그레이션 판단에만 읽는다.
+const LEGACY_PROMOTE_SHOWN_KEY = 'reading-notes-promote-shown-v1'
+// 기록 3개를 넘긴 게스트에게 로그인을 처음 권하고, 그 뒤로는 3개씩 더 쌓일 때마다 다시 권한다
+// — 잃을 게 생긴 시점에만 묻되, 한 번 닫았다고 영영 잊히지는 않게.
+const PROMOTE_FIRST = 3
+const PROMOTE_INTERVAL = 3
+
+// 다음에 로그인을 권할 기록 개수.
+function nextPromoteAt(): number {
+  const shownAt = localStorage.getItem(PROMOTE_SHOWN_AT_KEY)
+  if (shownAt !== null) return Number(shownAt) + PROMOTE_INTERVAL
+  // 예전 버전은 개수를 남기지 않았다. 그때 기준이 3개였으므로 3개에서 봤던 것으로 친다.
+  if (localStorage.getItem(LEGACY_PROMOTE_SHOWN_KEY)) return PROMOTE_FIRST + PROMOTE_INTERVAL
+  return PROMOTE_FIRST
+}
 
 // 카카오톡·인스타그램 등 인앱 브라우저는 구글 로그인 팝업을 차단한다. Chrome/Safari로 유도해야 한다.
 function isInAppBrowser() {
@@ -103,33 +116,31 @@ function AppShell() {
     closeModal()
   }, [closeModal])
 
-  // 게스트가 책 3권 또는 문장 3개를 넘기면, 화면이 정리된 뒤 로그인을 한 번 권한다.
+  // 게스트의 기록이 기준 개수를 넘기면, 화면이 정리된 뒤 로그인을 권한다.
   // "넘긴 순간"이 아니라 "그 이후 처음 모달이 다 닫혔을 때"를 기다린다 — 저장 완료 토스트에
   // 곧바로 또 모달이 겹치면 그 자체가 지금 고치려는 문제(요구가 들이닥친다)와 같아진다.
-  const promotePendingRef = useRef(false)
-  const prevCountsRef = useRef({ books: 0, quotes: 0 })
+  // 띄울 때의 기록 개수를 담아둔다(null이면 띄울 차례가 아님).
+  const promotePendingRef = useRef<number | null>(null)
+  const prevCountRef = useRef(0)
+  const recordCount = state.books.length + state.quotes.length + state.words.length
 
   useEffect(() => {
     if (loading || user) return
-    if (localStorage.getItem(PROMOTE_SHOWN_KEY)) return
-    const prev = prevCountsRef.current
-    const crossed =
-      (prev.books < PROMOTE_THRESHOLD && state.books.length >= PROMOTE_THRESHOLD) ||
-      (prev.quotes < PROMOTE_THRESHOLD && state.quotes.length >= PROMOTE_THRESHOLD)
-    if (crossed) promotePendingRef.current = true
-    prevCountsRef.current = { books: state.books.length, quotes: state.quotes.length }
-  }, [state.books.length, state.quotes.length, user, loading])
+    const threshold = nextPromoteAt()
+    if (prevCountRef.current < threshold && recordCount >= threshold) promotePendingRef.current = recordCount
+    prevCountRef.current = recordCount
+  }, [recordCount, user, loading])
 
   useEffect(() => {
-    if (!promotePendingRef.current || loading) return
+    if (promotePendingRef.current === null || loading) return
     if (user) {
-      promotePendingRef.current = false
+      promotePendingRef.current = null
       return
     }
     if (modal.type !== 'none') return
     const timer = setTimeout(() => {
-      promotePendingRef.current = false
-      localStorage.setItem(PROMOTE_SHOWN_KEY, '1')
+      localStorage.setItem(PROMOTE_SHOWN_AT_KEY, String(promotePendingRef.current))
+      promotePendingRef.current = null
       openLogin('promote')
     }, 900)
     return () => clearTimeout(timer)
