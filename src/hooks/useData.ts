@@ -76,6 +76,32 @@ function stripLegacySeed(state: AppState): AppState {
   }
 }
 
+/** 책·문장·단어를 합친 개수. "기록 N개"라고 사용자에게 보여줄 때 쓴다. */
+function countRecords(s: AppState): number {
+  return s.books.length + s.quotes.length + (s.words?.length ?? 0)
+}
+
+function hasRecords(s: AppState): boolean {
+  return countRecords(s) > 0
+}
+
+/**
+ * 계정 기록과 이 브라우저 기록을 합친다. 같은 id는 계정 것을 남기고 이 브라우저에만 있던 항목을 뒤에 붙인다.
+ * id는 기기마다 따로 만들어지므로 실제로 겹칠 일은 거의 없다.
+ */
+function mergeStates(cloud: AppState, local: AppState): AppState {
+  const unionById = <T extends { id: string }>(base: T[], extra: T[]): T[] => {
+    const ids = new Set(base.map((x) => x.id))
+    return [...base, ...extra.filter((x) => !ids.has(x.id))]
+  }
+  return {
+    books: unionById(cloud.books, local.books),
+    quotes: unionById(cloud.quotes, local.quotes),
+    words: unionById(cloud.words ?? [], local.words ?? []),
+    readingGoal: cloud.readingGoal ?? local.readingGoal,
+  }
+}
+
 export type SyncStatus = 'synced' | 'saving' | 'error'
 
 export function useData(user: User | null) {
@@ -127,6 +153,9 @@ export function useData(user: User | null) {
     // — 다른 사람 데이터를 이 계정에 올리지 않는다.
     const localOwner = getLocalOwnerUid()
     const localIsForeign = localOwner !== null && localOwner !== user.uid
+    // 같은 계정으로 오프라인에서 고친 것 / 로그인 없이 쌓아둔 것은 성격이 달라서 따로 다룬다.
+    const localIsSameAccount = localOwner === user.uid
+    const localIsGuest = localOwner === null
 
     loadUserData(user.uid)
       .then((cloud) => {
@@ -137,9 +166,29 @@ export function useData(user: User | null) {
 
         if (cloud?.books) {
           const local = getInitialState()
-          // Don't overwrite local data if it's newer than cloud data
-          if (!localIsForeign && local.updatedAt && cloud.updatedAt && local.updatedAt > cloud.updatedAt) return
           const cloudState: AppState = { ...cloud, words: cloud.words ?? [] }
+
+          // 같은 계정으로 오프라인에서 고친 게 더 최신이면 클라우드로 덮어쓰지 않는다.
+          // 게스트 기록에는 이 보호를 적용하지 않는다 — 그건 이 계정의 오프라인 편집분이 아니라서,
+          // 그대로 두면 다음 저장 때 계정에 있던 기록을 통째로 밀어낸다.
+          if (localIsSameAccount && local.updatedAt && cloud.updatedAt && local.updatedAt > cloud.updatedAt) return
+
+          // 로그인 없이 쌓아둔 기록과 계정 기록이 둘 다 있으면 한쪽을 임의로 고르지 않고 물어본다.
+          // 자동으로 고르면 어느 쪽이든 한쪽이 통째로 사라진다.
+          if (localIsGuest && hasRecords(local) && hasRecords(cloudState)) {
+            const keepBoth = confirm(
+              `이 브라우저에 로그인 없이 쌓은 기록이 ${countRecords(local)}개 있어요.\n` +
+                `계정에는 이미 기록이 ${countRecords(cloudState)}개 있습니다.\n\n` +
+                `확인 — 두 기록을 합칩니다\n` +
+                `취소 — 계정 기록만 사용합니다 (이 브라우저 기록은 사라져요)`,
+            )
+            const next = stripLegacySeed(keepBoth ? mergeStates(cloudState, local) : cloudState)
+            setStateRaw(next)
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+            if (keepBoth || next !== cloudState) saveUserData(user.uid, JSON.parse(JSON.stringify(next)))
+            return
+          }
+
           const merged = stripLegacySeed(cloudState)
           setStateRaw(merged)
           localStorage.setItem(STORAGE_KEY, JSON.stringify(merged))
@@ -151,8 +200,9 @@ export function useData(user: User | null) {
           setStateRaw(empty)
           localStorage.setItem(STORAGE_KEY, JSON.stringify(empty))
         } else {
+          // 계정이 비어 있으면 이 브라우저에 쌓아둔 기록을 그대로 올린다(단어만 있어도 올린다).
           const local = getInitialState()
-          if (local.books.length > 0 || local.quotes.length > 0) {
+          if (hasRecords(local)) {
             saveUserData(user.uid, JSON.parse(JSON.stringify(local)))
           }
         }
