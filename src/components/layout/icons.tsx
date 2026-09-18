@@ -1,3 +1,5 @@
+import { useId } from 'react'
+
 interface Props {
   size?: number
 }
@@ -151,8 +153,26 @@ export const IconWord = ({ size = 18 }: Props) => (
 )
 
 // 채운 별은 굵은 선을 같이 그려서 꼭짓점을 둥글게 만든다 (텍스트 ★보다 부드럽게)
-export const IconStar = ({ size = 14, filled = false }: Props & { filled?: boolean }) => (
-  <svg {...base(size)} fill={filled ? 'currentColor' : 'none'} strokeWidth={filled ? 2.8 : 1.8}>
-    <path d="M12 3.9l2.45 4.97 5.48.79-3.96 3.87.93 5.45L12 16.4l-4.9 2.57.93-5.45-3.96-3.87 5.48-.79z" />
-  </svg>
-)
+const STAR_PATH = 'M12 3.9l2.45 4.97 5.48.79-3.96 3.87.93 5.45L12 16.4l-4.9 2.57.93-5.45-3.96-3.87 5.48-.79z'
+
+export const IconStar = ({ size = 14, filled = false }: Props & { filled?: boolean | 'half' }) => {
+  if (filled === 'half') {
+    const id = useId()
+    return (
+      <svg {...base(size)} fill="none" strokeWidth={1.8}>
+        <defs>
+          <clipPath id={id}>
+            <rect x="0" y="0" width="12" height="24" />
+          </clipPath>
+        </defs>
+        <path d={STAR_PATH} />
+        <path d={STAR_PATH} fill="currentColor" stroke="none" clipPath={`url(#${id})`} />
+      </svg>
+    )
+  }
+  return (
+    <svg {...base(size)} fill={filled ? 'currentColor' : 'none'} strokeWidth={filled ? 2.8 : 1.8}>
+      <path d={STAR_PATH} />
+    </svg>
+  )
+}

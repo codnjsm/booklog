@@ -187,10 +187,15 @@ export default function ManualBookModal({ prefill, editId, books, onClose, onSav
                     key={n}
                     type="button"
                     aria-label={`별점 ${n}점`}
-                    className={`bg-transparent border-none p-0 cursor-pointer transition-colors duration-100 ${rating >= n ? 'text-accent' : 'text-border'}`}
-                    onClick={() => setRating(rating === n ? 0 : n)}
+                    className={`bg-transparent border-none p-0 cursor-pointer transition-colors duration-100 ${rating >= n - 0.5 ? 'text-accent' : 'text-border'}`}
+                    onClick={(e) => {
+                      const rect = e.currentTarget.getBoundingClientRect()
+                      const isLeftHalf = e.clientX - rect.left < rect.width / 2
+                      const value = isLeftHalf ? n - 0.5 : n
+                      setRating(rating === value ? 0 : value)
+                    }}
                   >
-                    <IconStar size={26} filled={rating >= n} />
+                    <IconStar size={26} filled={rating >= n ? true : rating >= n - 0.5 ? 'half' : false} />
                   </button>
                 ))}
               </div>
