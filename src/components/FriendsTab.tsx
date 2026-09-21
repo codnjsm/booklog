@@ -396,7 +396,7 @@ export default function FriendsTab({
               </div>
             ) : (
               <>
-                <div className="flex items-center gap-2 px-3 mb-2.5 rounded-lg bg-surface border border-border focus-within:outline focus-within:outline-2 focus-within:outline-accent focus-within:outline-offset-0">
+                <div className="flex items-center gap-2 px-3 mb-2.5 rounded-lg bg-surface border border-border focus-within:outline focus-within:outline-2 focus-within:outline-accent focus-within:outline-offset-[-1px]">
                   <span className="text-dim flex-shrink-0">
                     <IconSearch />
                   </span>

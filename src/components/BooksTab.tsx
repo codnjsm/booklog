@@ -105,7 +105,7 @@ export default function BooksTab({ books, quotes }: { books: Book[]; quotes: Quo
           ))}
         </div>
 
-        <div className="flex items-center gap-2 px-3 rounded-lg bg-surface border border-border focus-within:outline focus-within:outline-2 focus-within:outline-accent focus-within:outline-offset-0">
+        <div className="flex items-center gap-2 px-3 rounded-lg bg-surface border border-border focus-within:outline focus-within:outline-2 focus-within:outline-accent focus-within:outline-offset-[-1px]">
           <span className="text-dim flex-shrink-0">
             <IconSearch />
           </span>
