@@ -65,7 +65,13 @@ function Avatar({ url, name, size }: { url?: string; name: string; size: 'sm' | 
   const cls = size === 'sm' ? 'w-[26px] h-[26px]' : 'w-9 h-9'
   if (url)
     return (
-      <img className={`${cls} rounded-full object-cover flex-shrink-0`} src={url} referrerPolicy="no-referrer" alt="" />
+      <img
+        loading="lazy"
+        className={`${cls} rounded-full object-cover flex-shrink-0`}
+        src={url}
+        referrerPolicy="no-referrer"
+        alt=""
+      />
     )
   return (
     <span

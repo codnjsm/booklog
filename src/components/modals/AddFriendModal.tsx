@@ -219,6 +219,7 @@ export default function AddFriendModal({
                 >
                   {person.photoURL ? (
                     <img
+                      loading="lazy"
                       className="w-9 h-9 rounded-full object-cover flex-shrink-0"
                       src={person.photoURL}
                       referrerPolicy="no-referrer"

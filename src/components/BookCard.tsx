@@ -37,6 +37,7 @@ export default function BookCard({ book, quoteCount, onClick }: Props) {
       <div className="w-[90px] sm:w-full flex-shrink-0 sm:flex-shrink aspect-[2/3] bg-gradient-to-br from-surface2 to-bg flex items-center justify-center overflow-hidden relative rounded-none">
         {book.cover && !imgError ? (
           <img
+            loading="lazy"
             src={book.cover}
             alt={book.title}
             onError={() => setImgError(true)}

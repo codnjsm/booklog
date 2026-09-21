@@ -68,6 +68,7 @@ function Cover({ book, className }: { book: Book; className: string }) {
   if (book.cover && !err) {
     return (
       <img
+        loading="lazy"
         src={book.cover}
         alt=""
         onError={() => setErr(true)}

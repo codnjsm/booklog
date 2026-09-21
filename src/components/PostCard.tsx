@@ -14,7 +14,13 @@ const BTN_SMALL_DANGER =
 function Avatar({ url, name }: { url?: string; name: string }) {
   if (url) {
     return (
-      <img className="w-7 h-7 rounded-full object-cover flex-shrink-0" src={url} referrerPolicy="no-referrer" alt="" />
+      <img
+        loading="lazy"
+        className="w-7 h-7 rounded-full object-cover flex-shrink-0"
+        src={url}
+        referrerPolicy="no-referrer"
+        alt=""
+      />
     )
   }
   return (
@@ -72,7 +78,7 @@ export default function PostCard({ post, isOwn, onDelete }: Props) {
         <div className="flex items-center gap-2.5 bg-surface2 rounded-lg p-2.5">
           <div className="w-11 h-16 rounded bg-bg border border-border flex-shrink-0 overflow-hidden flex items-center justify-center">
             {attachment.bookCover ? (
-              <img src={attachment.bookCover} alt="" className="w-full h-full object-cover" />
+              <img loading="lazy" src={attachment.bookCover} alt="" className="w-full h-full object-cover" />
             ) : (
               <span className="text-[9px] text-dim text-center px-0.5 leading-tight">{attachment.bookTitle}</span>
             )}

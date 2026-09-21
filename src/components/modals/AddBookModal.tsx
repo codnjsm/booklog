@@ -113,6 +113,7 @@ export default function AddBookModal({ onClose, onSelectBook, onManualEntry }: P
                   >
                     {item.thumbnail ? (
                       <img
+                        loading="lazy"
                         src={item.thumbnail}
                         alt={title}
                         className="w-[50px] h-[70px] object-cover rounded flex-shrink-0 bg-surface2"

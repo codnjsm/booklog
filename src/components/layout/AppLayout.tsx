@@ -56,8 +56,10 @@ export default function AppLayout({
   const syncLabel = syncStatus === 'saving' ? '저장 중…' : syncStatus === 'error' ? '저장 실패' : '동기화됨'
   const syncColor = syncStatus === 'saving' ? 'bg-accent' : syncStatus === 'error' ? 'bg-danger' : 'bg-ok'
 
+  // 100vh 대신 dvh — 모바일 주소창 높이만큼 페이지가 넘치는 걸 막는다.
+  // dvh 미지원 브라우저용 폴백은 index.css의 body 규칙이 담당한다.
   return (
-    <div className="min-h-screen flex bg-bg">
+    <div className="min-h-[100dvh] flex bg-bg">
       <aside className="hidden sm:flex w-[var(--sidebar-w)] flex-shrink-0 flex-col gap-7 bg-surface border-r border-border px-3.5 py-6 fixed inset-y-0 left-0">
         <button
           className="font-mono text-xl font-bold tracking-[-0.02em] text-[var(--logo)] px-2.5 text-left bg-transparent border-none cursor-pointer"
