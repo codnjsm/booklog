@@ -2,7 +2,9 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
+    <!-- maximum-scale은 두지 않는다. iOS는 이 값을 무시해서 입력칸 자동 확대를 막지도 못하면서,
+         안드로이드에서는 그대로 지켜져 확대만 불가능해진다(접근성 기준에 어긋남). -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Booklog</title>
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/favicon.png" />
