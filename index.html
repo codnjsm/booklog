@@ -2,9 +2,10 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <!-- maximum-scale은 두지 않는다. iOS는 이 값을 무시해서 입력칸 자동 확대를 막지도 못하면서,
-         안드로이드에서는 그대로 지켜져 확대만 불가능해진다(접근성 기준에 어긋남). -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- maximum-scale=1.0은 iOS에서 입력칸을 누를 때 화면이 자동 확대되는 걸 막는다(실기기 확인).
+         입력칸 폰트가 16px 미만이면 생기는 현상이라, 폰트를 16px로 올리면 이 값 없이도 해결된다.
+         다만 이 값은 안드로이드에서 핀치 줌까지 막으므로, 폰트 조정 시 함께 걷어내는 게 좋다. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
     <title>Booklog</title>
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/favicon.png" />
