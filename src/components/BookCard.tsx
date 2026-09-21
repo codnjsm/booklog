@@ -55,7 +55,7 @@ export default function BookCard({ book, quoteCount, onClick }: Props) {
           </div>
         )}
         <div
-          className={`absolute top-2 right-2 text-xs sm:text-[13px] px-2 py-1 rounded font-medium ${isDone ? 'bg-accent text-white border border-transparent' : 'bg-surface text-ink border border-border'}`}
+          className={`absolute top-2 right-2 text-xs sm:text-[13px] px-2 py-1 rounded font-medium ${isDone ? 'bg-accentfill text-white border border-transparent' : 'bg-surface text-ink border border-border'}`}
         >
           {status.label}
         </div>

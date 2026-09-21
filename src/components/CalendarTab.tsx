@@ -166,7 +166,7 @@ export default function CalendarTab({ books }: Props) {
                   onClick={() => setSelectedDate(isSelected ? null : dateStr)}
                   className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-[13px] sm:text-sm rounded-[9px] transition-colors duration-100 ${
                     isSelected
-                      ? 'bg-accent text-white font-semibold cursor-pointer'
+                      ? 'bg-accentfill text-white font-semibold cursor-pointer'
                       : isRead
                         ? 'bg-transparent text-ink font-semibold cursor-pointer hover:bg-surface2'
                         : isToday

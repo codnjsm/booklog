@@ -75,7 +75,7 @@ function Avatar({ url, name, size }: { url?: string; name: string; size: 'sm' | 
     )
   return (
     <span
-      className={`${cls} rounded-full object-cover flex-shrink-0 flex items-center justify-center bg-accent text-white font-semibold text-sm`}
+      className={`${cls} rounded-full object-cover flex-shrink-0 flex items-center justify-center bg-accentfill text-white font-semibold text-sm`}
     >
       {name[0].toUpperCase()}
     </span>
@@ -192,7 +192,7 @@ export default function FriendsTab({
         <p className="text-xs sm:text-[13px] mb-4">친구 기능은 로그인 후 사용할 수 있어요</p>
         <button
           onClick={() => openLogin()}
-          className="text-[13px] sm:text-sm font-medium px-4 py-2 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover"
+          className="text-[13px] sm:text-sm font-medium px-4 py-2 rounded-lg bg-accentfill text-white border-none cursor-pointer hover:bg-accentfillhover"
         >
           로그인
         </button>
@@ -268,7 +268,7 @@ export default function FriendsTab({
         {view === 'feed' && (
           <button
             onClick={openPublishPost}
-            className="text-[13px] sm:text-sm font-medium px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover"
+            className="text-[13px] sm:text-sm font-medium px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-accentfill text-white border-none cursor-pointer hover:bg-accentfillhover"
           >
             + 공유하기
           </button>
@@ -276,7 +276,7 @@ export default function FriendsTab({
         {view === 'friends' && (
           <button
             onClick={openAddFriend}
-            className="text-[13px] sm:text-sm font-medium px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover"
+            className="text-[13px] sm:text-sm font-medium px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-accentfill text-white border-none cursor-pointer hover:bg-accentfillhover"
           >
             + 친구 추가
           </button>

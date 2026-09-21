@@ -48,7 +48,7 @@ export default function MoreTab({
                 className="w-11 h-11 rounded-full object-cover flex-shrink-0"
               />
             ) : (
-              <span className="w-11 h-11 rounded-full bg-accent text-white flex items-center justify-center text-[17px] font-semibold flex-shrink-0">
+              <span className="w-11 h-11 rounded-full bg-accentfill text-white flex items-center justify-center text-[17px] font-semibold flex-shrink-0">
                 {(user.displayName || user.email || '?')[0].toUpperCase()}
               </span>
             )}

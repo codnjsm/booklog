@@ -10,7 +10,7 @@ import HighlightedText from '../HighlightedText'
 const STATUS_BADGE = {
   wishlist: { label: '읽고싶음', cls: 'border border-border text-dim' },
   reading: { label: '읽는중', cls: 'border border-ink text-ink' },
-  done: { label: '완독', cls: 'bg-accent text-white' },
+  done: { label: '완독', cls: 'bg-accentfill text-white' },
 }
 
 const MODAL_PANEL =

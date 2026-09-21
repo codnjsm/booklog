@@ -5,7 +5,7 @@ import HighlightedText from './HighlightedText'
 const STATUS_BADGE = {
   wishlist: { label: '읽고싶음', cls: 'border border-border text-dim' },
   reading: { label: '읽는중', cls: 'border border-ink text-ink' },
-  done: { label: '완독', cls: 'bg-accent text-white' },
+  done: { label: '완독', cls: 'bg-accentfill text-white' },
 }
 
 const BTN_SMALL_DANGER =
@@ -24,7 +24,7 @@ function Avatar({ url, name }: { url?: string; name: string }) {
     )
   }
   return (
-    <span className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center bg-accent text-white font-semibold text-xs">
+    <span className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center bg-accentfill text-white font-semibold text-xs">
       {(name || '?')[0].toUpperCase()}
     </span>
   )

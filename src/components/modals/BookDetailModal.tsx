@@ -9,7 +9,7 @@ import Stars from '../Stars'
 const STATUS = {
   wishlist: { label: '읽고싶음', cls: 'border border-border text-dim' },
   reading: { label: '읽는중', cls: 'border border-ink text-ink' },
-  done: { label: '완독', cls: 'bg-accent text-white' },
+  done: { label: '완독', cls: 'bg-accentfill text-white' },
 }
 
 const PANEL =
@@ -18,7 +18,7 @@ const LABEL = 'font-mono text-[10px] sm:text-[12px] tracking-[0.09em] text-dim'
 // 헤더에 모달 제목이 없으므로 책 제목이 이 모달의 접근성 이름 역할을 한다
 const TITLE_ID = 'book-detail-modal-title'
 const BTN =
-  'text-[13px] sm:text-sm font-medium px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover'
+  'text-[13px] sm:text-sm font-medium px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-accentfill text-white border-none cursor-pointer hover:bg-accentfillhover'
 const BTN_2 =
   'text-[13px] sm:text-sm px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-surface text-ink border border-border cursor-pointer hover:bg-surface2'
 const BTN_SM =
@@ -254,7 +254,7 @@ export default function BookDetailModal({
                   <p className="text-xs sm:text-[13px] text-dim">이 책에서 마음에 남은 문장을 저장해보세요</p>
                 </div>
                 <button
-                  className="text-xs sm:text-[13px] font-medium px-2.5 py-1.5 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover"
+                  className="text-xs sm:text-[13px] font-medium px-2.5 py-1.5 rounded-lg bg-accentfill text-white border-none cursor-pointer hover:bg-accentfillhover"
                   onClick={() => onAddQuote(bookId)}
                 >
                   + 첫 문장 저장하기

@@ -12,7 +12,7 @@ const TITLE_ID = 'welcome-modal-title'
 const PANEL =
   'bg-surface border border-border rounded-2xl w-full max-w-[440px] sm:max-w-[500px] shadow-card overflow-hidden'
 const BTN =
-  'w-full bg-accent text-white border-none font-medium py-3 rounded-lg text-sm sm:text-[15px] cursor-pointer hover:bg-accenthover'
+  'w-full bg-accentfill text-white border-none font-medium py-3 rounded-lg text-sm sm:text-[15px] cursor-pointer hover:bg-accentfillhover'
 
 interface Props {
   onClose: () => void

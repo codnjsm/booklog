@@ -139,7 +139,7 @@ export default function AppLayout({
                   className="w-7 h-7 rounded-full object-cover flex-shrink-0"
                 />
               ) : (
-                <span className="w-7 h-7 rounded-full bg-accent text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
+                <span className="w-7 h-7 rounded-full bg-accentfill text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
                   {(user.displayName || user.email || '?')[0].toUpperCase()}
                 </span>
               )}

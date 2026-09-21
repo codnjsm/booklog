@@ -8,7 +8,7 @@ function FabAction({ icon, label, onClick }: { icon: ReactNode; label: string; o
       <span className="text-white text-sm font-medium whitespace-nowrap [text-shadow:0_1px_3px_rgba(0,0,0,0.4)]">
         {label}
       </span>
-      <span className="w-11 h-11 rounded-full bg-accent text-white flex items-center justify-center shadow-card flex-shrink-0">
+      <span className="w-11 h-11 rounded-full bg-accentfill text-white flex items-center justify-center shadow-card flex-shrink-0">
         {icon}
       </span>
     </button>

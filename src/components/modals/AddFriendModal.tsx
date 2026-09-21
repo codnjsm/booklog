@@ -226,7 +226,7 @@ export default function AddFriendModal({
                       alt=""
                     />
                   ) : (
-                    <span className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center bg-accent text-white font-semibold text-sm">
+                    <span className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center bg-accentfill text-white font-semibold text-sm">
                       {(person.displayName || person.email || '?')[0].toUpperCase()}
                     </span>
                   )}

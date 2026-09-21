@@ -104,7 +104,7 @@ export default function WordSearchPanel({ words, onAddWord }: Props) {
                     ) : (
                       <button
                         onClick={() => onAddWord({ term: item.word, meaning: s.definition })}
-                        className="flex-shrink-0 text-[13px] sm:text-sm font-medium px-3.5 py-1.5 rounded-lg bg-accent text-white border-none cursor-pointer hover:bg-accenthover"
+                        className="flex-shrink-0 text-[13px] sm:text-sm font-medium px-3.5 py-1.5 rounded-lg bg-accentfill text-white border-none cursor-pointer hover:bg-accentfillhover"
                       >
                         저장
                       </button>
