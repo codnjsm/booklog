@@ -3,8 +3,8 @@ import type { User } from 'firebase/auth'
 import type { SyncStatus } from '../hooks/useData'
 import { useAppUI } from '../contexts/AppUIContext'
 import { isStorageAtRiskBrowser } from '../lib/browser'
-import { fileToSquareAvatar } from '../lib/image'
 import PageHeader from './layout/PageHeader'
+import AvatarCropModal from './modals/AvatarCropModal'
 import {
   IconFriends,
   IconExport,
@@ -49,6 +49,7 @@ export default function MoreTab({
   const photoInputRef = useRef<HTMLInputElement>(null)
   const [photoSaving, setPhotoSaving] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [cropFile, setCropFile] = useState<File | null>(null)
 
   // 모달과 같은 규칙 — 열려 있는 동안 Escape로 닫힌다.
   useEffect(() => {
@@ -83,16 +84,11 @@ export default function MoreTab({
     }
   }
 
-  const handlePhotoSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // 고른 사진을 바로 저장하지 않고, 어느 부분을 쓸지 먼저 고르게 한다.
+  const handlePhotoSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     e.target.value = ''
-    if (!file) return
-    try {
-      // 변환 실패와 저장 실패는 원인이 달라 메시지를 나눈다. 저장 쪽은 savePhoto가 알린다.
-      await savePhoto(await fileToSquareAvatar(file))
-    } catch {
-      showToast('사진을 읽지 못했어요', 'error')
-    }
+    if (file) setCropFile(file)
   }
 
   return (
@@ -264,6 +260,17 @@ export default function MoreTab({
           )}
         </div>
       </div>
+
+      {cropFile && (
+        <AvatarCropModal
+          file={cropFile}
+          onCancel={() => setCropFile(null)}
+          onApply={(dataUrl) => {
+            setCropFile(null)
+            savePhoto(dataUrl)
+          }}
+        />
+      )}
     </div>
   )
 }
