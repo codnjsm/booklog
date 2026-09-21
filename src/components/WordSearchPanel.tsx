@@ -55,7 +55,7 @@ export default function WordSearchPanel({ words, onAddWord }: Props) {
   const saved = new Set(words.map((w) => `${w.term}|${w.meaning}`))
 
   return (
-    <div className="bg-surface border border-border rounded-lg overflow-hidden focus-within:border-accent">
+    <div className="bg-surface border border-border rounded-lg overflow-hidden focus-within:border-accent focus-within:outline focus-within:outline-2 focus-within:outline-accent focus-within:outline-offset-2">
       <div className="flex items-center gap-2 px-3">
         <span className="text-dim flex-shrink-0">
           <IconSearch />

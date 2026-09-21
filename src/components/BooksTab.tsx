@@ -105,7 +105,7 @@ export default function BooksTab({ books, quotes }: { books: Book[]; quotes: Quo
           ))}
         </div>
 
-        <div className="flex items-center gap-2 px-3 rounded-lg bg-surface border border-border focus-within:border-accent">
+        <div className="flex items-center gap-2 px-3 rounded-lg bg-surface border border-border focus-within:border-accent focus-within:outline focus-within:outline-2 focus-within:outline-accent focus-within:outline-offset-2">
           <span className="text-dim flex-shrink-0">
             <IconSearch />
           </span>
@@ -120,7 +120,7 @@ export default function BooksTab({ books, quotes }: { books: Book[]; quotes: Quo
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value as SortKey)}
-            className="flex-shrink-0 appearance-none bg-transparent bg-no-repeat bg-[right_center] border-none pr-4 py-[9px] text-xs sm:text-[13px] text-dim font-sans cursor-pointer outline-none"
+            className="flex-shrink-0 appearance-none bg-transparent bg-no-repeat bg-[right_center] border-none pr-4 py-[9px] text-xs sm:text-[13px] text-dim font-sans cursor-pointer"
             style={{ backgroundImage: `url("${CARET}")` }}
           >
             {SORTS.map((s) => (

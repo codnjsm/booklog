@@ -185,7 +185,7 @@ export default function AddFriendModal({
           </button>
         </div>
         <div className={MODAL_BODY}>
-          <div className="flex items-center gap-2 px-3 rounded-lg bg-surface2 border border-border focus-within:border-accent">
+          <div className="flex items-center gap-2 px-3 rounded-lg bg-surface2 border border-border focus-within:border-accent focus-within:outline focus-within:outline-2 focus-within:outline-accent focus-within:outline-offset-2">
             <span className="text-dim flex-shrink-0">
               <IconSearch />
             </span>

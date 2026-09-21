@@ -13,7 +13,7 @@ const MODAL_BODY = 'px-[18px] py-3.5 sm:px-6 sm:py-[22px]'
 const FORM_GROUP = 'mb-3.5'
 const FORM_LABEL = 'flex text-xs sm:text-[13px] mb-2 uppercase tracking-[.05em] text-dim'
 const FORM_INPUT =
-  'w-full bg-bg border border-border text-ink px-3 py-2 rounded-[7px] text-[13px] sm:text-[14px] font-sans placeholder:text-dim placeholder:opacity-50 focus:outline-none focus:border-accent'
+  'w-full bg-bg border border-border text-ink px-3 py-2 rounded-[7px] text-[13px] sm:text-[14px] font-sans placeholder:text-dim placeholder:opacity-50 focus:border-accent'
 const PASSWORD_TOGGLE =
   'absolute right-2.5 top-1/2 -translate-y-1/2 bg-transparent border-none text-dim cursor-pointer p-0 flex items-center hover:text-ink'
 const BTN =

@@ -31,7 +31,7 @@ const MODAL_BODY = 'px-[18px] py-3.5 sm:px-6 sm:py-[22px] text-[13px] sm:text-[1
 const MODAL_ACTIONS = 'flex gap-2 justify-end px-[18px] py-3 sm:px-6 sm:py-4 border-t border-border'
 const FORM_LABEL = 'flex text-xs sm:text-[13px] mb-1.5 uppercase tracking-[.05em] text-dim'
 const FORM_INPUT =
-  'w-full bg-bg border border-border text-ink px-3 py-2 rounded-[7px] text-[13px] sm:text-[14px] font-sans placeholder:text-dim placeholder:opacity-50 focus:outline-none focus:border-accent'
+  'w-full bg-bg border border-border text-ink px-3 py-2 rounded-[7px] text-[13px] sm:text-[14px] font-sans placeholder:text-dim placeholder:opacity-50 focus:border-accent'
 const FORM_TEXTAREA = `${FORM_INPUT} resize-none min-h-[90px] max-h-[500px] overflow-y-auto leading-[1.6]`
 // 문장 입력칸 앞에는 항상 이 카드의 삭제(×) 버튼이 absolute로 얹혀있어 DOM상 첫 형제가 아닐 수
 // 있다. :first-child에 기대는 대신, 구분선이 필요한 두 번째·세 번째 섹션에만 이 클래스를 준다.
@@ -284,7 +284,9 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
                       <span className="text-xs sm:text-[13px] text-dim">형광펜</span>
                       {/* 원형 아이콘은 자기 박스 정중앙이 곧 잉크 중심이지만, 한글 글자는 실제 획이
                           줄박스 위쪽에 쏠려있어 items-center로 맞춰도 원이 살짝 처져 보인다. 눈에 맞게 보정. */}
-                      <div className="flex items-center gap-1 -translate-y-px">
+                      {/* 보이는 원은 20px이지만 버튼(=터치 영역)은 24px로 둔다 — WCAG 2.2의 최소 타겟 크기.
+                          원 둘레의 2px 여백이 예전 gap-1을 대신하므로 간격은 그대로 4px로 보인다. */}
+                      <div className="flex items-center -translate-y-px">
                         {HIGHLIGHT_COLORS.map((c) => (
                           <button
                             key={c.id}
@@ -293,11 +295,15 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
                             onClick={() => markHighlight(i, c.id)}
                             aria-label={`${c.label} 형광펜`}
                             title={c.label}
-                            className={`w-5 h-5 rounded-full border cursor-pointer transition-transform duration-100 ${
-                              pickedColor === c.id ? 'border-ink scale-110' : 'border-border'
-                            }`}
-                            style={{ background: `var(--highlight-${c.id})` }}
-                          />
+                            className="w-6 h-6 flex items-center justify-center bg-transparent border-none p-0 cursor-pointer"
+                          >
+                            <span
+                              className={`block w-5 h-5 rounded-full border transition-transform duration-100 ${
+                                pickedColor === c.id ? 'border-ink scale-110' : 'border-border'
+                              }`}
+                              style={{ background: `var(--highlight-${c.id})` }}
+                            />
+                          </button>
                         ))}
                       </div>
                       {entry.highlights?.length ? (
