@@ -86,8 +86,16 @@ export const sendVerificationEmail = (): Promise<void> => {
 }
 
 /** Firebase Auth 에러 코드를 한국어 안내로 바꾼다. 구글 팝업과 이메일 로그인/가입 양쪽에서 쓴다. */
+/**
+ * 알릴 필요가 없어 토스트를 띄우지 않는 코드.
+ * - popup-closed-by-user: 사용자가 직접 팝업을 닫은 것이라 본인이 이미 안다. 게다가 Firebase는
+ *   팝업이 닫혔는지 폴링으로 확인해서 몇 초 늦게 알려주는데, 그 사이 이메일 로그인으로 넘어가 있으면
+ *   "로그인이 취소됐어요"가 방금 입력하던 게 취소된 것처럼 읽힌다.
+ * - cancelled-popup-request: 로그인 버튼을 연달아 눌러 이전 팝업 요청이 대체된 것. 오류가 아니다.
+ */
+const SILENT_AUTH_ERRORS = new Set(['auth/popup-closed-by-user', 'auth/cancelled-popup-request'])
+
 const AUTH_ERROR_MESSAGES: Record<string, { msg: string; type: 'info' | 'error' }> = {
-  'auth/popup-closed-by-user': { msg: '로그인이 취소됐어요', type: 'info' },
   'auth/email-already-in-use': { msg: '이미 가입된 이메일이에요', type: 'error' },
   'auth/invalid-email': { msg: '이메일 형식이 올바르지 않아요', type: 'error' },
   'auth/weak-password': { msg: '비밀번호는 6자 이상이어야 해요', type: 'error' },
@@ -99,8 +107,10 @@ const AUTH_ERROR_MESSAGES: Record<string, { msg: string; type: 'info' | 'error' 
   'auth/network-request-failed': { msg: '네트워크 연결을 확인해주세요', type: 'error' },
 }
 
-export function authErrorMessage(err: unknown): { msg: string; type: 'info' | 'error' } {
+/** 보여줄 메시지. null이면 알릴 필요가 없는 에러이므로 토스트를 띄우지 않는다. */
+export function authErrorMessage(err: unknown): { msg: string; type: 'info' | 'error' } | null {
   const code = (err as { code?: string } | null | undefined)?.code
+  if (code && SILENT_AUTH_ERRORS.has(code)) return null
   if (code && AUTH_ERROR_MESSAGES[code]) return AUTH_ERROR_MESSAGES[code]
   return { msg: '오류가 발생했어요. 다시 시도해주세요', type: 'error' }
 }

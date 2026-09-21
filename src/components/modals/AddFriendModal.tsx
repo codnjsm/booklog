@@ -113,8 +113,8 @@ export default function AddFriendModal({
       await onSendVerification()
       setVerifySent(true)
     } catch (err) {
-      const { msg, type } = authErrorMessage(err)
-      showToast(msg, type)
+      const shown = authErrorMessage(err)
+      if (shown) showToast(shown.msg, shown.type)
     } finally {
       setVerifySending(false)
     }

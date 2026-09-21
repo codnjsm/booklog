@@ -75,8 +75,8 @@ export default function LoginModal({
       else await onEmailSignIn(email.trim(), password)
       onClose()
     } catch (err) {
-      const { msg, type } = authErrorMessage(err)
-      showToast(msg, type)
+      const shown = authErrorMessage(err)
+      if (shown) showToast(shown.msg, shown.type)
     } finally {
       setSubmitting(false)
     }
@@ -89,8 +89,8 @@ export default function LoginModal({
       await onPasswordReset(email.trim())
       setResetSent(true)
     } catch (err) {
-      const { msg, type } = authErrorMessage(err)
-      showToast(msg, type)
+      const shown = authErrorMessage(err)
+      if (shown) showToast(shown.msg, shown.type)
     } finally {
       setSubmitting(false)
     }

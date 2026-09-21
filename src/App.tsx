@@ -181,8 +181,8 @@ function AppShell() {
       changeTab('home')
       return 'ok'
     } catch (e) {
-      const { msg, type } = authErrorMessage(e)
-      showToast(msg, type)
+      const shown = authErrorMessage(e)
+      if (shown) showToast(shown.msg, shown.type)
       return 'error'
     }
   }, [signIn, showToast, changeTab])
