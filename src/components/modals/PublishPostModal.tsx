@@ -20,7 +20,7 @@ const MODAL_HEADER =
 const MODAL_CLOSE = 'bg-transparent border-none text-dim text-lg cursor-pointer leading-none px-2 py-1 hover:text-ink'
 const MODAL_BODY = 'px-[18px] py-3.5 sm:px-6 sm:py-[22px]'
 const FORM_TEXTAREA =
-  'w-full bg-bg border border-border text-ink px-3 py-2 rounded-[7px] text-sm sm:text-[15px] font-sans placeholder:text-dim placeholder:opacity-50 focus:border-accent resize-none min-h-[90px] max-h-[500px] overflow-y-auto leading-[1.6]'
+  'w-full bg-bg border border-border text-ink px-3 py-2 rounded-[7px] text-sm sm:text-[15px] font-sans placeholder:text-dim placeholder:opacity-50 resize-none min-h-[90px] max-h-[500px] overflow-y-auto leading-[1.6]'
 
 /** 최소 높이는 유지하되 내용이 길어지면 500px까지 늘어나고, 그 이상은 내부 스크롤로 처리한다. */
 function autoResizeTextarea(el: HTMLTextAreaElement | null) {

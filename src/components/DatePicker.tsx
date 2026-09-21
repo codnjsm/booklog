@@ -7,7 +7,7 @@ interface Props {
 }
 
 const SELECT =
-  'flex-1 bg-bg border border-border text-ink rounded-lg py-[9px] px-2.5 text-base font-sans cursor-pointer appearance-none focus:border-accent'
+  'flex-1 bg-bg border border-border text-ink rounded-lg py-[9px] px-2.5 text-base font-sans cursor-pointer appearance-none'
 
 export default function DatePicker({ value, onChange, max }: Props) {
   const parse = (v: string) => {
