@@ -67,6 +67,13 @@ export const IconExport = ({ size = 16 }: Props) => (
   </svg>
 )
 
+export const IconCamera = ({ size = 16 }: Props) => (
+  <svg {...base(size)}>
+    <path d="M22 18.5a1.5 1.5 0 0 1-1.5 1.5h-17A1.5 1.5 0 0 1 2 18.5v-10A1.5 1.5 0 0 1 3.5 7h3.2l1.6-2.5h7.4L17.3 7h3.2A1.5 1.5 0 0 1 22 8.5z" />
+    <circle cx="12" cy="13" r="3.4" />
+  </svg>
+)
+
 export const IconSun = ({ size = 16 }: Props) => (
   <svg {...base(size)}>
     <circle cx="12" cy="12" r="4" />

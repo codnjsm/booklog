@@ -17,6 +17,8 @@ import {
 
 interface Props {
   user: User | null
+  /** 내 프로필 사진. Auth 값이 아니라 users 문서 기준이라 App에서 받아온다. */
+  photoURL: string
   syncStatus: SyncStatus
   bookCount: number
   collectionCount: number
@@ -42,6 +44,7 @@ const MOBILE_NAV: { id: Tab; label: string; Icon: typeof IconHome }[] = [
 export default function AppLayout({
   user,
   syncStatus,
+  photoURL,
   bookCount,
   collectionCount,
   incomingCount,
@@ -131,9 +134,9 @@ export default function AppLayout({
               onClick={() => changeTab('more')}
               className="flex items-center gap-2.5 p-2.5 mt-1.5 rounded-lg bg-surface2 border-none cursor-pointer text-left w-full"
             >
-              {user.photoURL ? (
+              {photoURL ? (
                 <img
-                  src={user.photoURL}
+                  src={photoURL}
                   referrerPolicy="no-referrer"
                   alt=""
                   className="w-7 h-7 rounded-full object-cover flex-shrink-0"

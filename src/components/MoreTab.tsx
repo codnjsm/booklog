@@ -1,12 +1,27 @@
+import { useRef, useState } from 'react'
 import type { User } from 'firebase/auth'
 import type { SyncStatus } from '../hooks/useData'
 import { useAppUI } from '../contexts/AppUIContext'
 import { isStorageAtRiskBrowser } from '../lib/browser'
+import { fileToSquareAvatar } from '../lib/image'
 import PageHeader from './layout/PageHeader'
-import { IconFriends, IconExport, IconSun, IconMoon, IconSignOut, IconChevronRight, IconBooks } from './layout/icons'
+import {
+  IconFriends,
+  IconExport,
+  IconSun,
+  IconMoon,
+  IconSignOut,
+  IconChevronRight,
+  IconBooks,
+  IconCamera,
+} from './layout/icons'
 
 interface Props {
   user: User | null
+  /** 내 프로필 사진(users 문서 기준). 없으면 이름 첫 글자 아바타를 쓴다. */
+  photoURL: string
+  /** 빈 문자열을 넘기면 사진을 지운다. */
+  onChangePhoto: (photoURL: string) => Promise<void>
   syncStatus: SyncStatus
   incomingCount: number
   /** 게스트가 이 브라우저에만 쌓아둔 기록 수(책+문장+단어). 로그인을 권할 때 위험을 구체적으로 보여준다. */
@@ -21,6 +36,8 @@ const ROW =
 
 export default function MoreTab({
   user,
+  photoURL,
+  onChangePhoto,
   syncStatus,
   incomingCount,
   recordCount,
@@ -28,10 +45,51 @@ export default function MoreTab({
   onSignOut,
   onSignIn,
 }: Props) {
-  const { changeTab, theme, toggleTheme, openWelcome } = useAppUI()
+  const { changeTab, theme, toggleTheme, openWelcome, showToast } = useAppUI()
+  const photoInputRef = useRef<HTMLInputElement>(null)
+  const [photoSaving, setPhotoSaving] = useState(false)
 
   const syncLabel = syncStatus === 'saving' ? '저장 중…' : syncStatus === 'error' ? '저장 실패' : '동기화됨'
   const syncColor = syncStatus === 'saving' ? 'bg-accent' : syncStatus === 'error' ? 'bg-danger' : 'bg-ok'
+
+  // 사진이 없으면 바로 고르게 하고, 있을 때만 "바꿀지 지울지"를 한 번 묻는다.
+  const handlePhotoClick = () => {
+    if (!photoURL) {
+      photoInputRef.current?.click()
+      return
+    }
+    const remove = !confirm('확인 — 다른 사진으로 바꿉니다\n취소 — 사진을 지우고 글자 아바타로 돌아갑니다')
+    if (remove) savePhoto('')
+    else photoInputRef.current?.click()
+  }
+
+  const savePhoto = async (next: string) => {
+    setPhotoSaving(true)
+    try {
+      await onChangePhoto(next)
+      showToast(next ? '프로필 사진을 바꿨어요' : '프로필 사진을 지웠어요', 'success')
+    } catch {
+      showToast('사진을 저장하지 못했어요', 'error')
+    } finally {
+      setPhotoSaving(false)
+    }
+  }
+
+  const handlePhotoSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setPhotoSaving(true)
+    try {
+      const dataUrl = await fileToSquareAvatar(file)
+      await onChangePhoto(dataUrl)
+      showToast('프로필 사진을 바꿨어요', 'success')
+    } catch {
+      showToast('사진을 저장하지 못했어요', 'error')
+    } finally {
+      setPhotoSaving(false)
+    }
+  }
 
   return (
     <div>
@@ -40,18 +98,31 @@ export default function MoreTab({
       <div className="flex flex-col gap-3">
         {user ? (
           <div className="flex items-center gap-3 px-4 py-3.5 bg-surface border border-border rounded-xl">
-            {user.photoURL ? (
-              <img
-                src={user.photoURL}
-                referrerPolicy="no-referrer"
-                alt=""
-                className="w-11 h-11 rounded-full object-cover flex-shrink-0"
-              />
-            ) : (
-              <span className="w-11 h-11 rounded-full bg-accentfill text-white flex items-center justify-center text-[17px] font-semibold flex-shrink-0">
-                {(user.displayName || user.email || '?')[0].toUpperCase()}
+            <button
+              type="button"
+              onClick={handlePhotoClick}
+              disabled={photoSaving}
+              aria-label={photoURL ? '프로필 사진 바꾸기' : '프로필 사진 추가'}
+              className="relative w-11 h-11 flex-shrink-0 bg-transparent border-none p-0 cursor-pointer rounded-full disabled:opacity-60"
+            >
+              {photoURL ? (
+                <img
+                  src={photoURL}
+                  referrerPolicy="no-referrer"
+                  alt=""
+                  className="w-11 h-11 rounded-full object-cover block"
+                />
+              ) : (
+                <span className="w-11 h-11 rounded-full bg-accentfill text-white flex items-center justify-center text-[17px] font-semibold">
+                  {(user.displayName || user.email || '?')[0].toUpperCase()}
+                </span>
+              )}
+              {/* 바꾸려는 대상(아바타) 위에 입구를 둔다. 테두리는 배경과 같은 색이라 사진에서 뱃지를 떼어내 보이게 한다. */}
+              <span className="absolute -right-0.5 -bottom-0.5 w-[19px] h-[19px] rounded-full bg-accentfill text-white flex items-center justify-center border-2 border-surface">
+                <IconCamera size={10} />
               </span>
-            )}
+            </button>
+            <input ref={photoInputRef} type="file" accept="image/*" onChange={handlePhotoSelected} className="hidden" />
             <div className="flex-1 min-w-0 flex flex-col gap-0.5">
               <div className="text-[15px] font-semibold">{user.displayName || '사용자'}</div>
               <div className="text-xs sm:text-[13px] text-dim truncate">{user.email}</div>

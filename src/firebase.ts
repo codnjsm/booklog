@@ -176,6 +176,16 @@ export const upsertUserProfile = async (
   await setDoc(doc(db, 'users', uid), { ...profile, email: profile.email.trim().toLowerCase() }, { merge: true })
 }
 
+/**
+ * 프로필 사진만 바꾼다. 이미지는 Firebase Auth가 아니라 이 문서에 담는다 —
+ * Auth의 photoURL은 짧은 URL을 담는 자리라 데이터 URI를 넣기에 적절하지 않고,
+ * 친구 목록·피드가 이미 이 문서를 읽고 있어 여기 두면 그대로 반영된다.
+ * 빈 문자열을 넣으면 사진을 지운 것으로 보고 글자 아바타로 돌아간다.
+ */
+export const updateUserPhoto = async (uid: string, photoURL: string): Promise<void> => {
+  await setDoc(doc(db, 'users', uid), { photoURL }, { merge: true })
+}
+
 export const getUserProfile = async (uid: string): Promise<UserProfile | null> => {
   const snap = await getDoc(doc(db, 'users', uid))
   return snap.exists() ? { uid: snap.id, ...(snap.data() as Omit<UserProfile, 'uid'>) } : null

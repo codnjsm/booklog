@@ -41,6 +41,8 @@ type Selected = { kind: Kind; refId: string }
 
 interface Props {
   user: User | null
+  /** 내 프로필 사진(users 문서 기준). 게시물 작성자 사진으로 함께 저장한다. */
+  photoURL: string
   books: Book[]
   quotes: Quote[]
   onClose: () => void
@@ -48,7 +50,7 @@ interface Props {
   onPublished: (post: Post) => void
 }
 
-export default function PublishPostModal({ user, books, quotes, onClose, onPublish, onPublished }: Props) {
+export default function PublishPostModal({ user, photoURL, books, quotes, onClose, onPublish, onPublished }: Props) {
   const { showToast } = useAppUI()
   const [kindFilter, setKindFilter] = useState<Kind>('quote')
   const [picked, setPicked] = useState<Selected | null>(null)
@@ -74,7 +76,7 @@ export default function PublishPostModal({ user, books, quotes, onClose, onPubli
       onPublished({
         ...created,
         authorDisplayName: user?.displayName ?? '',
-        authorPhotoURL: user?.photoURL ?? '',
+        authorPhotoURL: photoURL,
       })
       onClose()
     },

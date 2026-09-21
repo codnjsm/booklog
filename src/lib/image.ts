@@ -32,3 +32,36 @@ export function fileToResizedBase64(file: File, maxDim = 1600): Promise<string> 
     img.src = url
   })
 }
+
+/**
+ * 프로필 사진용. 가운데를 정사각으로 잘라 size×size로 줄인 뒤 데이터 URI를 통째로 돌려준다.
+ * Firestore 문서에 그대로 넣으므로(문서 한도 1MB) 작게 유지하는 게 중요하다 — 128px JPEG면 보통 10KB 안쪽.
+ */
+export function fileToSquareAvatar(file: File, size = 128): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+
+    img.onload = () => {
+      const side = Math.min(img.width, img.height)
+      const sx = (img.width - side) / 2
+      const sy = (img.height - side) / 2
+      const canvas = document.createElement('canvas')
+      canvas.width = size
+      canvas.height = size
+      const ctx = canvas.getContext('2d')
+      URL.revokeObjectURL(url)
+      if (!ctx) {
+        reject(new Error('캔버스를 생성하지 못했어요'))
+        return
+      }
+      ctx.drawImage(img, sx, sy, side, side, 0, 0, size, size)
+      resolve(canvas.toDataURL('image/jpeg', 0.8))
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject(new Error('이미지를 불러오지 못했어요'))
+    }
+    img.src = url
+  })
+}

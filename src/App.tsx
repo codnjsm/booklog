@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query'
 import { BrowserRouter } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
@@ -6,6 +6,8 @@ import { useData } from './hooks/useData'
 import { useFriends } from './hooks/useFriends'
 import {
   upsertUserProfile,
+  getUserProfile,
+  updateUserPhoto,
   authErrorMessage,
   signUpWithEmail,
   signInWithEmail,
@@ -149,16 +151,43 @@ function AppShell() {
     return () => clearTimeout(timer)
   }, [modal.type, user, loading, openLogin])
 
+  // 내 프로필 사진. Auth가 준 값이 아니라 users 문서가 기준이다 — 사용자가 직접 올린 사진이
+  // 앱을 다시 열 때마다 Google 사진으로 되돌아가면 안 되기 때문.
+  const [myPhotoURL, setMyPhotoURL] = useState('')
+
   useEffect(() => {
-    if (!user) return
-    // 프로필이 마지막으로 동기화한 값과 같으면 매번 다시 쓰지 않는다 (앱 열 때마다 쓰기가 나가는 걸 방지)
-    const profile = { email: user.email ?? '', displayName: user.displayName ?? '', photoURL: user.photoURL ?? '' }
-    const cacheKey = `reading-notes-profile-synced-${user.uid}`
-    if (localStorage.getItem(cacheKey) === JSON.stringify(profile)) return
-    upsertUserProfile(user.uid, profile)
-      .then(() => localStorage.setItem(cacheKey, JSON.stringify(profile)))
-      .catch(() => {})
+    if (!user) {
+      setMyPhotoURL('')
+      return
+    }
+    let cancelled = false
+    getUserProfile(user.uid)
+      .then((saved) => {
+        if (cancelled) return
+        // 저장해둔 사진이 있으면 그게 우선. 없으면 Google이 준 사진을 쓰고 문서에도 한 번 심어둔다.
+        const photoURL = saved?.photoURL || user.photoURL || ''
+        setMyPhotoURL(photoURL)
+        const next = { email: user.email ?? '', displayName: user.displayName ?? '', photoURL }
+        const same =
+          saved && saved.email === next.email && saved.displayName === next.displayName && saved.photoURL === photoURL
+        if (!same) upsertUserProfile(user.uid, next).catch(() => {})
+      })
+      .catch(() => {
+        if (!cancelled) setMyPhotoURL(user.photoURL ?? '')
+      })
+    return () => {
+      cancelled = true
+    }
   }, [user])
+
+  const handleChangePhoto = useCallback(
+    async (photoURL: string) => {
+      if (!user) return
+      await updateUserPhoto(user.uid, photoURL)
+      setMyPhotoURL(photoURL)
+    },
+    [user],
+  )
 
   const handleExport = useCallback(() => {
     exportData()
@@ -209,6 +238,7 @@ function AppShell() {
   return (
     <AppLayout
       user={user}
+      photoURL={myPhotoURL}
       syncStatus={syncStatus}
       bookCount={state.books.length}
       collectionCount={state.quotes.length + state.words.length}
@@ -258,6 +288,8 @@ function AppShell() {
       {tab === 'more' && (
         <MoreTab
           user={user}
+          photoURL={myPhotoURL}
+          onChangePhoto={handleChangePhoto}
           syncStatus={syncStatus}
           incomingCount={incoming.length}
           recordCount={state.books.length + state.quotes.length + state.words.length}
@@ -365,6 +397,7 @@ function AppShell() {
       {modal.type === 'publishPost' && (
         <PublishPostModal
           user={user}
+          photoURL={myPhotoURL}
           books={state.books}
           quotes={state.quotes}
           onClose={closeModal}
