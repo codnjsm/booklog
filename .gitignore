@@ -12,3 +12,8 @@ firestore-debug.log
 firebase-debug.log
 
 .forge/
+
+# 에이전트 스킬 (npx skills add로 각자 설치. 저장소에는 두지 않는다)
+.agents/
+.claude/skills/
+skills-lock.json
