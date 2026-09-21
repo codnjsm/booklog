@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { User } from 'firebase/auth'
 import type { SyncStatus } from '../hooks/useData'
 import { useAppUI } from '../contexts/AppUIContext'
@@ -48,22 +48,30 @@ export default function MoreTab({
   const { changeTab, theme, toggleTheme, openWelcome, showToast } = useAppUI()
   const photoInputRef = useRef<HTMLInputElement>(null)
   const [photoSaving, setPhotoSaving] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  // 모달과 같은 규칙 — 열려 있는 동안 Escape로 닫힌다.
+  useEffect(() => {
+    if (!menuOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false)
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [menuOpen])
 
   const syncLabel = syncStatus === 'saving' ? '저장 중…' : syncStatus === 'error' ? '저장 실패' : '동기화됨'
   const syncColor = syncStatus === 'saving' ? 'bg-accent' : syncStatus === 'error' ? 'bg-danger' : 'bg-ok'
 
-  // 사진이 없으면 바로 고르게 하고, 있을 때만 "바꿀지 지울지"를 한 번 묻는다.
+  // 사진이 없으면 고를 것밖에 없으니 바로 파일 선택기를 연다.
+  // 이미 있을 때만 "변경 / 초기화"를 고르는 메뉴를 띄운다.
   const handlePhotoClick = () => {
-    if (!photoURL) {
-      photoInputRef.current?.click()
-      return
-    }
-    const remove = !confirm('확인 — 다른 사진으로 바꿉니다\n취소 — 사진을 지우고 글자 아바타로 돌아갑니다')
-    if (remove) savePhoto('')
-    else photoInputRef.current?.click()
+    if (!photoURL) photoInputRef.current?.click()
+    else setMenuOpen(true)
   }
 
   const savePhoto = async (next: string) => {
+    setMenuOpen(false)
     setPhotoSaving(true)
     try {
       await onChangePhoto(next)
@@ -79,15 +87,11 @@ export default function MoreTab({
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file) return
-    setPhotoSaving(true)
     try {
-      const dataUrl = await fileToSquareAvatar(file)
-      await onChangePhoto(dataUrl)
-      showToast('프로필 사진을 바꿨어요', 'success')
+      // 변환 실패와 저장 실패는 원인이 달라 메시지를 나눈다. 저장 쪽은 savePhoto가 알린다.
+      await savePhoto(await fileToSquareAvatar(file))
     } catch {
-      showToast('사진을 저장하지 못했어요', 'error')
-    } finally {
-      setPhotoSaving(false)
+      showToast('사진을 읽지 못했어요', 'error')
     }
   }
 
@@ -98,30 +102,60 @@ export default function MoreTab({
       <div className="flex flex-col gap-3">
         {user ? (
           <div className="flex items-center gap-3 px-4 py-3.5 bg-surface border border-border rounded-xl">
-            <button
-              type="button"
-              onClick={handlePhotoClick}
-              disabled={photoSaving}
-              aria-label={photoURL ? '프로필 사진 바꾸기' : '프로필 사진 추가'}
-              className="relative w-11 h-11 flex-shrink-0 bg-transparent border-none p-0 cursor-pointer rounded-full disabled:opacity-60"
-            >
-              {photoURL ? (
-                <img
-                  src={photoURL}
-                  referrerPolicy="no-referrer"
-                  alt=""
-                  className="w-11 h-11 rounded-full object-cover block"
-                />
-              ) : (
-                <span className="w-11 h-11 rounded-full bg-accentfill text-white flex items-center justify-center text-[17px] font-semibold">
-                  {(user.displayName || user.email || '?')[0].toUpperCase()}
-                </span>
+            <div className="relative flex-shrink-0">
+              {menuOpen && (
+                <>
+                  {/* 바깥을 눌러 닫는다. HomeFab과 같은 방식 */}
+                  <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
+                  <div className="absolute left-0 top-full mt-1.5 z-50 min-w-[124px] bg-surface border border-border rounded-xl shadow-card overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMenuOpen(false)
+                        photoInputRef.current?.click()
+                      }}
+                      className="w-full px-4 py-2.5 text-left text-[13px] whitespace-nowrap text-ink bg-transparent border-none cursor-pointer hover:bg-surface2"
+                    >
+                      사진 변경
+                    </button>
+                    {/* border-none과 border-t를 같이 주면 style이 none이라 선이 안 그려진다. border-0으로 폭만 0으로 둔다 */}
+                    <button
+                      type="button"
+                      onClick={() => savePhoto('')}
+                      className="w-full px-4 py-2.5 text-left text-[13px] whitespace-nowrap text-danger bg-transparent border-0 border-t border-border cursor-pointer hover:bg-surface2"
+                    >
+                      사진 초기화
+                    </button>
+                  </div>
+                </>
               )}
-              {/* 바꾸려는 대상(아바타) 위에 입구를 둔다. 테두리는 배경과 같은 색이라 사진에서 뱃지를 떼어내 보이게 한다. */}
-              <span className="absolute -right-0.5 -bottom-0.5 w-[19px] h-[19px] rounded-full bg-accentfill text-white flex items-center justify-center border-2 border-surface">
-                <IconCamera size={10} />
-              </span>
-            </button>
+              <button
+                type="button"
+                onClick={handlePhotoClick}
+                disabled={photoSaving}
+                aria-haspopup={photoURL ? 'menu' : undefined}
+                aria-expanded={photoURL ? menuOpen : undefined}
+                aria-label={photoURL ? '프로필 사진 바꾸기' : '프로필 사진 추가'}
+                className="relative block w-11 h-11 bg-transparent border-none p-0 cursor-pointer rounded-full disabled:opacity-60"
+              >
+                {photoURL ? (
+                  <img
+                    src={photoURL}
+                    referrerPolicy="no-referrer"
+                    alt=""
+                    className="w-11 h-11 rounded-full object-cover block"
+                  />
+                ) : (
+                  <span className="w-11 h-11 rounded-full bg-accentfill text-white flex items-center justify-center text-[17px] font-semibold">
+                    {(user.displayName || user.email || '?')[0].toUpperCase()}
+                  </span>
+                )}
+                {/* 바꾸려는 대상(아바타) 위에 입구를 둔다. 테두리는 배경과 같은 색이라 사진에서 뱃지를 떼어내 보이게 한다. */}
+                <span className="absolute -right-0.5 -bottom-0.5 w-[19px] h-[19px] rounded-full bg-accentfill text-white flex items-center justify-center border-2 border-surface">
+                  <IconCamera size={10} />
+                </span>
+              </button>
+            </div>
             <input ref={photoInputRef} type="file" accept="image/*" onChange={handlePhotoSelected} className="hidden" />
             <div className="flex-1 min-w-0 flex flex-col gap-0.5">
               <div className="text-[15px] font-semibold">{user.displayName || '사용자'}</div>
