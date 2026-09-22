@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { User } from 'firebase/auth'
 import type { SyncStatus } from '../hooks/useData'
+import type { VerifyResult } from '../hooks/useAuth'
 import { useAppUI } from '../contexts/AppUIContext'
 import { isStorageAtRiskBrowser } from '../lib/browser'
 import PageHeader from './layout/PageHeader'
@@ -31,7 +32,7 @@ interface Props {
   displayName: string
   onChangeName: (displayName: string) => Promise<void>
   onSendVerification: () => Promise<void>
-  onRefreshUser: () => Promise<boolean>
+  onRefreshUser: () => Promise<VerifyResult>
   onChangeEmail: (email: string) => Promise<void>
   syncStatus: SyncStatus
   incomingCount: number
@@ -90,8 +91,12 @@ export default function MoreTab({
   }
 
   const handleCheckVerified = async () => {
-    const verified = await onRefreshUser()
-    showToast(verified ? '이메일 인증이 확인됐어요' : '아직 인증 전이에요', verified ? 'success' : 'info')
+    const result = await onRefreshUser()
+    if (result === 'verified') showToast('이메일 인증이 확인됐어요', 'success')
+    else if (result === 'signed-out')
+      showToast('로그인이 만료됐어요. 이메일을 바꿨다면 새 주소로 다시 로그인해주세요', 'info')
+    else if (result === 'error') showToast('확인하지 못했어요. 잠시 후 다시 시도해주세요', 'error')
+    else showToast('아직 인증 전이에요', 'info')
   }
 
   const saveName = async (next: string) => {

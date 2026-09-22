@@ -40,6 +40,9 @@ import WelcomeModal from './components/modals/WelcomeModal'
 const queryClient = new QueryClient()
 // 이 브라우저에서 기능 소개를 한 번 본 뒤 남겨두는 표시.
 const WELCOME_SEEN_KEY = 'reading-notes-welcome-seen-v1'
+// 탈퇴 직후에는 새로고침으로 앱을 다시 띄우기 때문에, 토스트를 그 자리에서 띄우면 같이 사라진다.
+// 여기에 표시를 남겨뒀다가 다시 뜬 뒤에 띄운다. 탭을 닫으면 없어지는 sessionStorage면 충분하다.
+const DELETED_KEY = 'reading-notes-account-deleted'
 // 로그인 권유 모달을 마지막으로 띄웠을 때의 기록 개수. 없으면 아직 한 번도 안 띄운 것.
 const PROMOTE_SHOWN_AT_KEY = 'reading-notes-promote-shown-at-v1'
 // 예전 버전에서 쓰던 표시("띄웠다" 여부만 저장). 마이그레이션 판단에만 읽는다.
@@ -115,6 +118,13 @@ function AppShell() {
     if (localStorage.getItem(WELCOME_SEEN_KEY)) return
     openWelcome()
   }, [loading, openWelcome])
+
+  // 탈퇴 후 새로 뜬 화면에서 결과를 알려준다. 한 번 띄우고 표시를 지운다.
+  useEffect(() => {
+    if (!sessionStorage.getItem(DELETED_KEY)) return
+    sessionStorage.removeItem(DELETED_KEY)
+    showToast('회원 탈퇴가 완료됐어요', 'success')
+  }, [showToast])
 
   const closeWelcome = useCallback(() => {
     localStorage.setItem(WELCOME_SEEN_KEY, '1')
@@ -270,6 +280,7 @@ function AppShell() {
       throw err
     }
     clearLocalData()
+    sessionStorage.setItem(DELETED_KEY, '1')
     location.replace('/')
   }, [showToast])
   const handleSignOut = useCallback(async () => {

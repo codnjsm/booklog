@@ -5,6 +5,7 @@ import type { UserProfile, FriendRequest } from '../../types'
 import { useAppUI } from '../../contexts/AppUIContext'
 import { authErrorMessage } from '../../firebase'
 import { IconSearch, IconLock } from '../layout/icons'
+import type { VerifyResult } from '../../hooks/useAuth'
 import Modal from './Modal'
 
 const MODAL_PANEL =
@@ -36,7 +37,7 @@ interface Props {
   onSearch: (email: string) => Promise<UserProfile[]>
   onSendRequest: (toUid: string) => void
   onSendVerification: () => Promise<void>
-  onRefreshUser: () => Promise<boolean>
+  onRefreshUser: () => Promise<VerifyResult>
   onClose: () => void
 }
 
@@ -122,9 +123,13 @@ export default function AddFriendModal({
 
   const handleCheckVerified = async () => {
     setVerifyChecking(true)
-    const verified = await onRefreshUser()
+    const result = await onRefreshUser()
     setVerifyChecking(false)
-    if (!verified) showToast('아직 인증되지 않았어요. 메일함을 확인해주세요', 'info')
+    if (result === 'verified') return
+    if (result === 'signed-out')
+      showToast('로그인이 만료됐어요. 이메일을 바꿨다면 새 주소로 다시 로그인해주세요', 'info')
+    else if (result === 'error') showToast('확인하지 못했어요. 잠시 후 다시 시도해주세요', 'error')
+    else showToast('아직 인증되지 않았어요. 메일함을 확인해주세요', 'info')
   }
 
   // 타인 이메일로 가입해 검색·추가에서 그 사람 행세를 할 수 있어서, 이 두 동작만 인증 뒤로 미룬다.
