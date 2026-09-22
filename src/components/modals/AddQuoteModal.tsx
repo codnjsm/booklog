@@ -278,6 +278,10 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
                       onChange={(e) => updateEntry(i, 'text', e.target.value)}
                       className={`${FORM_TEXTAREA} mb-0`}
                     />
+                    {/* 안내문을 색 버튼 위에 둔다. iOS는 드래그로 선택하면 선택 영역 근처에
+                        "오려두기 · 복사하기" 시스템 메뉴를 띄우는데(웹에서 못 막는다), 색 버튼이
+                        입력칸에 바짝 붙어 있으면 그 메뉴에 가려 눌리지 않는다. 한 줄만큼 내려둔다. */}
+                    <div className="text-xs sm:text-[13px] text-dim mt-1.5">칠할 부분을 드래그한 뒤 눌러주세요</div>
                     <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                       <span className="text-xs sm:text-[13px] text-dim">형광펜</span>
                       {/* 원형 아이콘은 자기 박스 정중앙이 곧 잉크 중심이지만, 한글 글자는 실제 획이
@@ -315,9 +319,7 @@ export default function AddQuoteModal({ books, quotes, bookId, editId, onClose, 
                             모두 지우기
                           </button>
                         </>
-                      ) : (
-                        <span className="text-xs sm:text-[13px] text-dim">칠할 부분을 드래그한 뒤 눌러주세요</span>
-                      )}
+                      ) : null}
                     </div>
                   </>
                 )}
