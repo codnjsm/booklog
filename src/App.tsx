@@ -40,6 +40,10 @@ import WelcomeModal from './components/modals/WelcomeModal'
 const queryClient = new QueryClient()
 // 이 브라우저에서 기능 소개를 한 번 본 뒤 남겨두는 표시.
 const WELCOME_SEEN_KEY = 'reading-notes-welcome-seen-v1'
+// 게스트가 이 브라우저에 처음 기록을 남긴 시각. 로그인을 권하는 문구의 강도를 이걸로 정한다.
+// 데이터를 지우는 용도가 아니다 — 브라우저가 안 지우는 걸 우리가 지울 이유는 없고,
+// 며칠째 로그인 없이 쌓고 있는지를 알려줘야 "지금 로그인할 이유"가 생긴다.
+const GUEST_SINCE_KEY = 'reading-notes-guest-since-v1'
 // 탈퇴 직후에는 새로고침으로 앱을 다시 띄우기 때문에, 토스트를 그 자리에서 띄우면 같이 사라진다.
 // 여기에 표시를 남겨뒀다가 다시 뜬 뒤에 띄운다. 탭을 닫으면 없어지는 sessionStorage면 충분하다.
 const DELETED_KEY = 'reading-notes-account-deleted'
@@ -138,6 +142,26 @@ function AppShell() {
   const promotePendingRef = useRef<number | null>(null)
   const prevCountRef = useRef(0)
   const recordCount = state.books.length + state.quotes.length + state.words.length
+
+  // 게스트로 기록을 남기기 시작한 시점을 기록해두고, 며칠째인지 센다.
+  // 로그인하면 더는 셀 이유가 없으므로 표시를 지운다(다시 로그아웃하면 그때부터 새로 센다).
+  const [guestDays, setGuestDays] = useState(0)
+  useEffect(() => {
+    if (loading) return
+    if (user) {
+      localStorage.removeItem(GUEST_SINCE_KEY)
+      setGuestDays(0)
+      return
+    }
+    if (recordCount === 0) return
+    const saved = localStorage.getItem(GUEST_SINCE_KEY)
+    if (!saved) {
+      localStorage.setItem(GUEST_SINCE_KEY, String(Date.now()))
+      setGuestDays(0)
+      return
+    }
+    setGuestDays(Math.floor((Date.now() - Number(saved)) / 86400000))
+  }, [user, loading, recordCount])
 
   useEffect(() => {
     if (loading) return
@@ -301,7 +325,14 @@ function AppShell() {
       onExport={handleExport}
     >
       {tab === 'home' && (
-        <HomeTab state={state} userName={myName.split(' ')[0] || cachedName} onFinishBook={handleFinishBook} />
+        <HomeTab
+          state={state}
+          userName={myName.split(' ')[0] || cachedName}
+          onFinishBook={handleFinishBook}
+          isGuest={!user}
+          guestDays={guestDays}
+          onSignIn={() => openLogin()}
+        />
       )}
       {tab === 'books' && <BooksTab books={state.books} quotes={state.quotes} />}
       {tab === 'collection' && (

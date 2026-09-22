@@ -9,15 +9,24 @@ import {
   recentActivity,
   relativeDay,
 } from '../lib/insights'
-import { IconCollection, IconRecords, IconRefresh } from './layout/icons'
+import { IconCollection, IconRecords, IconRefresh, IconChevronRight } from './layout/icons'
+import { isStorageAtRiskBrowser } from '../lib/browser'
 import HighlightedText from './HighlightedText'
 import HomeFab from './HomeFab'
 import Stars from './Stars'
+
+/** Safari·아이폰이 미접속 데이터를 지우기 시작하는 기준. App.tsx의 값과 같은 의미다. */
+const GUEST_WARN_DAYS = 7
 
 interface Props {
   state: AppState
   userName?: string
   onFinishBook: (id: string) => void
+  /** 로그인하지 않은 상태면 true. 이때만 저장 위험 배너를 띄운다. */
+  isGuest: boolean
+  /** 게스트로 기록을 남기기 시작한 뒤 지난 날수. 7일을 넘기면 문구를 강하게 바꾼다. */
+  guestDays: number
+  onSignIn: () => void
 }
 
 /**
@@ -85,7 +94,7 @@ function Cover({ book, className = '' }: { book: Book; className?: string }) {
   )
 }
 
-export default function HomeTab({ state, userName, onFinishBook }: Props) {
+export default function HomeTab({ state, userName, onFinishBook, isGuest, guestDays, onSignIn }: Props) {
   const { openBookDetail, openAddQuote, changeTab } = useAppUI()
   const { books, quotes, words, readingGoal } = state
 
@@ -103,6 +112,27 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
   const activity = recentActivity({ books, quotes, words }, 5)
 
   const greeting = pickGreeting(userName)
+
+  const recordCount = books.length + quotes.length + words.length
+  // 더보기 탭에만 있던 안내를 홈으로 끌어올린다 — 사이드바 배너는 900px 이상에서만 보여서,
+  // 모바일 게스트는 더보기에 직접 들어가지 않는 한 위험을 한 번도 못 봤다.
+  const showGuestWarning = isGuest && recordCount > 0
+  const guestUrgent = guestDays >= GUEST_WARN_DAYS
+  // Safari·아이폰은 7일 미접속이면 브라우저가 실제로 지운다. 그때만 "사라져요"라고 단정하고,
+  // 나머지 브라우저에는 "사라질 수 있어요"로 둔다 — 크롬에서 단정하면 거짓이 된다.
+  const storageAtRisk = isStorageAtRiskBrowser()
+  const guestTitle = !guestUrgent
+    ? '기록이 이 브라우저에만 저장돼 있어요'
+    : storageAtRisk
+      ? '로그인하지 않으면 기록이 사라져요'
+      : '로그인하지 않으면 기록이 사라질 수 있어요'
+  const guestBody = !guestUrgent
+    ? storageAtRisk
+      ? `기록 ${recordCount}개. 7일 넘게 안 들어오면 사라져요. 로그인하면 안전하게 보관돼요`
+      : `기록 ${recordCount}개. 7일 안에 로그인하면 안전하게 보관돼요`
+    : storageAtRisk
+      ? `저장한 지 ${guestDays}일째예요. 이 브라우저는 7일 넘게 접속하지 않으면 기록을 지워요`
+      : `저장한 지 ${guestDays}일째예요. 지금 로그인하면 안전하게 보관되고, 다른 기기에서도 볼 수 있어요`
 
   const [quoteIdx, setQuoteIdx] = useState(() => Math.floor(Math.random() * Math.max(quotes.length, 1)))
   const todayQuote: Quote | undefined = quotes.length ? quotes[quoteIdx % quotes.length] : undefined
@@ -130,6 +160,25 @@ export default function HomeTab({ state, userName, onFinishBook }: Props) {
           {thisYear}.{String(now.getMonth() + 1).padStart(2, '0')}.{String(now.getDate()).padStart(2, '0')}
         </div>
       </div>
+
+      {/* 7일이 지나도 데이터를 지우지는 않는다. 크롬은 브라우저가 안 지우는데 우리가 지울 이유가 없고,
+          늦게 돌아온 사람에게 빈 화면을 보여주면 로그인이 아니라 이탈로 이어진다.
+          대신 며칠째인지 세서 지났을 때 문구를 올린다. 모양은 더보기의 이메일 인증 배너와 같게. */}
+      {showGuestWarning && (
+        <button
+          type="button"
+          onClick={onSignIn}
+          className="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-dangersoft text-left border-none cursor-pointer w-full"
+        >
+          <span className="flex-1 flex flex-col gap-1 min-w-0">
+            <span className="text-[13px] sm:text-sm font-semibold text-ink">{guestTitle}</span>
+            <span className="text-xs sm:text-[13px] text-dim leading-relaxed">{guestBody}</span>
+          </span>
+          <span className="text-dim flex-shrink-0">
+            <IconChevronRight />
+          </span>
+        </button>
+      )}
 
       {/* 목표 + 보조 지표 */}
       <div className={`${CARD} px-5 py-5 flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-8`}>

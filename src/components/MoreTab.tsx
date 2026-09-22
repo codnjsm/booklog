@@ -246,7 +246,7 @@ export default function MoreTab({
             테두리는 border-border로 둔다 — danger 토큰은 CSS 변수라 border-danger/30 같은 투명도 수식어가 클래스
             자체를 생성하지 못하고, preflight 기본값(#e5e7eb)이 대신 먹어 다크모드에서 밝은 선이 그어진다. */}
         {needsVerify && (
-          <div className="flex flex-col gap-2.5 px-4 py-3.5 bg-dangersoft border border-border rounded-xl">
+          <div className="flex flex-col gap-2.5 px-4 py-3.5 bg-dangersoft rounded-xl">
             <div className="flex flex-col gap-1">
               {/* 주소를 고치는 건 인증과 다른 갈래라 아래 버튼 줄에서 빼고 제목 옆에 링크로 둔다.
                   -mr-1로 당겨 카드 안쪽 여백에 글자가 맞게 한다(버튼 패딩만큼 밀리는 걸 상쇄). */}
@@ -294,12 +294,13 @@ export default function MoreTab({
               <span className="text-[15px] font-semibold text-ink">로그인</span>
               {/* 기록이 쌓인 뒤로는 "동기화하면 좋다"가 아니라 "지금 잃을 수 있다"가 사실에 가깝다.
                   로그인할 때까지 계속 남아 있는 상태라, 모달로 한 번 알리는 대신 여기에 상시 표시한다.
-                  Safari·아이폰은 7일 미접속 시 브라우저가 알아서 지울 수 있어 위험을 구체적으로 알린다. */}
+                  Safari·아이폰은 7일 미접속 시 브라우저가 실제로 지우므로 그때만 단정해서 말하고,
+                  나머지는 "권한다"로 둔다 — 크롬에서 "사라져요"는 사실이 아니다. */}
               <span className="text-xs sm:text-[13px] text-dim">
                 {recordCount > 0
                   ? isStorageAtRiskBrowser()
-                    ? `기록 ${recordCount}개가 이 브라우저에만 저장돼 있어요. 7일 넘게 접속 안 하면 사라질 수 있어요`
-                    : `기록 ${recordCount}개가 이 브라우저에만 저장돼 있어요`
+                    ? `기록 ${recordCount}개가 이 브라우저에만 저장돼 있어요. 7일 넘게 접속 안 하면 사라져요`
+                    : `기록 ${recordCount}개가 이 브라우저에만 저장돼 있어요. 7일 안에 로그인하는 걸 권해요`
                   : '여러 기기에서 동기화하려면 로그인이 필요해요'}
               </span>
             </span>

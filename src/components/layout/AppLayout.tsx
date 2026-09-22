@@ -174,7 +174,7 @@ export default function AppLayout({
                     Safari·아이폰은 7일 미접속 시 브라우저가 알아서 지울 수 있어 위험을 구체적으로 알린다. */}
                 {recordCount > 0 && (
                   <span className="text-[10px] text-dim leading-tight">
-                    {isStorageAtRiskBrowser() ? '7일 넘게 안 들어오면 사라져요' : '이 브라우저에만 저장됨'}
+                    {isStorageAtRiskBrowser() ? '7일 넘게 안 들어오면 사라져요' : '7일 안에 로그인하세요'}
                   </span>
                 )}
               </span>
