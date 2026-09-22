@@ -239,7 +239,7 @@ function AppShell() {
       // 보낸 주소를 그대로 보여준다 — 오타를 냈다면 이 순간이 가장 알아채기 쉬운 시점이다.
       showToast(
         verificationSent
-          ? `${email.trim()} 으로 인증 메일을 보냈어요`
+          ? `${email.trim()}으로 인증 메일을 보냈어요`
           : '가입됐어요. 더보기에서 인증 메일을 보낼 수 있어요',
         verificationSent ? 'success' : 'info',
       )

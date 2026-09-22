@@ -56,12 +56,11 @@ export default function NameEditModal({ current, onCancel, onSave }: Props) {
             autoFocus
             maxLength={MAX_LEN}
             aria-label="표시 이름"
-            placeholder="친구에게 보이는 이름"
             onChange={(e) => setName(e.target.value)}
             className={FORM_INPUT}
           />
           <p className="text-xs sm:text-[13px] text-dim mt-2">
-            친구 목록과 피드에 이 이름으로 보입니다. {MAX_LEN}자까지 쓸 수 있어요.
+            친구 목록과 피드에 이 이름으로 보여요. {MAX_LEN}자까지 쓸 수 있어요.
           </p>
         </div>
 

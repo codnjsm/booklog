@@ -234,14 +234,27 @@ export default function MoreTab({
 
         {/* 문제가 있을 때만 나온다. 주소를 잘못 적었으면 메일이 안 오는데, 그걸 모른 채 기록만 쌓이면
             나중에 비밀번호를 잊었을 때 계정을 통째로 잃는다. 그래서 "인증 필요"를 알리는 데서 그치지 않고
-            주소를 고칠 길(이메일 변경)까지 같은 자리에 둔다. */}
+            주소를 고칠 길(이메일 변경)까지 같은 자리에 둔다.
+            테두리는 border-border로 둔다 — danger 토큰은 CSS 변수라 border-danger/30 같은 투명도 수식어가 클래스
+            자체를 생성하지 못하고, preflight 기본값(#e5e7eb)이 대신 먹어 다크모드에서 밝은 선이 그어진다. */}
         {needsVerify && (
-          <div className="flex flex-col gap-2.5 px-4 py-3.5 bg-dangersoft border border-danger/30 rounded-xl">
+          <div className="flex flex-col gap-2.5 px-4 py-3.5 bg-dangersoft border border-border rounded-xl">
             <div className="flex flex-col gap-1">
-              <span className="text-[13px] sm:text-sm font-semibold text-ink">이메일 인증이 필요해요</span>
+              {/* 주소를 고치는 건 인증과 다른 갈래라 아래 버튼 줄에서 빼고 제목 옆에 링크로 둔다.
+                  -mr-1로 당겨 카드 안쪽 여백에 글자가 맞게 한다(버튼 패딩만큼 밀리는 걸 상쇄). */}
+              <div className="flex items-start justify-between gap-2">
+                <span className="text-[13px] sm:text-sm font-semibold text-ink">이메일 인증이 필요해요</span>
+                <button
+                  type="button"
+                  onClick={() => setEmailChanging(true)}
+                  className="-mr-1 flex-shrink-0 px-1 py-0.5 text-[13px] text-accent bg-transparent border-none cursor-pointer hover:underline"
+                >
+                  이메일 변경
+                </button>
+              </div>
               <span className="text-xs sm:text-[13px] text-dim leading-relaxed">
-                {user?.email} 으로 보낸 메일을 확인해주세요. 인증 전에는 친구 기능을 쓸 수 없고, 주소가 잘못돼 있으면
-                나중에 비밀번호를 찾을 수 없어요.
+                <span className="font-semibold text-ink">{user?.email}</span>으로 보낸 메일을 확인해주세요. 인증 전에는
+                친구 기능을 쓸 수 없고, 주소가 잘못돼 있으면 나중에 비밀번호를 찾을 수 없어요.
               </span>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -256,16 +269,9 @@ export default function MoreTab({
               <button
                 type="button"
                 onClick={handleCheckVerified}
-                className="px-3 py-1.5 rounded-lg text-[13px] bg-surface text-ink border border-border cursor-pointer hover:bg-surface2"
+                className="px-3 py-1.5 rounded-lg text-[13px] bg-accentfill text-white border-none cursor-pointer hover:bg-accentfillhover"
               >
                 인증했어요
-              </button>
-              <button
-                type="button"
-                onClick={() => setEmailChanging(true)}
-                className="px-3 py-1.5 rounded-lg text-[13px] bg-transparent text-dim border border-border cursor-pointer hover:text-ink"
-              >
-                이메일 변경
               </button>
             </div>
           </div>

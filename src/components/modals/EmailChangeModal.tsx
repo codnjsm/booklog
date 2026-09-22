@@ -65,12 +65,11 @@ export default function EmailChangeModal({ current, onClose, onChangeEmail }: Pr
           {sentTo ? (
             <>
               <p className="text-[13px] sm:text-sm text-ink leading-relaxed">
-                <span className="font-semibold">{sentTo}</span> 으로 확인 메일을 보냈어요.
+                <span className="font-semibold">{sentTo}</span>으로 확인 메일을 보냈어요.
               </p>
               <p className="text-xs sm:text-[13px] text-dim mt-2.5 leading-relaxed">
-                메일의 링크를 눌러야 이메일이 바뀝니다.
-                <br />
-                그때까지는 기존 이메일로 로그인하시면 되고, 기록은 그대로 남아 있어요.
+                메일의 링크를 눌러야 이메일이 바뀌어요. 그때까지는 기존 이메일로 로그인하시면 되고, 기록은 그대로 남아
+                있어요.
               </p>
             </>
           ) : (
@@ -85,9 +84,8 @@ export default function EmailChangeModal({ current, onClose, onChangeEmail }: Pr
                 className={FORM_INPUT}
               />
               <p className="text-xs sm:text-[13px] text-dim mt-2.5 leading-relaxed">
-                새 주소로 확인 메일을 보냅니다. 링크를 눌러야 실제로 바뀌므로,
-                <br />
-                주소를 잘못 적어도 기존 계정과 기록은 그대로입니다.
+                새 주소로 확인 메일을 보내요. 링크를 눌러야 실제로 바뀌니까, 주소를 잘못 적어도 기존 계정과 기록은
+                그대로예요.
               </p>
             </>
           )}

@@ -58,14 +58,19 @@ export default function DeleteAccountModal({ recordCount, onCancel, onConfirm }:
           <p className="text-[13px] sm:text-sm text-ink leading-relaxed">
             탈퇴하면 아래가 <span className="font-semibold text-danger">모두 영구히 삭제</span>되고 되돌릴 수 없어요.
           </p>
+          {/* 기록이 하나도 없으면 "0개를 지운다"는 줄과 내보내기 안내가 둘 다 헛돈다.
+              지울 게 있을 때만 보여준다. */}
           <ul className="mt-2.5 flex flex-col gap-1 text-xs sm:text-[13px] text-dim">
-            <li>· 기록한 책·문장·단어 {recordCount}개</li>
+            {recordCount > 0 && <li>· 기록한 책·문장·단어 {recordCount}개</li>}
             <li>· 친구 관계와 친구에게 공유한 게시물</li>
             <li>· 프로필과 계정</li>
           </ul>
-          <p className="text-xs sm:text-[13px] text-dim mt-3 leading-relaxed">
-            남기고 싶은 기록이 있다면 취소하고 <span className="text-ink">더보기 → 기록 내보내기</span>를 먼저 해주세요.
-          </p>
+          {recordCount > 0 && (
+            <p className="text-xs sm:text-[13px] text-dim mt-3 leading-relaxed">
+              남기고 싶은 기록이 있다면 취소하고 <span className="text-ink">더보기 → 기록 내보내기</span>를 먼저
+              해주세요.
+            </p>
+          )}
 
           <div className="mt-4">
             <p className="text-xs sm:text-[13px] text-dim mb-2">
