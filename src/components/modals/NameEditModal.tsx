@@ -8,7 +8,6 @@ const MODAL_HEADER =
 const MODAL_CLOSE = 'bg-transparent border-none text-dim text-lg cursor-pointer leading-none px-2 py-1 hover:text-ink'
 const MODAL_BODY = 'px-[18px] py-3.5 sm:px-6 sm:py-[22px]'
 const MODAL_ACTIONS = 'flex gap-2 justify-end px-[18px] py-3 sm:px-6 sm:py-4 border-t border-border'
-const FORM_LABEL = 'flex text-xs sm:text-[13px] mb-2 uppercase tracking-[.05em] text-dim'
 const FORM_INPUT =
   'w-full bg-bg border border-border text-ink px-3 py-2 rounded-[7px] text-[13px] sm:text-[14px] font-sans placeholder:text-dim placeholder:opacity-50'
 const BTN =
@@ -48,15 +47,15 @@ export default function NameEditModal({ current, onCancel, onSave }: Props) {
         </div>
 
         <div className={MODAL_BODY}>
-          <label className={FORM_LABEL} htmlFor="name-edit-input">
-            표시 이름
-          </label>
+          {/* 모달 제목이 "이름 수정"이라 라벨을 따로 쓰면 같은 말이 두 번이다.
+              화면에서는 빼되 스크린리더가 이 칸을 부를 이름은 aria-label로 남긴다. */}
           <input
             id="name-edit-input"
             type="text"
             value={name}
             autoFocus
             maxLength={MAX_LEN}
+            aria-label="표시 이름"
             placeholder="친구에게 보이는 이름"
             onChange={(e) => setName(e.target.value)}
             className={FORM_INPUT}
