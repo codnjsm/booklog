@@ -67,6 +67,15 @@ export const IconExport = ({ size = 16 }: Props) => (
   </svg>
 )
 
+export const IconTrash = ({ size = 16 }: Props) => (
+  <svg {...base(size)}>
+    <path d="M4 7h16" />
+    <path d="M9.5 7V5.2A1.2 1.2 0 0 1 10.7 4h2.6a1.2 1.2 0 0 1 1.2 1.2V7" />
+    <path d="M6.5 7l.8 12.1A1.9 1.9 0 0 0 9.2 21h5.6a1.9 1.9 0 0 0 1.9-1.9L17.5 7" />
+    <path d="M10.5 11v6M13.5 11v6" />
+  </svg>
+)
+
 export const IconPencil = ({ size = 16 }: Props) => (
   <svg {...base(size)}>
     <path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17z" />

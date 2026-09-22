@@ -102,6 +102,13 @@ function mergeStates(cloud: AppState, local: AppState): AppState {
   }
 }
 
+/** 회원 탈퇴처럼 이 브라우저의 기록을 완전히 지울 때 쓴다. 호출한 쪽에서 새로고침해야 메모리 상태가 다시 저장되지 않는다. */
+export function clearLocalData() {
+  localStorage.removeItem(STORAGE_KEY)
+  localStorage.removeItem(OWNER_KEY)
+  localStorage.removeItem(OWNER_MIGRATED_KEY)
+}
+
 export type SyncStatus = 'synced' | 'saving' | 'error'
 
 export function useData(user: User | null) {

@@ -10,6 +10,7 @@ import {
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
   sendEmailVerification,
+  verifyBeforeUpdateEmail,
   updateProfile,
   type User,
 } from 'firebase/auth'
@@ -64,11 +65,36 @@ export const signIn = () => signInWithPopup(auth, provider).then((r) => r.user)
 export const signOutUser = () => signOut(auth)
 export const onAuthChange = (cb: (user: User | null) => void) => onAuthStateChanged(auth, cb)
 
-/** 이메일/비밀번호로 새 계정을 만든다. 표시 이름은 가입 시점에 같이 받지 않는 값이라 직접 설정해준다. */
-export const signUpWithEmail = async (name: string, email: string, password: string): Promise<User> => {
+/**
+ * 이메일/비밀번호로 새 계정을 만든다. 표시 이름은 가입 시점에 같이 받지 않는 값이라 직접 설정해준다.
+ * 가입하자마자 인증 메일을 보낸다 — 주소를 잘못 적었으면 메일이 안 오는 걸로 바로 알아챌 수 있고,
+ * 기록이 쌓이기 전에 고칠 기회가 생긴다. 발송이 실패해도 가입 자체는 성공으로 두되,
+ * 화면에서 "보냈다"고 잘못 안내하지 않도록 성공 여부를 같이 돌려준다.
+ */
+export const signUpWithEmail = async (
+  name: string,
+  email: string,
+  password: string,
+): Promise<{ user: User; verificationSent: boolean }> => {
   const cred = await createUserWithEmailAndPassword(auth, email, password)
   await updateProfile(cred.user, { displayName: name })
-  return cred.user
+  let verificationSent = true
+  try {
+    await sendEmailVerification(cred.user)
+  } catch {
+    verificationSent = false
+  }
+  return { user: cred.user, verificationSent }
+}
+
+/**
+ * 계정의 이메일을 바꾼다. 새 주소로 인증 메일이 먼저 가고, 링크를 눌러야 실제로 교체된다.
+ * 덕분에 새 주소가 진짜인지 자동으로 검증되고, 또 오타를 내면 교체가 일어나지 않아 잃는 게 없다.
+ * (이메일 열거 방지가 켜져 있으면 예전 updateEmail은 막히고 이 방식만 쓸 수 있다.)
+ */
+export const changeEmail = (newEmail: string): Promise<void> => {
+  if (!auth.currentUser) return Promise.reject(new Error('로그인이 필요합니다'))
+  return verifyBeforeUpdateEmail(auth.currentUser, newEmail.trim())
 }
 
 export const signInWithEmail = (email: string, password: string): Promise<User> =>
@@ -77,8 +103,8 @@ export const signInWithEmail = (email: string, password: string): Promise<User> 
 export const sendPasswordReset = (email: string): Promise<void> => sendPasswordResetEmail(auth, email)
 
 /**
- * 친구 기능(검색·추가)을 쓰기 전에 이메일 인증을 받는다. 가입 직후 자동으로 보내지 않고
- * 사용자가 직접 요청할 때만 보낸다 — 예상 못 한 메일은 발신 도메인이 낯설어 피싱으로 오인되기 쉽다.
+ * 인증 메일을 다시 보낸다. 가입 직후에는 signUpWithEmail이 한 번 자동으로 보내므로,
+ * 이 함수는 "메일이 안 왔어요"라고 다시 요청하는 경우와 친구 기능 진입 시 안내용으로 쓴다.
  */
 export const sendVerificationEmail = (): Promise<void> => {
   if (!auth.currentUser) return Promise.reject(new Error('로그인이 필요합니다'))
@@ -102,6 +128,7 @@ const AUTH_ERROR_MESSAGES: Record<string, { msg: string; type: 'info' | 'error' 
   'auth/wrong-password': { msg: '비밀번호가 맞지 않아요', type: 'error' },
   'auth/invalid-credential': { msg: '이메일 또는 비밀번호가 맞지 않아요', type: 'error' },
   'auth/user-not-found': { msg: '가입되지 않은 이메일이에요', type: 'error' },
+  'auth/requires-recent-login': { msg: '보안을 위해 다시 로그인한 뒤 시도해주세요', type: 'error' },
   'auth/too-many-requests': { msg: '너무 많이 시도했어요. 잠시 후 다시 시도해주세요', type: 'error' },
   'auth/account-exists-with-different-credential': { msg: '이미 다른 방식으로 가입된 이메일이에요', type: 'error' },
   'auth/network-request-failed': { msg: '네트워크 연결을 확인해주세요', type: 'error' },
@@ -160,6 +187,15 @@ export const createPost = async (data: {
 export const deletePost = async (postId: string): Promise<void> => {
   const call = httpsCallable<{ postId: string }, { ok: true }>(functions, 'deletePost')
   await call({ postId })
+}
+
+/**
+ * 회원 탈퇴. 서버가 게시물·친구관계·기록·프로필·Auth 계정을 한 번에 지운다.
+ * 되돌릴 수 없다. 호출 전에 화면에서 반드시 확인을 받아야 한다.
+ */
+export const deleteAccount = async (): Promise<void> => {
+  const call = httpsCallable<void, { ok: true }>(functions, 'deleteAccount')
+  await call()
 }
 
 /** 책 페이지 사진에서 텍스트를 인식한다(OCR). base64Image는 데이터 URI 접두어 없는 순수 base64. */

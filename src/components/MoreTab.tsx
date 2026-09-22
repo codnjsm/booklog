@@ -6,6 +6,8 @@ import { isStorageAtRiskBrowser } from '../lib/browser'
 import PageHeader from './layout/PageHeader'
 import AvatarCropModal from './modals/AvatarCropModal'
 import NameEditModal from './modals/NameEditModal'
+import EmailChangeModal from './modals/EmailChangeModal'
+import DeleteAccountModal from './modals/DeleteAccountModal'
 import {
   IconFriends,
   IconExport,
@@ -16,6 +18,7 @@ import {
   IconBooks,
   IconCamera,
   IconPencil,
+  IconTrash,
 } from './layout/icons'
 
 interface Props {
@@ -27,6 +30,9 @@ interface Props {
   /** 내 표시 이름(users 문서 기준). */
   displayName: string
   onChangeName: (displayName: string) => Promise<void>
+  onSendVerification: () => Promise<void>
+  onRefreshUser: () => Promise<boolean>
+  onChangeEmail: (email: string) => Promise<void>
   syncStatus: SyncStatus
   incomingCount: number
   /** 게스트가 이 브라우저에만 쌓아둔 기록 수(책+문장+단어). 로그인을 권할 때 위험을 구체적으로 보여준다. */
@@ -34,6 +40,8 @@ interface Props {
   onExport: () => void
   onSignOut: () => void
   onSignIn: () => void
+  /** 계정과 모든 기록을 영구 삭제한다. 실패하면 던져서 모달이 닫히지 않게 한다. */
+  onDeleteAccount: () => Promise<void>
 }
 
 const ROW =
@@ -45,12 +53,16 @@ export default function MoreTab({
   onChangePhoto,
   displayName,
   onChangeName,
+  onSendVerification,
+  onRefreshUser,
+  onChangeEmail,
   syncStatus,
   incomingCount,
   recordCount,
   onExport,
   onSignOut,
   onSignIn,
+  onDeleteAccount,
 }: Props) {
   const { changeTab, theme, toggleTheme, openWelcome, showToast } = useAppUI()
   const photoInputRef = useRef<HTMLInputElement>(null)
@@ -58,6 +70,29 @@ export default function MoreTab({
   const [menuOpen, setMenuOpen] = useState(false)
   const [cropFile, setCropFile] = useState<File | null>(null)
   const [nameEditing, setNameEditing] = useState(false)
+  const [emailChanging, setEmailChanging] = useState(false)
+  const [verifySending, setVerifySending] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  // 이메일 가입자만 해당한다. Google 로그인은 항상 인증된 상태로 들어온다.
+  const needsVerify = !!user && !user.emailVerified
+
+  const handleResendVerification = async () => {
+    setVerifySending(true)
+    try {
+      await onSendVerification()
+      showToast('인증 메일을 다시 보냈어요', 'success')
+    } catch {
+      showToast('메일을 보내지 못했어요', 'error')
+    } finally {
+      setVerifySending(false)
+    }
+  }
+
+  const handleCheckVerified = async () => {
+    const verified = await onRefreshUser()
+    showToast(verified ? '이메일 인증이 확인됐어요' : '아직 인증 전이에요', verified ? 'success' : 'info')
+  }
 
   const saveName = async (next: string) => {
     setNameEditing(false)
@@ -195,7 +230,48 @@ export default function MoreTab({
               <span className="font-mono text-[10px] text-dim">{syncLabel}</span>
             </div>
           </div>
-        ) : (
+        ) : null}
+
+        {/* 문제가 있을 때만 나온다. 주소를 잘못 적었으면 메일이 안 오는데, 그걸 모른 채 기록만 쌓이면
+            나중에 비밀번호를 잊었을 때 계정을 통째로 잃는다. 그래서 "인증 필요"를 알리는 데서 그치지 않고
+            주소를 고칠 길(이메일 변경)까지 같은 자리에 둔다. */}
+        {needsVerify && (
+          <div className="flex flex-col gap-2.5 px-4 py-3.5 bg-dangersoft border border-danger/30 rounded-xl">
+            <div className="flex flex-col gap-1">
+              <span className="text-[13px] sm:text-sm font-semibold text-ink">이메일 인증이 필요해요</span>
+              <span className="text-xs sm:text-[13px] text-dim leading-relaxed">
+                {user?.email} 으로 보낸 메일을 확인해주세요. 인증 전에는 친구 기능을 쓸 수 없고, 주소가 잘못돼 있으면
+                나중에 비밀번호를 찾을 수 없어요.
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={handleResendVerification}
+                disabled={verifySending}
+                className="px-3 py-1.5 rounded-lg text-[13px] bg-surface text-ink border border-border cursor-pointer hover:bg-surface2 disabled:opacity-50"
+              >
+                {verifySending ? '보내는 중…' : '메일 다시 보내기'}
+              </button>
+              <button
+                type="button"
+                onClick={handleCheckVerified}
+                className="px-3 py-1.5 rounded-lg text-[13px] bg-surface text-ink border border-border cursor-pointer hover:bg-surface2"
+              >
+                인증했어요
+              </button>
+              <button
+                type="button"
+                onClick={() => setEmailChanging(true)}
+                className="px-3 py-1.5 rounded-lg text-[13px] bg-transparent text-dim border border-border cursor-pointer hover:text-ink"
+              >
+                이메일 변경
+              </button>
+            </div>
+          </div>
+        )}
+
+        {!user && (
           <button className={ROW} onClick={onSignIn}>
             <span className="w-11 h-11 rounded-full bg-surface2 text-dim flex items-center justify-center flex-shrink-0">
               <IconFriends size={20} />
@@ -282,6 +358,17 @@ export default function MoreTab({
               <span className="text-sm text-ink">로그아웃</span>
             </button>
           )}
+
+          {/* 되돌릴 수 없는 동작이라 로그아웃과 같은 생김새로 두지 않는다.
+              글자를 danger로 두고, 실제 삭제는 확인 문구를 입력해야 열리는 모달에서 받는다. */}
+          {user && (
+            <button className={ROW} onClick={() => setDeleting(true)}>
+              <span className="text-danger">
+                <IconTrash size={19} />
+              </span>
+              <span className="text-sm text-danger">회원 탈퇴</span>
+            </button>
+          )}
         </div>
 
         <div className="px-1 pt-1 flex flex-col gap-1">
@@ -306,6 +393,25 @@ export default function MoreTab({
       )}
 
       {nameEditing && <NameEditModal current={displayName} onCancel={() => setNameEditing(false)} onSave={saveName} />}
+
+      {emailChanging && (
+        <EmailChangeModal
+          current={user?.email ?? ''}
+          onClose={() => setEmailChanging(false)}
+          onChangeEmail={onChangeEmail}
+        />
+      )}
+
+      {deleting && (
+        <DeleteAccountModal
+          recordCount={recordCount}
+          onCancel={() => setDeleting(false)}
+          onConfirm={async () => {
+            await onDeleteAccount()
+            setDeleting(false)
+          }}
+        />
+      )}
     </div>
   )
 }

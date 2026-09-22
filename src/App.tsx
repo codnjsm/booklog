@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query'
 import { BrowserRouter } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
-import { useData } from './hooks/useData'
+import { useData, clearLocalData } from './hooks/useData'
 import { useFriends } from './hooks/useFriends'
 import {
   upsertUserProfile,
@@ -14,6 +14,8 @@ import {
   signInWithEmail,
   sendPasswordReset,
   sendVerificationEmail,
+  changeEmail,
+  deleteAccount,
 } from './firebase'
 import type { Post } from './types'
 import { AppUIProvider, useAppUI } from './contexts/AppUIContext'
@@ -232,10 +234,17 @@ function AppShell() {
   }, [signIn, showToast, changeTab])
   const handleEmailSignUp = useCallback(
     async (name: string, email: string, password: string) => {
-      await signUpWithEmail(name, email, password)
+      const { verificationSent } = await signUpWithEmail(name, email, password)
       changeTab('home')
+      // 보낸 주소를 그대로 보여준다 — 오타를 냈다면 이 순간이 가장 알아채기 쉬운 시점이다.
+      showToast(
+        verificationSent
+          ? `${email.trim()} 으로 인증 메일을 보냈어요`
+          : '가입됐어요. 더보기에서 인증 메일을 보낼 수 있어요',
+        verificationSent ? 'success' : 'info',
+      )
     },
-    [changeTab],
+    [changeTab, showToast],
   )
   const handleEmailSignIn = useCallback(
     async (email: string, password: string) => {
@@ -244,6 +253,19 @@ function AppShell() {
     },
     [changeTab],
   )
+  // 서버에서 계정과 데이터를 지운 뒤, 이 브라우저에 남은 캐시까지 지우고 새로고침한다.
+  // 새로고침하지 않으면 메모리에 남은 state가 디바운스 저장으로 로컬에 다시 써진다.
+  const handleDeleteAccount = useCallback(async () => {
+    try {
+      await deleteAccount()
+    } catch (err) {
+      const e = authErrorMessage(err)
+      if (e) showToast(e.msg, e.type)
+      throw err
+    }
+    clearLocalData()
+    location.replace('/')
+  }, [showToast])
   const handleSignOut = useCallback(async () => {
     if (!confirm('로그아웃할까요?\n이 계정의 데이터는 그대로 남아있어요.')) return
     await signOut()
@@ -309,6 +331,9 @@ function AppShell() {
           photoURL={myPhotoURL}
           displayName={myName}
           onChangeName={handleChangeName}
+          onSendVerification={sendVerificationEmail}
+          onRefreshUser={refreshUser}
+          onChangeEmail={changeEmail}
           onChangePhoto={handleChangePhoto}
           syncStatus={syncStatus}
           incomingCount={incoming.length}
@@ -316,6 +341,7 @@ function AppShell() {
           onExport={handleExport}
           onSignOut={handleSignOut}
           onSignIn={() => openLogin()}
+          onDeleteAccount={handleDeleteAccount}
         />
       )}
 

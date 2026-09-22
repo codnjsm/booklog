@@ -3,6 +3,7 @@ import { defineSecret } from 'firebase-functions/params'
 import { initializeApp } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
 import { getAppCheck } from 'firebase-admin/app-check'
+import { getAuth } from 'firebase-admin/auth'
 import { ImageAnnotatorClient } from '@google-cloud/vision'
 import type { Request, Response } from 'express'
 
@@ -380,3 +381,48 @@ export const ocrBookPage = onCall(
     }
   },
 )
+
+/**
+ * 회원 탈퇴. 이 사용자와 얽힌 것을 전부 지운다.
+ *
+ * 클라이언트에서 처리하지 않고 서버에 둔 이유: posts는 보안 규칙이 클라이언트 쓰기를 전면
+ * 차단하고 있어(스냅샷 위조 방지) 본인도 직접 지울 수 없다. 게시물만 남으면 탈퇴한 사람의
+ * 이름·사진이 친구 피드에 계속 보이므로, Admin 권한으로 한 번에 정리한다.
+ *
+ * 삭제 순서: 데이터 → Auth 계정. 반대로 하면 계정이 사라진 뒤 데이터 삭제가 실패했을 때
+ * 주인 없는 데이터가 남아 손댈 방법이 없어진다.
+ */
+export async function deleteAccountHandler(uid: string) {
+  const db = getDb()
+
+  const [posts, outgoing, incoming] = await Promise.all([
+    db.collection('posts').where('authorUid', '==', uid).get(),
+    db.collection('friendRequests').where('fromUid', '==', uid).get(),
+    db.collection('friendRequests').where('toUid', '==', uid).get(),
+  ])
+
+  const docs = [
+    ...posts.docs.map((d) => d.ref),
+    ...outgoing.docs.map((d) => d.ref),
+    ...incoming.docs.map((d) => d.ref),
+    db.collection('reading-notes').doc(uid),
+    db.collection('users').doc(uid),
+  ]
+
+  // 배치 한 번에 500개까지만 담을 수 있다. 게시물이 많은 사용자를 대비해 나눠 커밋한다.
+  for (let i = 0; i < docs.length; i += 400) {
+    const batch = db.batch()
+    docs.slice(i, i + 400).forEach((ref) => batch.delete(ref))
+    await batch.commit()
+  }
+
+  await getAuth().deleteUser(uid)
+  return { ok: true as const, deleted: { posts: posts.size, friendRequests: outgoing.size + incoming.size } }
+}
+
+export const deleteAccount = onCall({ region: 'asia-northeast3', enforceAppCheck: true }, async (req) => {
+  if (!req.auth) {
+    throw new HttpsError('unauthenticated', '로그인이 필요합니다')
+  }
+  return deleteAccountHandler(req.auth.uid)
+})
