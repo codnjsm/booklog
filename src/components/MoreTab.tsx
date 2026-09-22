@@ -65,7 +65,7 @@ export default function MoreTab({
   onSignIn,
   onDeleteAccount,
 }: Props) {
-  const { changeTab, theme, toggleTheme, openWelcome, showToast } = useAppUI()
+  const { changeTab, theme, toggleTheme, openWelcome, openLogin, showToast } = useAppUI()
   const photoInputRef = useRef<HTMLInputElement>(null)
   const [photoSaving, setPhotoSaving] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -93,9 +93,12 @@ export default function MoreTab({
   const handleCheckVerified = async () => {
     const result = await onRefreshUser()
     if (result === 'verified') showToast('이메일 인증이 확인됐어요', 'success')
-    else if (result === 'signed-out')
+    // 세션이 끝났으면 알리는 데서 그치지 않고 로그인 창까지 연다 — 방금 바꾼 주소를 다시
+    // 입력할 자리를 사용자가 직접 찾아가게 두지 않는다.
+    else if (result === 'signed-out') {
       showToast('로그인이 만료됐어요. 이메일을 바꿨다면 새 주소로 다시 로그인해주세요', 'info')
-    else if (result === 'error') showToast('확인하지 못했어요. 잠시 후 다시 시도해주세요', 'error')
+      openLogin()
+    } else if (result === 'error') showToast('확인하지 못했어요. 잠시 후 다시 시도해주세요', 'error')
     else showToast('아직 인증 전이에요', 'info')
   }
 

@@ -52,7 +52,7 @@ export default function AddFriendModal({
   onRefreshUser,
   onClose,
 }: Props) {
-  const { showToast } = useAppUI()
+  const { showToast, openLogin } = useAppUI()
   const [emailInput, setEmailInput] = useState('')
   // 입력할 때마다 서버를 부르지 않도록, 책 검색(AddBookModal)과 같은 방식으로 디바운스한다
   const [debouncedInput, setDebouncedInput] = useState('')
@@ -126,9 +126,11 @@ export default function AddFriendModal({
     const result = await onRefreshUser()
     setVerifyChecking(false)
     if (result === 'verified') return
-    if (result === 'signed-out')
+    // openLogin이 이 모달을 로그인 모달로 갈아끼운다 (모달은 한 번에 하나만 열린다).
+    if (result === 'signed-out') {
       showToast('로그인이 만료됐어요. 이메일을 바꿨다면 새 주소로 다시 로그인해주세요', 'info')
-    else if (result === 'error') showToast('확인하지 못했어요. 잠시 후 다시 시도해주세요', 'error')
+      openLogin()
+    } else if (result === 'error') showToast('확인하지 못했어요. 잠시 후 다시 시도해주세요', 'error')
     else showToast('아직 인증되지 않았어요. 메일함을 확인해주세요', 'info')
   }
 
