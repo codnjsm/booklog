@@ -5,6 +5,7 @@ import { useAppUI } from '../contexts/AppUIContext'
 import { isStorageAtRiskBrowser } from '../lib/browser'
 import PageHeader from './layout/PageHeader'
 import AvatarCropModal from './modals/AvatarCropModal'
+import NameEditModal from './modals/NameEditModal'
 import {
   IconFriends,
   IconExport,
@@ -14,6 +15,7 @@ import {
   IconChevronRight,
   IconBooks,
   IconCamera,
+  IconPencil,
 } from './layout/icons'
 
 interface Props {
@@ -22,6 +24,9 @@ interface Props {
   photoURL: string
   /** 빈 문자열을 넘기면 사진을 지운다. */
   onChangePhoto: (photoURL: string) => Promise<void>
+  /** 내 표시 이름(users 문서 기준). */
+  displayName: string
+  onChangeName: (displayName: string) => Promise<void>
   syncStatus: SyncStatus
   incomingCount: number
   /** 게스트가 이 브라우저에만 쌓아둔 기록 수(책+문장+단어). 로그인을 권할 때 위험을 구체적으로 보여준다. */
@@ -38,6 +43,8 @@ export default function MoreTab({
   user,
   photoURL,
   onChangePhoto,
+  displayName,
+  onChangeName,
   syncStatus,
   incomingCount,
   recordCount,
@@ -50,6 +57,17 @@ export default function MoreTab({
   const [photoSaving, setPhotoSaving] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [cropFile, setCropFile] = useState<File | null>(null)
+  const [nameEditing, setNameEditing] = useState(false)
+
+  const saveName = async (next: string) => {
+    setNameEditing(false)
+    try {
+      await onChangeName(next)
+      showToast('이름을 바꿨어요', 'success')
+    } catch {
+      showToast('이름을 저장하지 못했어요', 'error')
+    }
+  }
 
   // 모달과 같은 규칙 — 열려 있는 동안 Escape로 닫힌다.
   useEffect(() => {
@@ -143,18 +161,33 @@ export default function MoreTab({
                   />
                 ) : (
                   <span className="w-11 h-11 rounded-full bg-accentfill text-white flex items-center justify-center text-[17px] font-semibold">
-                    {(user.displayName || user.email || '?')[0].toUpperCase()}
+                    {(displayName || user.email || '?')[0].toUpperCase()}
                   </span>
                 )}
-                {/* 바꾸려는 대상(아바타) 위에 입구를 둔다. 테두리는 배경과 같은 색이라 사진에서 뱃지를 떼어내 보이게 한다. */}
-                <span className="absolute -right-0.5 -bottom-0.5 w-[19px] h-[19px] rounded-full bg-accentfill text-white flex items-center justify-center border-2 border-surface">
-                  <IconCamera size={10} />
+                {/* 바꾸려는 대상(아바타) 위에 입구를 둔다. accent는 "앱이 말하는 것"(완료·진행률·주요 버튼)에
+                    쓰는 색이라 프로필 수정 같은 보조 동작에는 쓰지 않는다. 이름 옆 연필과 같은 칩 모양으로 맞춘다.
+                    옅은 그림자는 사진 위에서 칩이 묻히지 않게 하는 용도. */}
+                <span className="absolute -right-0.5 -bottom-0.5 w-[22px] h-[22px] rounded-full bg-surface border border-border text-dim flex items-center justify-center [box-shadow:0_1px_3px_rgba(0,0,0,0.12)]">
+                  <IconCamera size={12} />
                 </span>
               </button>
             </div>
             <input ref={photoInputRef} type="file" accept="image/*" onChange={handlePhotoSelected} className="hidden" />
             <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-              <div className="text-[15px] font-semibold">{user.displayName || '사용자'}</div>
+              <div className="flex items-center gap-1">
+                <span className="text-[15px] font-semibold truncate">{displayName || '사용자'}</span>
+                {/* 보이는 칩은 22px로 카메라와 같게 맞추고, 버튼 자체는 24px로 둬서 터치 영역 기준을 지킨다. */}
+                <button
+                  type="button"
+                  onClick={() => setNameEditing(true)}
+                  aria-label="이름 수정"
+                  className="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-transparent border-none p-0 text-dim cursor-pointer hover:text-ink"
+                >
+                  <span className="w-[22px] h-[22px] rounded-full bg-surface border border-border flex items-center justify-center">
+                    <IconPencil size={12} />
+                  </span>
+                </button>
+              </div>
               <div className="text-xs sm:text-[13px] text-dim truncate">{user.email}</div>
             </div>
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-surface2 flex-shrink-0">
@@ -271,6 +304,8 @@ export default function MoreTab({
           }}
         />
       )}
+
+      {nameEditing && <NameEditModal current={displayName} onCancel={() => setNameEditing(false)} onSave={saveName} />}
     </div>
   )
 }

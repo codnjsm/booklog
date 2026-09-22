@@ -186,6 +186,15 @@ export const updateUserPhoto = async (uid: string, photoURL: string): Promise<vo
   await setDoc(doc(db, 'users', uid), { photoURL }, { merge: true })
 }
 
+/**
+ * 표시 이름만 바꾼다. 사진과 같은 이유로 Auth가 아니라 이 문서를 기준으로 삼는다 —
+ * Google 계정은 로그인할 때마다 Auth 프로필이 Google 값으로 덮일 수 있어서,
+ * 사용자가 직접 정한 이름은 우리 문서에 두는 쪽이 확실하다.
+ */
+export const updateUserName = async (uid: string, displayName: string): Promise<void> => {
+  await setDoc(doc(db, 'users', uid), { displayName }, { merge: true })
+}
+
 export const getUserProfile = async (uid: string): Promise<UserProfile | null> => {
   const snap = await getDoc(doc(db, 'users', uid))
   return snap.exists() ? { uid: snap.id, ...(snap.data() as Omit<UserProfile, 'uid'>) } : null

@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import type { User } from 'firebase/auth'
 import Modal from './Modal'
 import type { Book, Quote, Post } from '../../types'
 import { friendlyErrorMessage, type CreatedPost } from '../../firebase'
@@ -40,9 +39,10 @@ type Kind = 'quote' | 'book'
 type Selected = { kind: Kind; refId: string }
 
 interface Props {
-  user: User | null
   /** 내 프로필 사진(users 문서 기준). 게시물 작성자 사진으로 함께 저장한다. */
   photoURL: string
+  /** 내 표시 이름(users 문서 기준). 게시물 작성자 이름으로 함께 저장한다. */
+  displayName: string
   books: Book[]
   quotes: Quote[]
   onClose: () => void
@@ -50,7 +50,15 @@ interface Props {
   onPublished: (post: Post) => void
 }
 
-export default function PublishPostModal({ user, photoURL, books, quotes, onClose, onPublish, onPublished }: Props) {
+export default function PublishPostModal({
+  photoURL,
+  displayName,
+  books,
+  quotes,
+  onClose,
+  onPublish,
+  onPublished,
+}: Props) {
   const { showToast } = useAppUI()
   const [kindFilter, setKindFilter] = useState<Kind>('quote')
   const [picked, setPicked] = useState<Selected | null>(null)
@@ -75,7 +83,7 @@ export default function PublishPostModal({ user, photoURL, books, quotes, onClos
       // 서버가 저장한 내용을 그대로 받았으니, 피드를 다시 불러오지 않고 이 결과로 화면을 바로 갱신한다.
       onPublished({
         ...created,
-        authorDisplayName: user?.displayName ?? '',
+        authorDisplayName: displayName,
         authorPhotoURL: photoURL,
       })
       onClose()

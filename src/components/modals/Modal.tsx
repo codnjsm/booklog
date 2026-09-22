@@ -10,6 +10,16 @@ interface Props {
 export default function Modal({ onClose, children, labelledBy }: Props) {
   const boxRef = useRef<HTMLDivElement>(null)
 
+  // Escape로 닫는다. AppUIContext에도 같은 처리가 있지만 그건 전역 모달 상태만 닫으므로,
+  // 컴포넌트가 자체 상태로 여는 모달(사진 편집·이름 수정)은 여기서 처리해야 한다.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onClose])
+
   useEffect(() => {
     // body { overflow: hidden } 만으로는 iOS 사파리에서 터치 스크롤이 안 막힌다.
     // body를 position: fixed로 아예 문서 흐름에서 빼서 스크롤 자체를 불가능하게 만든다.

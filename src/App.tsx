@@ -8,6 +8,7 @@ import {
   upsertUserProfile,
   getUserProfile,
   updateUserPhoto,
+  updateUserName,
   authErrorMessage,
   signUpWithEmail,
   signInWithEmail,
@@ -151,29 +152,34 @@ function AppShell() {
     return () => clearTimeout(timer)
   }, [modal.type, user, loading, openLogin])
 
-  // 내 프로필 사진. Auth가 준 값이 아니라 users 문서가 기준이다 — 사용자가 직접 올린 사진이
-  // 앱을 다시 열 때마다 Google 사진으로 되돌아가면 안 되기 때문.
+  // 내 이름·사진. Auth가 준 값이 아니라 users 문서가 기준이다 — 직접 정한 값이 앱을 다시 열 때마다
+  // Google 값으로 되돌아가면 안 되기 때문. Auth 값은 문서가 비어 있을 때의 초기값으로만 쓴다.
   const [myPhotoURL, setMyPhotoURL] = useState('')
+  const [myName, setMyName] = useState('')
 
   useEffect(() => {
     if (!user) {
       setMyPhotoURL('')
+      setMyName('')
       return
     }
     let cancelled = false
     getUserProfile(user.uid)
       .then((saved) => {
         if (cancelled) return
-        // 저장해둔 사진이 있으면 그게 우선. 없으면 Google이 준 사진을 쓰고 문서에도 한 번 심어둔다.
         const photoURL = saved?.photoURL || user.photoURL || ''
+        const displayName = saved?.displayName || user.displayName || ''
         setMyPhotoURL(photoURL)
-        const next = { email: user.email ?? '', displayName: user.displayName ?? '', photoURL }
+        setMyName(displayName)
+        const next = { email: user.email ?? '', displayName, photoURL }
         const same =
-          saved && saved.email === next.email && saved.displayName === next.displayName && saved.photoURL === photoURL
+          saved && saved.email === next.email && saved.displayName === displayName && saved.photoURL === photoURL
         if (!same) upsertUserProfile(user.uid, next).catch(() => {})
       })
       .catch(() => {
-        if (!cancelled) setMyPhotoURL(user.photoURL ?? '')
+        if (cancelled) return
+        setMyPhotoURL(user.photoURL ?? '')
+        setMyName(user.displayName ?? '')
       })
     return () => {
       cancelled = true
@@ -185,6 +191,15 @@ function AppShell() {
       if (!user) return
       await updateUserPhoto(user.uid, photoURL)
       setMyPhotoURL(photoURL)
+    },
+    [user],
+  )
+
+  const handleChangeName = useCallback(
+    async (displayName: string) => {
+      if (!user) return
+      await updateUserName(user.uid, displayName)
+      setMyName(displayName)
     },
     [user],
   )
@@ -239,13 +254,16 @@ function AppShell() {
     <AppLayout
       user={user}
       photoURL={myPhotoURL}
+      displayName={myName}
       syncStatus={syncStatus}
       bookCount={state.books.length}
       collectionCount={state.quotes.length + state.words.length}
       incomingCount={incoming.length}
       onExport={handleExport}
     >
-      {tab === 'home' && <HomeTab state={state} userName={cachedName} onFinishBook={handleFinishBook} />}
+      {tab === 'home' && (
+        <HomeTab state={state} userName={myName.split(' ')[0] || cachedName} onFinishBook={handleFinishBook} />
+      )}
       {tab === 'books' && <BooksTab books={state.books} quotes={state.quotes} />}
       {tab === 'collection' && (
         <CollectionTab
@@ -289,6 +307,8 @@ function AppShell() {
         <MoreTab
           user={user}
           photoURL={myPhotoURL}
+          displayName={myName}
+          onChangeName={handleChangeName}
           onChangePhoto={handleChangePhoto}
           syncStatus={syncStatus}
           incomingCount={incoming.length}
@@ -396,8 +416,8 @@ function AppShell() {
       )}
       {modal.type === 'publishPost' && (
         <PublishPostModal
-          user={user}
           photoURL={myPhotoURL}
+          displayName={myName}
           books={state.books}
           quotes={state.quotes}
           onClose={closeModal}

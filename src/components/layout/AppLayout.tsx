@@ -19,6 +19,8 @@ interface Props {
   user: User | null
   /** 내 프로필 사진. Auth 값이 아니라 users 문서 기준이라 App에서 받아온다. */
   photoURL: string
+  /** 내 표시 이름(users 문서 기준). */
+  displayName: string
   syncStatus: SyncStatus
   bookCount: number
   collectionCount: number
@@ -45,6 +47,7 @@ export default function AppLayout({
   user,
   syncStatus,
   photoURL,
+  displayName,
   bookCount,
   collectionCount,
   incomingCount,
@@ -143,13 +146,11 @@ export default function AppLayout({
                 />
               ) : (
                 <span className="w-7 h-7 rounded-full bg-accentfill text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
-                  {(user.displayName || user.email || '?')[0].toUpperCase()}
+                  {(displayName || user.email || '?')[0].toUpperCase()}
                 </span>
               )}
               <span className="flex flex-col gap-px min-w-0">
-                <span className="text-xs sm:text-[13px] font-medium text-ink truncate">
-                  {user.displayName || '사용자'}
-                </span>
+                <span className="text-xs sm:text-[13px] font-medium text-ink truncate">{displayName || '사용자'}</span>
                 <span className="flex items-center gap-1.5">
                   <span className={`w-1.5 h-1.5 rounded-full ${syncColor}`} />
                   <span className="font-mono text-[9px] text-dim">{syncLabel}</span>
