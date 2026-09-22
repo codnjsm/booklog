@@ -50,7 +50,7 @@ const MODAL_BODY = 'px-5 py-4 sm:px-7 sm:py-6 text-[13px] sm:text-[14px]'
 const MODAL_ACTIONS = 'flex gap-2 justify-end px-[18px] py-3 sm:px-6 sm:py-4 border-t border-border'
 const FORM_GROUP = 'mb-5'
 const FORM_SECTION = 'pt-5 mt-5 border-t border-border first:pt-0 first:mt-0 first:border-t-0'
-const FORM_LABEL = 'flex text-xs sm:text-[13px] mb-2 uppercase tracking-[.05em] text-dim'
+const FORM_LABEL = 'flex text-xs sm:text-[13px] mb-2 text-dim'
 const FORM_INPUT =
   'w-full bg-bg border border-border text-ink px-3 py-2 rounded-[7px] text-[13px] sm:text-[14px] font-sans placeholder:text-dim placeholder:opacity-50'
 const FORM_TEXTAREA = `${FORM_INPUT} resize-none min-h-[90px] max-h-[500px] overflow-y-auto leading-[1.6]`

@@ -8,14 +8,16 @@ interface Props {
   onSetGoal: (n: number) => void
 }
 
-const FORM_INPUT =
-  'w-full bg-bg border border-border text-ink px-3 py-2 rounded-[7px] text-sm sm:text-[15px] font-sans placeholder:text-dim placeholder:opacity-50'
-const BTN =
-  'bg-ink text-bg border-none px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:opacity-90'
-const BTN_SECONDARY =
-  'bg-surface text-ink border border-border px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:bg-surface2'
 const BTN_SMALL_SECONDARY =
   'bg-surface text-ink border border-border px-3 py-1.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:bg-surface2'
+// border-none으로 두면 테두리가 있는 옆 버튼보다 2px 낮아진다. 폭만 투명하게 남겨 높이를 맞춘다.
+const BTN_SMALL_PRIMARY =
+  'bg-ink text-bg border border-transparent px-3 py-1.5 rounded-lg text-[13px] sm:text-sm cursor-pointer transition-all duration-150 font-sans hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed'
+// FORM_INPUT에는 w-full이 들어 있어서 폭을 덧붙여도 나중에 정의된 w-full이 이긴다(명시도 동률).
+// 그래서 폭을 직접 쓰는 이 입력은 FORM_INPUT을 재사용하지 않고 따로 둔다.
+// 높이는 옆 버튼과 같은 padding으로 맞춰, 보기 모드와 편집 모드의 행 높이가 같게 한다.
+const GOAL_INPUT =
+  'w-[64px] min-[420px]:w-[84px] bg-bg border border-border text-ink text-right px-2.5 py-1.5 rounded-lg text-[13px] sm:text-sm font-sans placeholder:text-dim placeholder:opacity-50'
 
 function StatCard({
   label,
@@ -33,7 +35,7 @@ function StatCard({
       <div className={`text-[22px] sm:text-[28px] font-bold font-sans ${highlight ? 'text-accent' : 'text-ink'}`}>
         {value}
       </div>
-      <div className="text-xs sm:text-[13px] text-dim uppercase tracking-[0.05em] mt-1">{label}</div>
+      <div className="text-xs sm:text-[13px] text-dim mt-2 sm:mt-3">{label}</div>
       {sub && <div className="text-xs sm:text-[13px] text-dim mt-0.5">{sub}</div>}
     </div>
   )
@@ -93,31 +95,40 @@ export default function StatsTab({ books, quotes, goal, onSetGoal }: Props) {
     <div>
       <div className="bg-surface border border-border rounded-[10px] p-4 sm:p-[22px] mb-4">
         {editing ? (
-          <div className="flex items-center gap-2">
-            <div className="text-base font-normal uppercase tracking-[0.05em] flex-shrink-0">
-              {thisYear}년 독서 목표
+          <div className="flex flex-wrap items-center justify-between gap-1.5 min-[420px]:gap-2">
+            {/* 420px 미만에서는 "독서"를 빼고 입력창도 좁힌다 — 안 줄이면 49px이 모자라 두 줄이 된다.
+                글자 크기는 그대로 둬서, 수정을 눌러도 라벨이 커졌다 작아지지 않게 한다. */}
+            <div className="text-base font-normal">
+              {thisYear}년 <span className="hidden min-[420px]:inline">독서 </span>목표
             </div>
-            <div className="flex-1" />
-            <input
-              type="number"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="목표 권수 입력"
-              min={1}
-              className={`${FORM_INPUT} w-[140px] h-[42px] box-border`}
-              onKeyDown={(e) => e.key === 'Enter' && handleSaveGoal()}
-            />
-            <button className={`${BTN} whitespace-nowrap h-[42px]`} onClick={handleSaveGoal}>
-              저장
-            </button>
-            <button className={`${BTN_SECONDARY} whitespace-nowrap h-[42px]`} onClick={() => setEditing(false)}>
-              취소
-            </button>
+            <div className="flex items-center gap-1.5 min-[420px]:gap-2">
+              <input
+                type="number"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                aria-label={`${thisYear}년 목표 권수`}
+                placeholder="권수"
+                min={1}
+                autoFocus
+                className={GOAL_INPUT}
+                onKeyDown={(e) => e.key === 'Enter' && handleSaveGoal()}
+              />
+              <button
+                className={`${BTN_SMALL_PRIMARY} whitespace-nowrap`}
+                disabled={!(parseInt(input) > 0)}
+                onClick={handleSaveGoal}
+              >
+                저장
+              </button>
+              <button className={`${BTN_SMALL_SECONDARY} whitespace-nowrap`} onClick={() => setEditing(false)}>
+                취소
+              </button>
+            </div>
           </div>
         ) : (
           <div>
             <div className={`flex justify-between items-center ${goal ? 'mb-3.5' : ''}`}>
-              <div className="text-base font-normal uppercase tracking-[0.05em]">{thisYear}년 독서 목표</div>
+              <div className="text-base font-normal">{thisYear}년 독서 목표</div>
               <button
                 className={BTN_SMALL_SECONDARY}
                 onClick={() => {
@@ -161,7 +172,7 @@ export default function StatsTab({ books, quotes, goal, onSetGoal }: Props) {
         <StatCard label="평균 별점" value={avgRating ? avgRating.toFixed(1) : '–'} sub={`${rated.length}권 평가`} />
       </div>
       <div className="bg-surface border border-border rounded-[10px] p-4 sm:p-[22px] mb-4">
-        <div className="text-base font-normal mb-4 uppercase tracking-[0.05em]">최근 12개월 완독 추이</div>
+        <div className="text-base font-normal mb-4">최근 12개월 완독 추이</div>
         <div className="flex gap-1.5 items-stretch h-[130px] sm:h-[170px]">
           {Object.entries(monthCounts).map(([key, v]) => {
             const isCurrent = key === `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
@@ -198,7 +209,7 @@ export default function StatsTab({ books, quotes, goal, onSetGoal }: Props) {
       </div>
       {topAuthors.length > 0 && (
         <div className="bg-surface border border-border rounded-[10px] p-4 sm:p-[22px] mb-4">
-          <div className="text-base font-normal mb-4 uppercase tracking-[0.05em]">가장 많이 읽은 저자</div>
+          <div className="text-base font-normal mb-4">가장 많이 읽은 저자</div>
           <div className="flex flex-col gap-2">
             {topAuthors.map(([a, c]) => (
               <div
@@ -214,7 +225,7 @@ export default function StatsTab({ books, quotes, goal, onSetGoal }: Props) {
       )}
       {topQuoted.length > 0 && (
         <div className="bg-surface border border-border rounded-[10px] p-4 sm:p-[22px] mb-4">
-          <div className="text-base font-normal mb-4 uppercase tracking-[0.05em]">문장을 많이 모은 책</div>
+          <div className="text-base font-normal mb-4">문장을 많이 모은 책</div>
           <div className="flex flex-col gap-2">
             {topQuoted.map((t) => (
               <div

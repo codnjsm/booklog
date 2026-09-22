@@ -84,8 +84,7 @@ export default function EmailChangeModal({ current, onClose, onChangeEmail }: Pr
                 className={FORM_INPUT}
               />
               <p className="text-xs sm:text-[13px] text-dim mt-2.5 leading-relaxed">
-                새 주소로 확인 메일을 보내요. 링크를 눌러야 실제로 바뀌니까, 주소를 잘못 적어도 기존 계정과 기록은
-                그대로예요.
+                잘못 등록된 이메일 주소를 수정해요. 새로운 주소로 인증 메일을 보낼게요.
               </p>
             </>
           )}

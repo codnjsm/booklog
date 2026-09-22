@@ -78,6 +78,10 @@ export const signUpWithEmail = async (
 ): Promise<{ user: User; verificationSent: boolean }> => {
   const cred = await createUserWithEmailAndPassword(auth, email, password)
   await updateProfile(cred.user, { displayName: name })
+  // users 문서를 여기서 같이 만든다. createUserWithEmailAndPassword가 끝나는 순간 이미 로그인
+  // 상태가 되어 App의 프로필 effect가 이 문서를 읽으러 출발하는데, 그때 문서가 없고 Auth의
+  // displayName도 아직 비어 있으면 이름이 "사용자"로 표시되고 빈 이름이 문서에 저장된다.
+  await upsertUserProfile(cred.user.uid, { email: email.trim(), displayName: name, photoURL: '' })
   let verificationSent = true
   try {
     await sendEmailVerification(cred.user)

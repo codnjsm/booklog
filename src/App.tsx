@@ -173,6 +173,9 @@ function AppShell() {
         const displayName = saved?.displayName || user.displayName || ''
         setMyPhotoURL(photoURL)
         setMyName(displayName)
+        // 이름이 빈 채로 덮어쓰지 않는다. 가입 직후에는 이 읽기가 users 문서 생성보다 먼저 끝날 수
+        // 있는데, 그때 빈 이름을 저장하면 방금 정한 이름이 지워진다.
+        if (!displayName) return
         const next = { email: user.email ?? '', displayName, photoURL }
         const same =
           saved && saved.email === next.email && saved.displayName === displayName && saved.photoURL === photoURL
@@ -235,6 +238,9 @@ function AppShell() {
   const handleEmailSignUp = useCallback(
     async (name: string, email: string, password: string) => {
       const { verificationSent } = await signUpWithEmail(name, email, password)
+      // 프로필 effect가 이 계정의 문서를 읽으러 이미 출발했을 수 있다. 그 읽기가 문서 생성보다
+      // 빨랐다면 이름이 빈 값으로 남으므로, 방금 정한 이름을 여기서 확정한다.
+      setMyName(name)
       changeTab('home')
       // 보낸 주소를 그대로 보여준다 — 오타를 냈다면 이 순간이 가장 알아채기 쉬운 시점이다.
       showToast(
