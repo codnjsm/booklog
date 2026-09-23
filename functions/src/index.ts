@@ -4,7 +4,6 @@ import { initializeApp } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
 import { getAppCheck } from 'firebase-admin/app-check'
 import { getAuth } from 'firebase-admin/auth'
-import { ImageAnnotatorClient } from '@google-cloud/vision'
 import type { Request, Response } from 'express'
 
 initializeApp()
@@ -283,6 +282,9 @@ export const createPost = onCall({ region: 'asia-northeast3', enforceAppCheck: t
  * Firestore 'in' 쿼리는 최대 30개까지만 지원한다. 지금 친구 수 규모에서는 문제 없고,
  * 넘는 경우의 처리는 이번 범위 밖이다.
  */
+/** 피드에 한 번에 내려주는 게시물 수. Firestore 쿼리에서 바로 잘라 읽기 요금을 이만큼으로 묶는다. */
+const FEED_LIMIT = 50
+
 export async function getFriendFeedHandler(uid: string): Promise<Record<string, unknown>[]> {
   const db = getFirestore()
 
@@ -295,10 +297,16 @@ export async function getFriendFeedHandler(uid: string): Promise<Record<string, 
   incoming.docs.forEach((d) => friendUids.add(d.data().fromUid))
   const authorUids = [uid, ...friendUids].slice(0, 30)
 
-  const postsSnap = await db.collection('posts').where('authorUid', 'in', authorUids).get()
-  const posts = postsSnap.docs.map((d) => ({ id: d.id, ...d.data() }) as Record<string, unknown>)
-  posts.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))
-  const top = posts.slice(0, 50)
+  // 정렬과 개수 제한을 서버(Firestore)에 맡긴다. 예전에는 친구들의 게시물을 전부 읽어와
+  // 메모리에서 정렬한 뒤 50개만 썼는데, 그러면 게시물이 쌓일수록 읽기 요금과 응답 시간이
+  // 같이 늘어난다. createdAt은 createPost가 항상 넣으므로 orderBy에서 빠지는 문서는 없다.
+  const postsSnap = await db
+    .collection('posts')
+    .where('authorUid', 'in', authorUids)
+    .orderBy('createdAt', 'desc')
+    .limit(FEED_LIMIT)
+    .get()
+  const top = postsSnap.docs.map((d) => ({ id: d.id, ...d.data() }) as Record<string, unknown>)
 
   const uniqueAuthors = [...new Set(top.map((p) => p.authorUid as string))]
   const profileDocs = await Promise.all(uniqueAuthors.map((u) => db.collection('users').doc(u).get()))
@@ -348,8 +356,19 @@ export const deletePost = onCall({ region: 'asia-northeast3', enforceAppCheck: t
   return deletePostHandler(req.auth.uid, postId)
 })
 
-// 함수 재사용 시(콜드 스타트가 아닐 때) 클라이언트를 다시 만들지 않도록 모듈 스코프에 둔다.
-const visionClient = new ImageAnnotatorClient()
+// Vision SDK는 무겁다. 최상단에서 import하면 이 파일에 함께 배포된 함수 전부가
+// (OCR과 무관한 친구 피드·책 검색까지) 콜드 스타트마다 이걸 로딩해 그만큼 느려진다.
+// 그래서 OCR을 실제로 부를 때 처음 한 번만 불러오고, 이후 호출은 만들어둔 클라이언트를 재사용한다.
+type VisionClient = { documentTextDetection: (req: unknown) => Promise<[{ fullTextAnnotation?: { text?: string } }]> }
+let visionClientPromise: Promise<VisionClient> | null = null
+function getVisionClient(): Promise<VisionClient> {
+  if (!visionClientPromise) {
+    visionClientPromise = import('@google-cloud/vision').then(
+      (m) => new m.ImageAnnotatorClient() as unknown as VisionClient,
+    )
+  }
+  return visionClientPromise
+}
 
 /** base64 하나당 최대 6MB. 클라이언트가 이미 1600px로 줄여 보내므로 정상 요청은 이 값에 한참 못 미친다. */
 const MAX_OCR_IMAGE_BASE64_LENGTH = 6_000_000
@@ -359,7 +378,8 @@ export async function ocrBookPageHandler(base64Image: string): Promise<string> {
     throw new HttpsError('invalid-argument', '이미지 데이터가 없거나 너무 큽니다')
   }
 
-  const [result] = await visionClient.documentTextDetection({
+  const client = await getVisionClient()
+  const [result] = await client.documentTextDetection({
     image: { content: Buffer.from(base64Image, 'base64') },
   })
   return result.fullTextAnnotation?.text ?? ''
