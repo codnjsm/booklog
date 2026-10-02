@@ -54,7 +54,7 @@ const LEGACY_SEED_BOOKS = [
  * 저장하므로, 사용자가 직접 담은 같은 문장은 여기 걸리지 않는다.
  * 책은 그 시드 문장이 가리키는 것 중 제목·저자까지 맞는 것만 지운다.
  */
-function stripLegacySeed(state: AppState): AppState {
+export function stripLegacySeed(state: AppState): AppState {
   const seedQuotes = state.quotes.filter((q) => LEGACY_SEED_QUOTE_TEXTS.includes(q.text) && (q.tags?.length ?? 0) > 0)
   if (seedQuotes.length === 0) return state
 
@@ -76,8 +76,11 @@ function stripLegacySeed(state: AppState): AppState {
   }
 }
 
+/* 아래 세 함수는 테스트에서 직접 부르려고 export한다 — 동기화·병합은 한 번 틀리면
+   사용자 기록이 사라지는 자리라, 훅을 띄우지 않고도 검증할 수 있게 열어둔다. */
+
 /** 책·문장·단어를 합친 개수. "기록 N개"라고 사용자에게 보여줄 때 쓴다. */
-function countRecords(s: AppState): number {
+export function countRecords(s: AppState): number {
   return s.books.length + s.quotes.length + (s.words?.length ?? 0)
 }
 
@@ -89,7 +92,7 @@ function hasRecords(s: AppState): boolean {
  * 계정 기록과 이 브라우저 기록을 합친다. 같은 id는 계정 것을 남기고 이 브라우저에만 있던 항목을 뒤에 붙인다.
  * id는 기기마다 따로 만들어지므로 실제로 겹칠 일은 거의 없다.
  */
-function mergeStates(cloud: AppState, local: AppState): AppState {
+export function mergeStates(cloud: AppState, local: AppState): AppState {
   const unionById = <T extends { id: string }>(base: T[], extra: T[]): T[] => {
     const ids = new Set(base.map((x) => x.id))
     return [...base, ...extra.filter((x) => !ids.has(x.id))]

@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm --prefix functions ci
+
+      - name: 포맷
+        run: npm run format:check
+
+      # tsc -b가 테스트 파일까지 타입체크한다. 빌드가 통과하면 배포 가능한 상태라는 뜻.
+      - name: 빌드 (프론트)
+        run: npm run build
+
+      # functions는 firebase.json에 predeploy 훅이 없어서 lib/를 수동으로 빌드해야 한다.
+      # 이걸 빼먹고 배포해 "No function matches the filter"로 실패한 적이 있어 CI에서 먼저 막는다.
+      - name: 빌드 (functions)
+        run: npm --prefix functions run build
+
+      - name: 테스트 (프론트 로직)
+        run: npm test
+
+      # 보안 규칙·핸들러 테스트는 Firestore 에뮬레이터가 필요해 Java가 있어야 한다.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: 테스트 (규칙·핸들러, 에뮬레이터)
+        run: npm run test:rules
