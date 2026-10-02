@@ -38,5 +38,11 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+
+      # firebase CLI는 프로젝트 의존성이 아니라 개발자 PC에 전역 설치된 것을 쓴다.
+      # 러너에는 없으므로 여기서 깔아준다. 메이저를 고정해 어느 날 갑자기 CI가 깨지지 않게 한다.
+      - name: Firebase CLI 설치
+        run: npm i -g firebase-tools@15
+
       - name: 테스트 (규칙·핸들러, 에뮬레이터)
         run: npm run test:rules
