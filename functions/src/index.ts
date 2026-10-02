@@ -46,7 +46,12 @@ export const kakaoBookSearch = onRequest(
       res.status(400).json({ error: 'query required' })
       return
     }
-    const url = `https://dapi.kakao.com/v3/search/book?query=${encodeURIComponent(query)}&size=15`
+    // target은 카카오가 정한 값만 허용된다. 그대로 흘려보내면 임의 값이 API로 나가므로 화이트리스트로 막는다.
+    // 책 추천이 저자로 검색하려고 target=person을 쓴다(제목·출판사까지 섞이면 엉뚱한 책이 딸려온다).
+    const ALLOWED_TARGETS = ['title', 'isbn', 'publisher', 'person']
+    const target = req.query.target as string | undefined
+    const targetParam = target && ALLOWED_TARGETS.includes(target) ? `&target=${target}` : ''
+    const url = `https://dapi.kakao.com/v3/search/book?query=${encodeURIComponent(query)}&size=15${targetParam}`
     const response = await fetch(url, {
       headers: {
         Authorization: `KakaoAK ${kakaoRestApiKey.value()}`,

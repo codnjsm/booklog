@@ -76,7 +76,9 @@ interface Props {
 
 export default function ManualBookModal({ prefill, editId, books, onClose, onSave }: Props) {
   const existing = editId ? books.find((b) => b.id === editId) : null
-  const initStatus: BookStatus = existing?.status ?? 'reading'
+  // 새로 담는 책은 대개 "읽고 싶어서" 담는다. 읽고싶음은 읽은 날짜를 요구하지 않아
+  // 저장까지 바로 갈 수 있고, 지금 읽는 중이면 그때만 바꾸면 된다.
+  const initStatus: BookStatus = existing?.status ?? 'wishlist'
 
   const [title, setTitle] = useState(prefill?.title ?? '')
   const [author, setAuthor] = useState(prefill?.author ?? '')

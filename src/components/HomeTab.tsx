@@ -13,6 +13,7 @@ import { IconCollection, IconRecords, IconRefresh, IconChevronRight } from './la
 import { isStorageAtRiskBrowser } from '../lib/browser'
 import HighlightedText from './HighlightedText'
 import HomeFab from './HomeFab'
+import TodayRecommendation from './TodayRecommendation'
 import Stars from './Stars'
 
 /** Safari·아이폰이 미접속 데이터를 지우기 시작하는 기준. App.tsx의 값과 같은 의미다. */
@@ -367,8 +368,8 @@ export default function HomeTab({ state, userName, onFinishBook, isGuest, guestD
           )}
         </div>
 
-        {/* 최근 활동 */}
-        <div className={`${CARD} sm:col-span-2 px-5 py-4 flex flex-col gap-2`}>
+        {/* 최근 활동. 예전에는 2칸을 다 썼지만 오른쪽에 오늘의 추천이 들어오면서 한 칸이 됐다. */}
+        <div className={`${CARD} px-5 py-4 flex flex-col gap-2`}>
           <div className={LABEL}>RECENT ACTIVITY</div>
           {activity.length === 0 ? (
             <div className="py-3 text-sm text-dim">아직 기록이 없어요</div>
@@ -419,6 +420,8 @@ export default function HomeTab({ state, userName, onFinishBook, isGuest, guestD
             </div>
           )}
         </div>
+
+        <TodayRecommendation books={books} />
       </div>
 
       <HomeFab />
