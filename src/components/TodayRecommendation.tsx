@@ -11,8 +11,12 @@ interface KakaoItem {
   datetime: string
 }
 
-/** 홈 카드 한 칸에 들어가는 양. 저자 하나가 목록을 다 채우지 않게 저자별로도 제한한다. */
-const MAX_SHOWN = 3
+/**
+ * 데스크톱은 4권, 모바일은 3권. 4권까지 받아두고 마지막 줄만 좁은 화면에서 감춘다 —
+ * 화면 폭을 JS로 재면 처음 그릴 때 개수가 한 번 바뀌어 깜빡인다.
+ */
+const MAX_SHOWN = 4
+/** 저자 하나가 목록을 다 채우지 않게 저자별로도 제한한다. */
 const MAX_PER_AUTHOR = 2
 
 interface Suggestion {
@@ -110,10 +114,14 @@ export default function TodayRecommendation({ books }: { books: Book[] }) {
         </div>
       ) : (
         <div className="flex flex-col">
-          {data.map((s) => (
+          {data.map((s, i) => (
             <div
               key={s.title + s.author}
-              className="flex items-center gap-3 py-2 border-b border-surface2 last:border-b-0"
+              // 4번째 줄은 데스크톱에서만. 구분선을 위쪽에 두어, 이 줄을 감춰도
+              // 3번째 줄 아래에 선만 남는 일이 없다.
+              className={`items-center gap-3 py-2 border-t border-surface2 first:border-t-0 ${
+                i >= 3 ? 'hidden sm:flex' : 'flex'
+              }`}
             >
               <img
                 src={s.cover}
