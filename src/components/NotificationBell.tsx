@@ -67,7 +67,10 @@ export default function NotificationBell({ incoming }: Props) {
           <div
             ref={panelRef}
             role="menu"
-            className="absolute right-0 top-full mt-1.5 z-50 w-[min(80vw,260px)] bg-surface border border-border rounded-xl shadow-card overflow-hidden"
+            // 모바일은 종이 화면 오른쪽 끝이라 왼쪽으로 펼친다.
+            // 데스크톱은 종이 사이드바(220~280px) 안에 있어, 왼쪽으로 펼치면 화면 밖으로 잘린다.
+            // 그래서 오른쪽으로 펼쳐 본문 위에 띄운다.
+            className="absolute top-full mt-1.5 z-50 w-[min(80vw,260px)] right-0 sm:right-auto sm:left-0 bg-surface border border-border rounded-xl shadow-card overflow-hidden"
           >
             {items.length === 0 ? (
               <div className="px-4 py-5 text-center text-xs sm:text-[13px] text-dim">새로운 알림이 없어요</div>
