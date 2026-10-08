@@ -10,6 +10,9 @@ import {
   markSeenNow,
 } from '../lib/notifications'
 
+/** 알림 한 건 = 카드 하나. 여러 건이면 카드가 쌓인다. */
+const CARD = 'bg-surface border border-border rounded-xl shadow-card'
+
 interface Props {
   /** 받은 친구 요청. 지금은 알림원이 이것뿐이고, 2단계부터 좋아요·댓글이 더해진다. */
   incoming: FriendRequest[]
@@ -70,10 +73,12 @@ export default function NotificationBell({ incoming }: Props) {
             // 모바일은 종이 화면 오른쪽 끝이라 왼쪽으로 펼친다.
             // 데스크톱은 종이 사이드바(220~280px) 안에 있어, 왼쪽으로 펼치면 화면 밖으로 잘린다.
             // 그래서 오른쪽으로 펼쳐 본문 위에 띄운다.
-            className="absolute top-full mt-1.5 z-50 w-[min(80vw,260px)] right-0 sm:right-auto sm:left-0 bg-surface border border-border rounded-xl shadow-card overflow-hidden"
+            className="absolute top-full mt-1.5 z-50 w-[min(80vw,280px)] right-0 sm:right-auto sm:left-0 flex flex-col gap-2"
           >
             {items.length === 0 ? (
-              <div className="px-4 py-5 text-center text-xs sm:text-[13px] text-dim">새로운 알림이 없어요</div>
+              <div className={`${CARD} px-4 py-5 text-center text-xs sm:text-[13px] text-dim`}>
+                새로운 알림이 없어요
+              </div>
             ) : (
               items.map((n) => (
                 <button
@@ -84,8 +89,9 @@ export default function NotificationBell({ incoming }: Props) {
                     setOpen(false)
                     changeTab(n.goTo)
                   }}
-                  className="w-full px-4 py-3 text-left text-[13px] text-ink bg-transparent border-0 border-b border-border last:border-b-0 cursor-pointer hover:bg-surface2"
+                  className={`${CARD} w-full px-4 py-3 text-left text-[13px] text-ink cursor-pointer hover:bg-surface2`}
                 >
+                  <span className="font-semibold">{n.actor}</span>
                   {n.text}
                 </button>
               ))

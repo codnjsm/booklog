@@ -13,7 +13,9 @@ export interface NotificationItem {
   kind: 'friendRequest'
   /** ISO 문자열. 정렬과 읽음 판정에 쓴다. */
   at: string
-  /** 목록에 보일 한 줄. */
+  /** 알림을 일으킨 사람 이름. 화면에서 굵게 보여준다. */
+  actor: string
+  /** 이름 뒤에 붙는 문구. 이름과 나눠둬야 이름만 굵게 그릴 수 있다. */
   text: string
   /** 눌렀을 때 갈 화면. */
   goTo: Tab
@@ -36,7 +38,8 @@ export function friendRequestNotifications(incoming: FriendRequest[]): Notificat
       id: r.id,
       kind: 'friendRequest' as const,
       at: r.createdAt,
-      text: `${senderName(r)}님이 친구 요청을 보냈어요`,
+      actor: senderName(r),
+      text: '님이 친구 요청을 보냈어요',
       goTo: 'friends' as Tab,
     }))
 }

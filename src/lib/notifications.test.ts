@@ -33,22 +33,23 @@ describe('friendRequestNotifications — 받은 요청을 알림으로', () => {
 
   it('이름이 있으면 이름으로 부른다', () => {
     const [item] = friendRequestNotifications([req('a', { profile: profile({ displayName: '채원' }) })])
-    expect(item.text).toBe('채원님이 친구 요청을 보냈어요')
+    expect(item.actor).toBe('채원')
+    expect(item.text).toBe('님이 친구 요청을 보냈어요')
   })
 
   it('이름이 비어 있으면 이메일 앞부분을 쓴다', () => {
     const [item] = friendRequestNotifications([req('a', { profile: profile({ email: 'chae@example.com' }) })])
-    expect(item.text).toBe('chae님이 친구 요청을 보냈어요')
+    expect(item.actor).toBe('chae')
   })
 
   it('프로필이 아직 안 붙었어도 문구가 깨지지 않는다', () => {
     const [item] = friendRequestNotifications([req('a')])
-    expect(item.text).toBe('누군가님이 친구 요청을 보냈어요')
+    expect(item.actor).toBe('누군가')
   })
 
   it('공백뿐인 이름은 이름이 없는 것으로 본다', () => {
     const [item] = friendRequestNotifications([req('a', { profile: profile({ displayName: '   ' }) })])
-    expect(item.text).toBe('누군가님이 친구 요청을 보냈어요')
+    expect(item.actor).toBe('누군가')
   })
 
   it('누르면 친구 탭으로 간다', () => {
@@ -62,7 +63,8 @@ describe('sortNotifications — 최신순 정렬', () => {
     id,
     kind: 'friendRequest' as const,
     at: t,
-    text: id,
+    actor: id,
+    text: '님이 친구 요청을 보냈어요',
     goTo: 'friends' as const,
   })
 
@@ -92,7 +94,8 @@ describe('countUnread — 읽지 않은 알림 수', () => {
     id,
     kind: 'friendRequest' as const,
     at: t,
-    text: id,
+    actor: id,
+    text: '님이 친구 요청을 보냈어요',
     goTo: 'friends' as const,
   })
   const items = [
