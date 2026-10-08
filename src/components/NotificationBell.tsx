@@ -10,10 +10,10 @@ import {
   markSeenNow,
 } from '../lib/notifications'
 
-/** 바깥 틀. 알림이 몇 건이든 이 안에 담긴다. */
-const PANEL = 'bg-surface border border-border rounded-xl shadow-card p-2'
-/** 틀 안에 쌓이는 카드. 테두리를 또 두르면 상자 안 상자가 되므로 면으로만 구분한다. */
-const CARD = 'bg-surface2 rounded-lg border-none'
+/** 바깥 틀. 알림이 몇 건이든 이 안에 담기고, 항목끼리는 선으로 나눈다. */
+const PANEL = 'bg-surface border border-border rounded-xl shadow-card overflow-hidden'
+/** border-none과 border-b를 같이 주면 style이 none이라 선이 안 그려진다. border-0으로 폭만 0으로 둔다. */
+const ROW = 'w-full px-4 py-3 text-left bg-transparent border-0 border-b border-border last:border-b-0'
 
 interface Props {
   /** 받은 친구 요청. 지금은 알림원이 이것뿐이고, 2단계부터 좋아요·댓글이 더해진다. */
@@ -75,10 +75,10 @@ export default function NotificationBell({ incoming }: Props) {
             // 모바일은 종이 화면 오른쪽 끝이라 왼쪽으로 펼친다.
             // 데스크톱은 종이 사이드바(220~280px) 안에 있어, 왼쪽으로 펼치면 화면 밖으로 잘린다.
             // 그래서 오른쪽으로 펼쳐 본문 위에 띄운다.
-            className={`absolute top-full mt-1.5 z-50 w-[min(80vw,280px)] right-0 sm:right-auto sm:left-0 flex flex-col gap-1.5 ${PANEL}`}
+            className={`absolute top-full mt-1.5 z-50 w-[min(80vw,280px)] right-0 sm:right-auto sm:left-0 ${PANEL}`}
           >
             {items.length === 0 ? (
-              <div className="px-3 py-4 text-center text-xs sm:text-[13px] text-dim">새로운 알림이 없어요</div>
+              <div className="px-4 py-5 text-center text-xs sm:text-[13px] text-dim">새로운 알림이 없어요</div>
             ) : (
               items.map((n) => (
                 <button
@@ -89,7 +89,7 @@ export default function NotificationBell({ incoming }: Props) {
                     setOpen(false)
                     changeTab(n.goTo)
                   }}
-                  className={`${CARD} w-full px-3 py-2.5 text-left text-[13px] text-ink cursor-pointer hover:opacity-80`}
+                  className={`${ROW} text-[13px] text-ink cursor-pointer hover:bg-surface2`}
                 >
                   <span className="font-semibold">{n.actor}</span>
                   {n.text}
