@@ -322,6 +322,7 @@ function AppShell() {
       bookCount={state.books.length}
       collectionCount={state.quotes.length + state.words.length}
       incomingCount={incoming.length}
+      incoming={incoming}
       onExport={handleExport}
     >
       {tab === 'home' && (

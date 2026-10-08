@@ -67,6 +67,13 @@ export const IconExport = ({ size = 16 }: Props) => (
   </svg>
 )
 
+export const IconBell = ({ size = 18 }: Props) => (
+  <svg {...base(size)}>
+    <path d="M18 8.5a6 6 0 0 0-12 0c0 5-2.2 6.5-2.2 6.5h16.4S18 13.5 18 8.5" />
+    <path d="M13.7 19a2 2 0 0 1-3.4 0" />
+  </svg>
+)
+
 export const IconTrash = ({ size = 16 }: Props) => (
   <svg {...base(size)}>
     <path d="M4 7h16" />

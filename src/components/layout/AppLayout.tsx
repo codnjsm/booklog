@@ -3,6 +3,8 @@ import type { User } from 'firebase/auth'
 import { useAppUI, type Tab } from '../../contexts/AppUIContext'
 import type { SyncStatus } from '../../hooks/useData'
 import { isStorageAtRiskBrowser } from '../../lib/browser'
+import type { FriendRequest } from '../../types'
+import NotificationBell from '../NotificationBell'
 import {
   IconHome,
   IconBooks,
@@ -25,6 +27,8 @@ interface Props {
   bookCount: number
   collectionCount: number
   incomingCount: number
+  /** 받은 친구 요청. 알림함이 쓴다. */
+  incoming: FriendRequest[]
   onExport: () => void
   children: ReactNode
 }
@@ -51,6 +55,7 @@ export default function AppLayout({
   bookCount,
   collectionCount,
   incomingCount,
+  incoming,
   onExport,
   children,
 }: Props) {
@@ -67,12 +72,16 @@ export default function AppLayout({
   return (
     <div className="min-h-[100dvh] flex bg-bg">
       <aside className="hidden sm:flex w-[var(--sidebar-w)] flex-shrink-0 flex-col gap-7 bg-surface border-r border-border px-3.5 py-6 fixed inset-y-0 left-0">
-        <button
-          className="font-mono text-xl font-bold tracking-[-0.02em] text-[var(--logo)] px-2.5 text-left bg-transparent border-none cursor-pointer"
-          onClick={() => changeTab('home')}
-        >
-          Booklog
-        </button>
+        {/* 로고 줄 오른쪽이 데스크톱에서 화면 전환과 무관하게 유지되는 유일한 자리다 */}
+        <div className="flex items-center justify-between gap-2 px-2.5">
+          <button
+            className="font-mono text-xl font-bold tracking-[-0.02em] text-[var(--logo)] text-left bg-transparent border-none cursor-pointer p-0"
+            onClick={() => changeTab('home')}
+          >
+            Booklog
+          </button>
+          {user && <NotificationBell incoming={incoming} />}
+        </div>
 
         <nav className="flex flex-col gap-0.5">
           {NAV.map(({ id, label, Icon }) => {
@@ -185,8 +194,9 @@ export default function AppLayout({
 
       <main className="flex-1 min-w-0 sm:ml-[var(--sidebar-w)] px-5 pt-4 pb-[calc(76px+env(safe-area-inset-bottom))] sm:pt-20 sm:pb-10">
         <div className="max-w-[1200px] mx-auto">
-          <div className="sm:hidden mb-3 font-mono text-[15px] font-bold tracking-[-0.02em] text-[var(--logo)]">
-            Booklog
+          <div className="sm:hidden mb-3 flex items-center justify-between gap-2">
+            <span className="font-mono text-[15px] font-bold tracking-[-0.02em] text-[var(--logo)]">Booklog</span>
+            {user && <NotificationBell incoming={incoming} />}
           </div>
           {children}
         </div>
