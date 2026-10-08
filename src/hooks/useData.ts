@@ -76,6 +76,72 @@ export function stripLegacySeed(state: AppState): AppState {
   }
 }
 
+/**
+ * 로그인 직후, 클라우드 기록과 이 브라우저 기록 중 무엇을 쓸지 정한 결과.
+ * 훅은 이 판정을 실행만 하고, 판정 자체는 아래 planInitialSync가 혼자 책임진다.
+ */
+export type SyncPlan =
+  /** 같은 계정으로 오프라인에서 고친 게 더 최신이다. 클라우드로 덮지 않는다. */
+  | { kind: 'keepLocal' }
+  /** 게스트 기록과 계정 기록이 둘 다 있다. 한쪽을 임의로 고르지 않고 사용자에게 묻는다. */
+  | { kind: 'askMerge'; local: AppState; cloud: AppState }
+  /** 클라우드를 그대로 쓴다. */
+  | { kind: 'useCloud'; cloud: AppState }
+  /** 클라우드가 비어 있는데 로컬은 다른 계정이 쓰던 캐시다. 올리지 않고 비운다. */
+  | { kind: 'discardForeign' }
+  /** 클라우드가 비어 있고 로컬은 내 것이거나 게스트 기록이다. 그대로 올린다. */
+  | { kind: 'uploadLocal'; local: AppState }
+
+/**
+ * 로그인 직후의 동기화 판정. 한 번 틀리면 남의 기록이 내 계정에 올라가거나
+ * 내 기록이 통째로 사라지는 자리라, 훅을 띄우지 않고도 검증할 수 있게 순수 함수로 둔다.
+ *
+ * localOwner는 이 브라우저 캐시의 주인 표식이다.
+ * null이면 로그인 없이 쌓은 기록(게스트), 다른 uid면 남이 쓰던 캐시다.
+ */
+export function planInitialSync(args: {
+  uid: string
+  localOwner: string | null
+  local: AppState
+  cloud: AppState | null
+}): SyncPlan {
+  const { uid, localOwner, local, cloud } = args
+  const isSameAccount = localOwner === uid
+  const isGuest = localOwner === null
+  const isForeign = localOwner !== null && localOwner !== uid
+
+  if (cloud) {
+    // 같은 계정의 오프라인 편집분만 보호한다. 게스트 기록에 이걸 적용하면
+    // 다음 저장 때 계정에 있던 기록을 통째로 밀어낸다.
+    if (isSameAccount && local.updatedAt && cloud.updatedAt && local.updatedAt > cloud.updatedAt) {
+      return { kind: 'keepLocal' }
+    }
+    if (isGuest && hasRecords(local) && hasRecords(cloud)) {
+      return { kind: 'askMerge', local, cloud }
+    }
+    return { kind: 'useCloud', cloud }
+  }
+
+  if (isForeign) return { kind: 'discardForeign' }
+  return { kind: 'uploadLocal', local }
+}
+
+/**
+ * 저장하려는 기록 수가 마지막으로 확인된 수보다 급격히 줄었는지.
+ *
+ * 로컬 저장소가 어떤 이유로든 비워진 채 저장이 돌면, 그 순간의 (줄어든) 상태가
+ * 클라우드 기록을 통째로 덮어쓴다. 실제로 한 번 그렇게 데이터를 잃었다.
+ * 절반 미만으로 떨어지면 실수일 가능성이 높다고 보고 호출한 쪽에서 한 번 더 확인한다.
+ *
+ * - baseline이 null이면 아직 클라우드와 맞춰본 적이 없으므로 비교 대상이 없다.
+ * - baseline이 0이면 빈 계정이라 줄어들 것 자체가 없다.
+ * - 정확히 절반(100 → 50)은 통과시킨다. 경계에서까지 막으면 정상적인 정리도 걸린다.
+ */
+export function isSuspiciousDrop(baseline: number | null, next: number): boolean {
+  if (baseline === null || baseline <= 0) return false
+  return next < baseline / 2
+}
+
 /* 아래 세 함수는 테스트에서 직접 부르려고 export한다 — 동기화·병합은 한 번 틀리면
    사용자 기록이 사라지는 자리라, 훅을 띄우지 않고도 검증할 수 있게 열어둔다. */
 
@@ -162,13 +228,7 @@ export function useData(user: User | null) {
     if (cloudLoadedRef.current) return
     cloudLoadedRef.current = true
 
-    // 로컬 캐시가 지금 로그인한 사람 것이 아니면 아무리 최신이어도 신뢰하지 않는다
-    // — 다른 사람 데이터를 이 계정에 올리지 않는다.
     const localOwner = getLocalOwnerUid()
-    const localIsForeign = localOwner !== null && localOwner !== user.uid
-    // 같은 계정으로 오프라인에서 고친 것 / 로그인 없이 쌓아둔 것은 성격이 달라서 따로 다룬다.
-    const localIsSameAccount = localOwner === user.uid
-    const localIsGuest = localOwner === null
 
     loadUserData(user.uid)
       .then((cloud) => {
@@ -177,54 +237,56 @@ export function useData(user: User | null) {
         // 다음 계정이 로그인할 때 남의 데이터를 걸러내지 못한다.
         setLocalOwnerUid(user.uid)
 
-        if (cloud?.books) {
-          const local = getInitialState()
-          const cloudState: AppState = { ...cloud, words: cloud.words ?? [] }
+        const cloudState: AppState | null = cloud?.books ? { ...cloud, words: cloud.words ?? [] } : null
+        const plan = planInitialSync({
+          uid: user.uid,
+          localOwner,
+          local: getInitialState(),
+          cloud: cloudState,
+        })
 
-          // 같은 계정으로 오프라인에서 고친 게 더 최신이면 클라우드로 덮어쓰지 않는다.
-          // 게스트 기록에는 이 보호를 적용하지 않는다 — 그건 이 계정의 오프라인 편집분이 아니라서,
-          // 그대로 두면 다음 저장 때 계정에 있던 기록을 통째로 밀어낸다.
-          if (localIsSameAccount && local.updatedAt && cloud.updatedAt && local.updatedAt > cloud.updatedAt) {
-            lastSyncedCountRef.current = countRecords(local)
+        const apply = (next: AppState) => {
+          setStateRaw(next)
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+          lastSyncedCountRef.current = countRecords(next)
+        }
+
+        switch (plan.kind) {
+          case 'keepLocal':
+            lastSyncedCountRef.current = countRecords(getInitialState())
             return
-          }
 
-          // 로그인 없이 쌓아둔 기록과 계정 기록이 둘 다 있으면 한쪽을 임의로 고르지 않고 물어본다.
-          // 자동으로 고르면 어느 쪽이든 한쪽이 통째로 사라진다.
-          if (localIsGuest && hasRecords(local) && hasRecords(cloudState)) {
+          case 'askMerge': {
             const keepBoth = confirm(
-              `이 브라우저에 로그인 없이 쌓은 기록이 ${countRecords(local)}개 있어요.\n` +
-                `계정에는 이미 기록이 ${countRecords(cloudState)}개 있습니다.\n\n` +
+              `이 브라우저에 로그인 없이 쌓은 기록이 ${countRecords(plan.local)}개 있어요.\n` +
+                `계정에는 이미 기록이 ${countRecords(plan.cloud)}개 있습니다.\n\n` +
                 `확인 — 두 기록을 합칩니다\n` +
                 `취소 — 계정 기록만 사용합니다 (이 브라우저 기록은 사라져요)`,
             )
-            const next = stripLegacySeed(keepBoth ? mergeStates(cloudState, local) : cloudState)
-            setStateRaw(next)
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-            lastSyncedCountRef.current = countRecords(next)
-            if (keepBoth || next !== cloudState) saveUserData(user.uid, JSON.parse(JSON.stringify(next)))
+            const next = stripLegacySeed(keepBoth ? mergeStates(plan.cloud, plan.local) : plan.cloud)
+            apply(next)
+            if (keepBoth || next !== plan.cloud) saveUserData(user.uid, JSON.parse(JSON.stringify(next)))
             return
           }
 
-          const merged = stripLegacySeed(cloudState)
-          setStateRaw(merged)
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(merged))
-          lastSyncedCountRef.current = countRecords(merged)
-          // 클라우드에 남아 있던 데모 데이터도 같이 걷어낸다
-          if (merged !== cloudState) saveUserData(user.uid, JSON.parse(JSON.stringify(merged)))
-        } else if (localIsForeign) {
-          // 신규 가입이라 클라우드는 비어있는데, 로컬은 다른 계정이 쓰던 캐시다 — 올리지 않고 비운다.
-          const empty: AppState = { books: [], quotes: [], words: [] }
-          setStateRaw(empty)
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(empty))
-          lastSyncedCountRef.current = 0
-        } else {
-          // 계정이 비어 있으면 이 브라우저에 쌓아둔 기록을 그대로 올린다(단어만 있어도 올린다).
-          const local = getInitialState()
-          lastSyncedCountRef.current = countRecords(local)
-          if (hasRecords(local)) {
-            saveUserData(user.uid, JSON.parse(JSON.stringify(local)))
+          case 'useCloud': {
+            const next = stripLegacySeed(plan.cloud)
+            apply(next)
+            // 클라우드에 남아 있던 데모 데이터도 같이 걷어낸다
+            if (next !== plan.cloud) saveUserData(user.uid, JSON.parse(JSON.stringify(next)))
+            return
           }
+
+          case 'discardForeign':
+            apply({ books: [], quotes: [], words: [] })
+            return
+
+          case 'uploadLocal':
+            lastSyncedCountRef.current = countRecords(plan.local)
+            if (hasRecords(plan.local)) {
+              saveUserData(user.uid, JSON.parse(JSON.stringify(plan.local)))
+            }
+            return
         }
       })
       .catch(() => setSyncStatus('error'))
@@ -241,12 +303,9 @@ export function useData(user: User | null) {
       // JSON round-trip strips undefined fields so Firestore doesn't reject them
       const clean: AppState = JSON.parse(JSON.stringify(stamped))
       timerRef.current = setTimeout(async () => {
-        // 로컬 저장소가 어떤 이유로든 리셋된 채로 저장이 실행되면, 그 순간의 (줄어든) 상태가
-        // 클라우드에 있던 기록을 통째로 덮어쓴다. 마지막으로 확인된 기록 수의 절반 밑으로
-        // 갑자기 떨어지면 실수일 가능성이 높다고 보고 한 번 확인한다.
         const baseline = lastSyncedCountRef.current
         const nextCount = countRecords(clean)
-        if (baseline !== null && baseline > 0 && nextCount < baseline / 2) {
+        if (isSuspiciousDrop(baseline, nextCount)) {
           const proceed = confirm(
             `클라우드에 저장돼 있던 기록은 ${baseline}개인데, 지금 저장하려는 건 ${nextCount}개예요.\n` +
               `기록이 갑자기 많이 줄어든 것 같아 확인차 여쭤봅니다.\n\n` +
