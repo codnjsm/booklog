@@ -3,3 +3,8 @@ node_modules
 package-lock.json
 functions/lib
 functions/node_modules
+
+# 마크다운은 Prettier가 표 칸을 글자 수에 맞춰 늘리는데, 한글은 폭이 2칸이라
+# 그렇게 맞춘 정렬이 편집기에서는 오히려 어긋나 보인다. 셀 하나만 고쳐도
+# 표 전체가 다시 정렬돼 diff도 지저분해져서 검사 대상에서 뺀다.
+*.md
