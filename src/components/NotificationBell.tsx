@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { FriendRequest } from '../types'
 import { useAppUI } from '../contexts/AppUIContext'
 import { IconBell } from './layout/icons'
+import { relativeDay } from '../lib/insights'
 import {
   friendRequestNotifications,
   likeNotifications,
@@ -97,10 +98,14 @@ export default function NotificationBell({ incoming, uid, nameOf }: Props) {
                     setOpen(false)
                     changeTab(n.goTo)
                   }}
-                  className={`${ROW} text-[13px] text-ink cursor-pointer hover:bg-surface2`}
+                  className={`${ROW} cursor-pointer hover:bg-surface2`}
                 >
-                  <span className="font-semibold">{n.actor}</span>
-                  {n.text}
+                  <span className="block text-[13px] text-ink">
+                    <span className="font-semibold">{n.actor}</span>
+                    {n.text}
+                  </span>
+                  {/* 피드 카드·최근 활동과 같은 형식. 오늘/어제/N일 전으로 보이다가 4주부터 날짜가 된다. */}
+                  <span className="block font-mono text-[11px] text-dim mt-1">{relativeDay(n.at)}</span>
                 </button>
               ))
             )}
