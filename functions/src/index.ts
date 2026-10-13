@@ -1,7 +1,7 @@
 import { onRequest, onCall, HttpsError } from 'firebase-functions/v2/https'
 import { defineSecret } from 'firebase-functions/params'
 import { initializeApp } from 'firebase-admin/app'
-import { getFirestore } from 'firebase-admin/firestore'
+import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 import { getAppCheck } from 'firebase-admin/app-check'
 import { getAuth } from 'firebase-admin/auth'
 import type { Request, Response } from 'express'
@@ -336,6 +336,129 @@ export const getFriendFeed = onCall({ region: 'asia-northeast3', enforceAppCheck
  * 남의 게시물을 지울 수 있으면 안 된다 — 이게 이번 발행 기능에서 가장 중요하게
  * 지켜야 할 지점이다.
  */
+/** 수락된 친구인지 확인한다. 문서 ID가 {fromUid}_{toUid}라 양방향 모두 본다. */
+async function areFriends(a: string, b: string): Promise<boolean> {
+  if (a === b) return true
+  const db = getDb()
+  const [x, y] = await Promise.all([
+    db.collection('friendRequests').doc(`${a}_${b}`).get(),
+    db.collection('friendRequests').doc(`${b}_${a}`).get(),
+  ])
+  return [x, y].some((d) => d.exists && d.data()?.status === 'accepted')
+}
+
+/**
+ * 좋아요를 켜고 끈다.
+ *
+ * 게시물은 클라이언트가 직접 못 읽고 못 쓰므로(firestore.rules) 여기를 거친다.
+ * 누른 사람 목록은 게시물 안에 둔다 — 친구 수가 많지 않아 길어질 일이 없고,
+ * "내가 눌렀는지"를 따로 조회하지 않아도 된다.
+ * 동시에 눌러도 서로 덮어쓰지 않도록 배열 전체가 아니라 원소 단위로 더하고 뺀다.
+ */
+export async function toggleLikeHandler(uid: string, postId: unknown): Promise<{ liked: boolean; count: number }> {
+  if (typeof postId !== 'string' || !postId) {
+    throw new HttpsError('invalid-argument', '게시물을 찾을 수 없습니다')
+  }
+  const db = getDb()
+  const ref = db.collection('posts').doc(postId)
+  const snap = await ref.get()
+  if (!snap.exists) {
+    throw new HttpsError('not-found', '게시물을 찾을 수 없습니다')
+  }
+
+  const authorUid = snap.data()?.authorUid as string
+  // 내 글이거나 친구의 글에만 누를 수 있다. 피드에 뜨지 않는 글을 누르는 경로를 막는다.
+  if (!(await areFriends(uid, authorUid))) {
+    throw new HttpsError('permission-denied', '친구의 게시물에만 누를 수 있습니다')
+  }
+
+  const likes: string[] = Array.isArray(snap.data()?.likes) ? snap.data()!.likes : []
+  const liked = likes.includes(uid)
+
+  await ref.update({
+    likes: liked ? FieldValue.arrayRemove(uid) : FieldValue.arrayUnion(uid),
+  })
+
+  // 글쓴이에게 알림을 남긴다. 게시물은 클라이언트가 직접 못 읽으므로,
+  // "내 글에 좋아요가 달렸다"를 알려면 이 통로가 필요하다.
+  // 문서 id를 (게시물, 누른 사람)으로 고정해 눌렀다 취소하기를 반복해도 쌓이지 않는다.
+  if (authorUid !== uid) {
+    const notif = db.doc(`notifications/${authorUid}/items/like_${postId}_${uid}`)
+    if (liked) await notif.delete()
+    else
+      await notif.set({
+        kind: 'like',
+        actorUid: uid,
+        postId,
+        createdAt: new Date().toISOString(),
+      })
+  }
+
+  return { liked: !liked, count: liked ? likes.length - 1 : likes.length + 1 }
+}
+
+export const toggleLike = onCall({ region: 'asia-northeast3', enforceAppCheck: true }, async (req) => {
+  if (!req.auth) {
+    throw new HttpsError('unauthenticated', '로그인이 필요합니다')
+  }
+  return toggleLikeHandler(req.auth.uid, req.data?.postId)
+})
+
+/**
+ * 게시물에 좋아요를 누른 사람 목록.
+ *
+ * 이름을 **서버에서 가린다.** 이 앱은 프로필 조회를 "나와 친구 요청이 오간 상대"로
+ * 제한하는데, 누른 사람 전원의 이름을 내려주면 그 선을 넘는다 — 같은 글에 좋아요를
+ * 누른 친구의 친구끼리 서로 이름을 알게 된다. 화면에서 가리면 응답을 뜯어보면 되므로
+ * 아예 보내지 않는다.
+ *
+ * 피드 응답에는 싣지 않는다. 사용자가 좋아요 수를 눌렀을 때만 부른다 —
+ * 피드마다 누른 사람 프로필을 조회하면 읽기 횟수가 배로 늘어난다.
+ */
+export async function getPostLikesHandler(
+  viewerUid: string,
+  postId: unknown,
+): Promise<{ displayName: string; photoURL: string; known: boolean }[]> {
+  if (typeof postId !== 'string' || !postId) {
+    throw new HttpsError('invalid-argument', '게시물을 찾을 수 없습니다')
+  }
+  const db = getDb()
+  const snap = await db.collection('posts').doc(postId).get()
+  if (!snap.exists) {
+    throw new HttpsError('not-found', '게시물을 찾을 수 없습니다')
+  }
+  // 내가 볼 수 없는 글의 좋아요 목록도 볼 수 없다.
+  if (!(await areFriends(viewerUid, snap.data()?.authorUid as string))) {
+    throw new HttpsError('permission-denied', '볼 수 없는 게시물입니다')
+  }
+
+  const likes: string[] = Array.isArray(snap.data()?.likes) ? snap.data()!.likes : []
+  if (likes.length === 0) return []
+
+  const knownFlags = await Promise.all(likes.map((u) => areFriends(viewerUid, u)))
+  const knownUids = likes.filter((_, i) => knownFlags[i])
+  const profiles = new Map(
+    (await Promise.all(knownUids.map((u) => db.collection('users').doc(u).get()))).map((d) => [d.id, d.data()]),
+  )
+
+  // 아는 이름이 먼저 보여야 쓸모가 있다. 모르는 사람은 아래로 묶는다.
+  return [
+    ...knownUids.map((u) => ({
+      displayName: (profiles.get(u)?.displayName as string) || '',
+      photoURL: (profiles.get(u)?.photoURL as string) || '',
+      known: true,
+    })),
+    ...likes.filter((_, i) => !knownFlags[i]).map(() => ({ displayName: '', photoURL: '', known: false })),
+  ]
+}
+
+export const getPostLikes = onCall({ region: 'asia-northeast3', enforceAppCheck: true }, async (req) => {
+  if (!req.auth) {
+    throw new HttpsError('unauthenticated', '로그인이 필요합니다')
+  }
+  return getPostLikesHandler(req.auth.uid, req.data?.postId)
+})
+
 export async function deletePostHandler(uid: string, postId: string): Promise<{ ok: true }> {
   const db = getFirestore()
   const ref = db.collection('posts').doc(postId)

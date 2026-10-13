@@ -113,3 +113,47 @@ describe('posts 직접 접근 차단', () => {
     )
   })
 })
+
+describe('notifications 접근 제어', () => {
+  before(async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      const db = ctx.firestore()
+      await setDoc(doc(db, 'notifications', ALICE, 'items', 'n1'), {
+        kind: 'like',
+        actorUid: BOB,
+        postId: 'p1',
+        createdAt: '2026-10-13T00:00:00.000Z',
+      })
+    })
+  })
+
+  it('본인은 자기 알림을 읽는다', async () => {
+    const db = testEnv.authenticatedContext(ALICE).firestore()
+    await assertSucceeds(getDocs(collection(db, 'notifications', ALICE, 'items')))
+  })
+
+  it('남의 알림은 읽지 못한다 — 누가 누구 글에 반응했는지 들여다볼 수 있다', async () => {
+    const db = testEnv.authenticatedContext(CAROL).firestore()
+    await assertFails(getDocs(collection(db, 'notifications', ALICE, 'items')))
+  })
+
+  it('친구여도 남의 알림은 읽지 못한다', async () => {
+    const db = testEnv.authenticatedContext(BOB).firestore()
+    await assertFails(getDoc(doc(db, 'notifications', ALICE, 'items', 'n1')))
+  })
+
+  it('로그인하지 않으면 읽지 못한다', async () => {
+    const db = testEnv.unauthenticatedContext().firestore()
+    await assertFails(getDoc(doc(db, 'notifications', ALICE, 'items', 'n1')))
+  })
+
+  it('알림을 클라이언트가 직접 쓰지 못한다 — 서버만 만든다', async () => {
+    const db = testEnv.authenticatedContext(ALICE).firestore()
+    await assertFails(setDoc(doc(db, 'notifications', ALICE, 'items', 'fake'), { kind: 'like' }))
+  })
+
+  it('남의 알림을 지우지 못한다', async () => {
+    const db = testEnv.authenticatedContext(CAROL).firestore()
+    await assertFails(setDoc(doc(db, 'notifications', ALICE, 'items', 'n1'), { kind: 'x' }))
+  })
+})
