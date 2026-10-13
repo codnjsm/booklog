@@ -38,18 +38,32 @@ interface Props {
   onToggleLike: () => void
   onOpenLikes: () => void
   likeBusy?: boolean
+  /** 글쓴이 책장으로 간다. 내 글이거나 친구 목록에서 못 찾으면 넘어오지 않는다. */
+  onOpenAuthor?: () => void
 }
 
-export default function PostCard({ post, isOwn, onDelete, onToggleLike, onOpenLikes, likeBusy }: Props) {
+export default function PostCard({ post, isOwn, onDelete, onToggleLike, onOpenLikes, likeBusy, onOpenAuthor }: Props) {
   const { attachment } = post
 
   return (
     <div className="bg-surface border border-border rounded-[10px] px-4 py-3.5 sm:px-[22px] sm:py-5">
       <div className="flex items-center justify-between gap-2 mb-3">
-        <div className="flex items-center gap-2">
-          <Avatar url={post.authorPhotoURL} name={post.authorDisplayName} />
-          <span className="text-sm font-medium text-ink">{post.authorDisplayName || '이름 없음'}</span>
-        </div>
+        {/* 글쓴이를 누르면 그 사람 책장으로 간다. 내 글이면 갈 곳이 없으므로 버튼으로 만들지 않는다. */}
+        {onOpenAuthor ? (
+          <button
+            type="button"
+            onClick={onOpenAuthor}
+            className="flex items-center gap-2 bg-transparent border-none p-0 -m-1 px-1 py-1 cursor-pointer text-left rounded-lg hover:bg-surface2"
+          >
+            <Avatar url={post.authorPhotoURL} name={post.authorDisplayName} />
+            <span className="text-sm font-medium text-ink">{post.authorDisplayName || '이름 없음'}</span>
+          </button>
+        ) : (
+          <div className="flex items-center gap-2">
+            <Avatar url={post.authorPhotoURL} name={post.authorDisplayName} />
+            <span className="text-sm font-medium text-ink">{post.authorDisplayName || '이름 없음'}</span>
+          </div>
+        )}
         <div className="flex items-center justify-end gap-2">
           <span className="font-mono text-xs sm:text-[13px] text-dim">{relativeDay(post.createdAt)}</span>
           {isOwn && (

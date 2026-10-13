@@ -348,6 +348,11 @@ export default function FriendsTab({
                 onDelete={() => {
                   if (confirm('이 게시물을 삭제할까요?')) deletePostMutation.mutate(post.id)
                 }}
+                onOpenAuthor={(() => {
+                  // 피드에는 내 친구 글만 오지만, 친구 목록이 아직 안 받아졌을 수 있어 못 찾으면 넘기지 않는다.
+                  const author = friends.find((f) => f.uid === post.authorUid)
+                  return post.authorUid === user.uid || !author ? undefined : () => handleViewFriend(author)
+                })()}
                 onToggleLike={() => handleToggleLike(post.id)}
                 onOpenLikes={() => openLikes(post.id)}
                 likeBusy={likeBusy === post.id}
