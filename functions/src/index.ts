@@ -317,11 +317,20 @@ export async function getFriendFeedHandler(uid: string): Promise<Record<string, 
   const profileDocs = await Promise.all(uniqueAuthors.map((u) => db.collection('users').doc(u).get()))
   const profiles = new Map(profileDocs.map((d) => [d.id, d.data()]))
 
-  return top.map((p) => ({
-    ...p,
-    authorDisplayName: profiles.get(p.authorUid as string)?.displayName ?? '',
-    authorPhotoURL: profiles.get(p.authorUid as string)?.photoURL ?? '',
-  }))
+  // likes(누른 사람 uid 목록)를 그대로 내려보내면 내 친구가 아닌 사람의 uid까지 넘어간다.
+  // 화면에 필요한 건 수와 "내가 눌렀는지"뿐이므로 그 둘로만 줄여서 보낸다.
+  // 누가 눌렀는지는 사용자가 수를 눌렀을 때 getPostLikes가 이름을 가려서 따로 준다.
+  return top.map((p) => {
+    const { likes, ...rest } = p as Record<string, unknown> & { likes?: unknown }
+    const list: string[] = Array.isArray(likes) ? likes : []
+    return {
+      ...rest,
+      authorDisplayName: profiles.get(p.authorUid as string)?.displayName ?? '',
+      authorPhotoURL: profiles.get(p.authorUid as string)?.photoURL ?? '',
+      likeCount: list.length,
+      likedByMe: list.includes(uid),
+    }
+  })
 }
 
 export const getFriendFeed = onCall({ region: 'asia-northeast3', enforceAppCheck: true }, async (req) => {

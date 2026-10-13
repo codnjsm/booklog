@@ -7,6 +7,8 @@ import PageHeader from './layout/PageHeader'
 import { IconSearch, IconBooks, IconFriends } from './layout/icons'
 import { useAppUI } from '../contexts/AppUIContext'
 import PostCard from './PostCard'
+import PostLikesModal, { type Liker } from './modals/PostLikesModal'
+import { toggleLike, getPostLikes } from '../firebase'
 
 type StatusFilter = BookStatus | 'all'
 const STATUS_LABELS: { id: StatusFilter; label: string }[] = [
@@ -136,6 +138,41 @@ export default function FriendsTab({
     staleTime: 30_000,
   })
   const feedPosts = feedQuery.data ?? []
+
+  // 좋아요는 누른 즉시 화면에 반영하고, 서버가 거절하면 되돌린다.
+  // 왕복을 기다리면 하트가 한 박자 늦게 켜져 두 번 누르게 된다.
+  const [likeBusy, setLikeBusy] = useState<string | null>(null)
+  const handleToggleLike = async (postId: string) => {
+    if (likeBusy) return
+    setLikeBusy(postId)
+    const patch = (fn: (p: Post) => Post) =>
+      queryClient.setQueryData<Post[]>(['friendFeed'], (old) => old?.map((p) => (p.id === postId ? fn(p) : p)))
+    const before = feedPosts.find((p) => p.id === postId)
+    patch((p) => ({ ...p, likedByMe: !p.likedByMe, likeCount: p.likeCount + (p.likedByMe ? -1 : 1) }))
+    try {
+      const r = await toggleLike(postId)
+      patch((p) => ({ ...p, likedByMe: r.liked, likeCount: r.count }))
+    } catch {
+      if (before) patch(() => before)
+      showToast('좋아요를 저장하지 못했어요', 'error')
+    } finally {
+      setLikeBusy(null)
+    }
+  }
+
+  // 수를 눌렀을 때만 불러온다. 피드 응답에는 누가 눌렀는지가 들어 있지 않다.
+  const [likesOf, setLikesOf] = useState<string | null>(null)
+  const [likers, setLikers] = useState<Liker[] | null>(null)
+  const openLikes = async (postId: string) => {
+    setLikesOf(postId)
+    setLikers(null)
+    try {
+      setLikers(await getPostLikes(postId))
+    } catch {
+      setLikesOf(null)
+      showToast('목록을 불러오지 못했어요', 'error')
+    }
+  }
 
   const deletePostMutation = useMutation({
     mutationFn: onDeletePost,
@@ -311,6 +348,9 @@ export default function FriendsTab({
                 onDelete={() => {
                   if (confirm('이 게시물을 삭제할까요?')) deletePostMutation.mutate(post.id)
                 }}
+                onToggleLike={() => handleToggleLike(post.id)}
+                onOpenLikes={() => openLikes(post.id)}
+                likeBusy={likeBusy === post.id}
               />
             ))}
           </div>
@@ -442,6 +482,16 @@ export default function FriendsTab({
             )}
           </div>
         </div>
+      )}
+
+      {likesOf && (
+        <PostLikesModal
+          likers={likers}
+          onClose={() => {
+            setLikesOf(null)
+            setLikers(null)
+          }}
+        />
       )}
     </div>
   )

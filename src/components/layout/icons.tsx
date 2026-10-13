@@ -67,6 +67,12 @@ export const IconExport = ({ size = 16 }: Props) => (
   </svg>
 )
 
+export const IconHeart = ({ size = 16, filled = false }: Props & { filled?: boolean }) => (
+  <svg {...base(size)} fill={filled ? 'currentColor' : 'none'}>
+    <path d="M12 20.3 4.6 13a4.6 4.6 0 0 1 6.5-6.5l.9.9.9-.9A4.6 4.6 0 0 1 19.4 13z" />
+  </svg>
+)
+
 export const IconBell = ({ size = 18 }: Props) => (
   <svg {...base(size)}>
     <path d="M18 8.5a6 6 0 0 0-12 0c0 5-2.2 6.5-2.2 6.5h16.4S18 13.5 18 8.5" />

@@ -118,4 +118,8 @@ export interface Post {
   attachment: PostAttachment
   authorDisplayName: string
   authorPhotoURL: string
+  /** 좋아요 수. 누른 사람 uid는 서버가 내려주지 않는다. */
+  likeCount: number
+  /** 내가 눌렀는지. */
+  likedByMe: boolean
 }

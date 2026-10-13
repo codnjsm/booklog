@@ -1,6 +1,7 @@
 import type { Post } from '../types'
 import { relativeDay } from '../lib/insights'
 import HighlightedText from './HighlightedText'
+import PostLikes from './PostLikes'
 
 const STATUS_BADGE = {
   wishlist: { label: '읽고싶음', cls: 'border border-border text-dim' },
@@ -34,9 +35,12 @@ interface Props {
   post: Post
   isOwn: boolean
   onDelete: () => void
+  onToggleLike: () => void
+  onOpenLikes: () => void
+  likeBusy?: boolean
 }
 
-export default function PostCard({ post, isOwn, onDelete }: Props) {
+export default function PostCard({ post, isOwn, onDelete, onToggleLike, onOpenLikes, likeBusy }: Props) {
   const { attachment } = post
 
   return (
@@ -98,6 +102,14 @@ export default function PostCard({ post, isOwn, onDelete }: Props) {
       <div className="text-xs sm:text-[13px] text-dim italic border-l-2 border-border pl-2.5 mt-3 leading-relaxed">
         {post.caption}
       </div>
+
+      <PostLikes
+        count={post.likeCount}
+        liked={post.likedByMe}
+        onToggle={onToggleLike}
+        onOpenList={onOpenLikes}
+        busy={likeBusy}
+      />
 
       {isOwn && (
         <div className="hidden sm:flex justify-end mt-3">

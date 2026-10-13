@@ -197,6 +197,41 @@ export const deletePost = async (postId: string): Promise<void> => {
  * 회원 탈퇴. 서버가 게시물·친구관계·기록·프로필·Auth 계정을 한 번에 지운다.
  * 되돌릴 수 없다. 호출 전에 화면에서 반드시 확인을 받아야 한다.
  */
+export interface LikeNotification {
+  id: string
+  actorUid: string
+  postId: string
+  createdAt: string
+}
+
+/**
+ * 내 알림을 실시간으로 구독한다. 서버(콜러블)만 쓰고, 보안 규칙상 본인만 읽는다.
+ * 게시물은 클라이언트가 직접 못 읽으므로 "내 글에 좋아요가 달렸다"를 알려면 이 통로가 필요하다.
+ */
+export const subscribeLikeNotifications = (uid: string, cb: (items: LikeNotification[]) => void): (() => void) =>
+  onSnapshot(
+    collection(db, 'notifications', uid, 'items'),
+    (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<LikeNotification, 'id'>) }))),
+    () => cb([]),
+  )
+
+/** 좋아요를 켜고 끈다. 서버가 바뀐 상태와 수를 돌려준다. */
+export const toggleLike = async (postId: string): Promise<{ liked: boolean; count: number }> => {
+  const call = httpsCallable<{ postId: string }, { liked: boolean; count: number }>(functions, 'toggleLike')
+  return (await call({ postId })).data
+}
+
+/** 누른 사람 목록. 내 친구가 아닌 사람은 서버가 이름을 비워서 보낸다. */
+export const getPostLikes = async (
+  postId: string,
+): Promise<{ displayName: string; photoURL: string; known: boolean }[]> => {
+  const call = httpsCallable<{ postId: string }, { displayName: string; photoURL: string; known: boolean }[]>(
+    functions,
+    'getPostLikes',
+  )
+  return (await call({ postId })).data ?? []
+}
+
 export const deleteAccount = async (): Promise<void> => {
   const call = httpsCallable<void, { ok: true }>(functions, 'deleteAccount')
   await call()

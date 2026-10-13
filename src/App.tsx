@@ -243,6 +243,12 @@ function AppShell() {
     [user],
   )
 
+  // 좋아요 알림에 쓸 이름. 친구가 아닌 사람은 서버가 이름을 주지 않으므로 여기서도 찾을 수 없다.
+  const friendNameOf = useCallback(
+    (uid: string) => friends.find((f) => f.uid === uid)?.displayName || undefined,
+    [friends],
+  )
+
   const handleExport = useCallback(() => {
     exportData()
     showToast('데이터를 내보냈어요', 'success')
@@ -323,6 +329,7 @@ function AppShell() {
       collectionCount={state.quotes.length + state.words.length}
       incomingCount={incoming.length}
       incoming={incoming}
+      friendNameOf={friendNameOf}
       onExport={handleExport}
     >
       {tab === 'home' && (

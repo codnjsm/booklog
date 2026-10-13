@@ -10,7 +10,7 @@ import type { Tab } from '../contexts/AppUIContext'
 export interface NotificationItem {
   /** 같은 알림을 두 번 그리지 않기 위한 키. 소스의 문서 id를 그대로 쓴다. */
   id: string
-  kind: 'friendRequest'
+  kind: 'friendRequest' | 'like'
   /** ISO 문자열. 정렬과 읽음 판정에 쓴다. */
   at: string
   /** 알림을 일으킨 사람 이름. 화면에서 굵게 보여준다. */
@@ -44,7 +44,26 @@ export function friendRequestNotifications(incoming: FriendRequest[]): Notificat
     }))
 }
 
-/** 여러 소스에서 모은 알림을 최신순으로 정렬한다. 2단계에서 소스가 늘면 여기로 합친다. */
+/**
+ * 좋아요 알림을 항목으로 바꾼다.
+ * 누른 사람 이름은 서버가 알림에 담지 않으므로, 아는 사람이면 친구 목록에서 찾아 쓴다.
+ * 못 찾으면 「내가 모르는 친구」 — 누른 사람 목록과 같은 표현을 쓴다.
+ */
+export function likeNotifications(
+  items: { id: string; actorUid: string; createdAt: string }[],
+  nameOf: (uid: string) => string | undefined,
+): NotificationItem[] {
+  return items.map((n) => ({
+    id: n.id,
+    kind: 'like' as const,
+    at: n.createdAt,
+    actor: nameOf(n.actorUid) || '내가 모르는 친구',
+    text: '님이 회원님의 글을 좋아합니다',
+    goTo: 'friends' as Tab,
+  }))
+}
+
+/** 여러 소스에서 모은 알림을 최신순으로 정렬한다. */
 export function sortNotifications(items: NotificationItem[]): NotificationItem[] {
   return [...items].sort((a, b) => (b.at ?? '').localeCompare(a.at ?? ''))
 }

@@ -1,6 +1,6 @@
 // 좋아요 콜러블 로직 테스트. posts.test.mjs와 같은 방식으로 handler를 직접 부른다.
 //   npm run test:rules
-import { toggleLikeHandler, getPostLikesHandler, getDb } from '../functions/lib/index.js'
+import { toggleLikeHandler, getPostLikesHandler, getFriendFeedHandler, getDb } from '../functions/lib/index.js'
 import { before, beforeEach, describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 
@@ -218,5 +218,43 @@ describe('getPostLikes — 누른 사람 목록', () => {
 
   it('게시물 id가 비어 있으면 거부된다', async () => {
     await assertHttpsCode(getPostLikesHandler(BOB, ''), 'invalid-argument')
+  })
+})
+
+describe('getFriendFeed — 좋아요 노출 범위', () => {
+  it('누른 사람 uid 목록은 내려보내지 않는다', async () => {
+    await makeFriends(ALICE, DAVE)
+    const id = await makePost(ALICE, [BOB, DAVE])
+    const feed = await getFriendFeedHandler(BOB)
+    const mine = feed.find((p) => p.id === id)
+    assert.ok(mine, '피드에 글이 있어야 한다')
+    assert.equal(mine.likes, undefined)
+    // DAVE는 BOB의 친구가 아니다. 응답 어디에도 그 uid가 없어야 한다.
+    assert.ok(!JSON.stringify(mine).includes(DAVE))
+  })
+
+  it('수와 내가 눌렀는지만 내려준다', async () => {
+    const id = await makePost(ALICE, [BOB])
+    const feed = await getFriendFeedHandler(BOB)
+    const mine = feed.find((p) => p.id === id)
+    assert.equal(mine.likeCount, 1)
+    assert.equal(mine.likedByMe, true)
+  })
+
+  it('내가 안 눌렀으면 likedByMe가 false', async () => {
+    await makeFriends(ALICE, DAVE)
+    const id = await makePost(ALICE, [DAVE])
+    const feed = await getFriendFeedHandler(BOB)
+    const mine = feed.find((p) => p.id === id)
+    assert.equal(mine.likeCount, 1)
+    assert.equal(mine.likedByMe, false)
+  })
+
+  it('아무도 안 눌렀으면 0', async () => {
+    const id = await makePost(ALICE)
+    const feed = await getFriendFeedHandler(BOB)
+    const mine = feed.find((p) => p.id === id)
+    assert.equal(mine.likeCount, 0)
+    assert.equal(mine.likedByMe, false)
   })
 })

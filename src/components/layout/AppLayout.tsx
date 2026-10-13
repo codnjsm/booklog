@@ -29,6 +29,8 @@ interface Props {
   incomingCount: number
   /** 받은 친구 요청. 알림함이 쓴다. */
   incoming: FriendRequest[]
+  /** uid로 친구 이름을 찾는다. 친구가 아니면 undefined. */
+  friendNameOf: (uid: string) => string | undefined
   onExport: () => void
   children: ReactNode
 }
@@ -56,6 +58,7 @@ export default function AppLayout({
   collectionCount,
   incomingCount,
   incoming,
+  friendNameOf,
   onExport,
   children,
 }: Props) {
@@ -80,7 +83,7 @@ export default function AppLayout({
           >
             Booklog
           </button>
-          {user && <NotificationBell incoming={incoming} />}
+          {user && <NotificationBell incoming={incoming} uid={user.uid} nameOf={friendNameOf} />}
         </div>
 
         <nav className="flex flex-col gap-0.5">
@@ -196,7 +199,7 @@ export default function AppLayout({
         <div className="max-w-[1200px] mx-auto">
           <div className="sm:hidden mb-3 flex items-center justify-between gap-2">
             <span className="font-mono text-[15px] font-bold tracking-[-0.02em] text-[var(--logo)]">Booklog</span>
-            {user && <NotificationBell incoming={incoming} />}
+            {user && <NotificationBell incoming={incoming} uid={user.uid} nameOf={friendNameOf} />}
           </div>
           {children}
         </div>

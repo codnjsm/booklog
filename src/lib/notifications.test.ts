@@ -1,6 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import type { FriendRequest } from '../types'
-import { friendRequestNotifications, sortNotifications, countUnread, readSeenAt, markSeenNow } from './notifications'
+import {
+  friendRequestNotifications,
+  likeNotifications,
+  sortNotifications,
+  countUnread,
+  readSeenAt,
+  markSeenNow,
+} from './notifications'
 
 const req = (id: string, extra: Partial<FriendRequest> = {}): FriendRequest => ({
   id,
@@ -169,5 +176,46 @@ describe('readSeenAt — 저장된 연 시각 읽기', () => {
     })
     expect(readSeenAt()).toBeNull()
     expect(() => markSeenNow()).not.toThrow()
+  })
+})
+
+describe('likeNotifications — 좋아요 알림', () => {
+  const raw = (id: string, actorUid: string, at: string) => ({ id, actorUid, createdAt: at })
+  const names: Record<string, string> = { 'u-bob': '밥' }
+  const nameOf = (uid: string) => names[uid]
+
+  it('아는 사람이면 이름으로 부른다', () => {
+    const [n] = likeNotifications([raw('n1', 'u-bob', '2026-10-13T00:00:00.000Z')], nameOf)
+    expect(n.actor).toBe('밥')
+    expect(n.text).toBe('님이 회원님의 글을 좋아합니다')
+  })
+
+  it('모르는 사람이면 「내가 모르는 친구」 — 누른 사람 목록과 같은 표현', () => {
+    const [n] = likeNotifications([raw('n1', 'u-x', '2026-10-13T00:00:00.000Z')], nameOf)
+    expect(n.actor).toBe('내가 모르는 친구')
+  })
+
+  it('누르면 친구 탭으로 간다', () => {
+    const [n] = likeNotifications([raw('n1', 'u-bob', '2026-10-13T00:00:00.000Z')], nameOf)
+    expect(n.goTo).toBe('friends')
+  })
+
+  it('알림이 없으면 빈 목록', () => {
+    expect(likeNotifications([], nameOf)).toEqual([])
+  })
+
+  it('친구 요청 알림과 시간순으로 섞인다', () => {
+    const fr = friendRequestNotifications([
+      {
+        id: 'r1',
+        fromUid: 'u1',
+        toUid: 'me',
+        status: 'pending',
+        createdAt: '2026-10-10T00:00:00.000Z',
+      },
+    ])
+    const lk = likeNotifications([raw('n1', 'u-bob', '2026-10-12T00:00:00.000Z')], nameOf)
+    const sorted = sortNotifications([...fr, ...lk])
+    expect(sorted.map((x) => x.kind)).toEqual(['like', 'friendRequest'])
   })
 })
