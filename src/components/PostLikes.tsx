@@ -36,7 +36,8 @@ export default function PostLikes({ count, liked, onToggle, onOpenList, busy }: 
         <button
           type="button"
           onClick={onOpenList}
-          className="bg-transparent border-none p-0 px-1 py-0.5 -mx-1 text-xs sm:text-[13px] text-dim cursor-pointer hover:text-ink"
+          // 글자만 두면 높이가 20px이라 최소 터치 영역(24)에 못 미친다. 위아래 여백으로 채우고 음수 마진으로 위치를 되돌린다.
+          className="bg-transparent border-none px-1.5 py-1.5 -mx-1.5 -my-1.5 text-xs sm:text-[13px] text-dim cursor-pointer hover:text-ink"
         >
           {count}명이 좋아합니다
         </button>
