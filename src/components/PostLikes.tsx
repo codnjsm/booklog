@@ -18,7 +18,7 @@ interface Props {
  */
 export default function PostLikes({ count, liked, onToggle, onOpenList, busy }: Props) {
   return (
-    <div className="flex items-center gap-2 mt-3">
+    <div className="flex items-center mt-3">
       <button
         type="button"
         onClick={onToggle}
