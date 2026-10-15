@@ -3,7 +3,7 @@ import Modal from './Modal'
 import type { Book, Quote } from '../../types'
 import { readingSince, readDaysCount } from '../../lib/insights'
 import HighlightedText from '../HighlightedText'
-import { IconLock, IconCollection } from '../layout/icons'
+import { IconLock, IconCollection, IconFriends, IconChevronRight } from '../layout/icons'
 import Stars from '../Stars'
 
 const STATUS = {
@@ -40,6 +40,9 @@ interface Props {
   onAddQuote: (bookId: string) => void
   onEditQuote: (id: string) => void
   onTogglePrivate: (id: string, next: boolean) => void
+  /** 권할 상대(친구)가 있을 때만 참. 없으면 권하기 줄을 숨긴다. */
+  canRecommend: boolean
+  onRecommend: (bookId: string) => void
 }
 
 export default function BookDetailModal({
@@ -52,6 +55,8 @@ export default function BookDetailModal({
   onAddQuote,
   onEditQuote,
   onTogglePrivate,
+  canRecommend,
+  onRecommend,
 }: Props) {
   const book = books.find((b) => b.id === bookId)
   const [coverError, setCoverError] = useState(false)
@@ -178,6 +183,26 @@ export default function BookDetailModal({
               </button>
             </div>
           </div>
+
+          {/* 비공개 책은 권할 수 없다(서버가 거부한다). 고른 뒤에 에러를 보게 하지 않는다. */}
+          {canRecommend && !isPrivate && (
+            <button
+              onClick={() => onRecommend(bookId)}
+              className="flex items-center gap-2.5 px-4 py-3 rounded-[10px] border border-border bg-transparent cursor-pointer text-left w-full"
+            >
+              <span className="text-dim">
+                <IconFriends size={16} />
+              </span>
+              <span className="flex flex-col gap-px">
+                <span className="text-[13px] font-medium text-ink">친구에게 권하기</span>
+                <span className="text-xs sm:text-[13px] text-dim">친구의 읽고싶음 목록에 담아줄 수 있어요</span>
+              </span>
+              <span className="flex-1" />
+              <span className="text-dim flex-shrink-0">
+                <IconChevronRight />
+              </span>
+            </button>
+          )}
 
           <button
             onClick={() => onTogglePrivate(bookId, !isPrivate)}

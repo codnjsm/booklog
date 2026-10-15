@@ -28,7 +28,8 @@ import {
   type Unsubscribe,
 } from 'firebase/firestore'
 import { getFunctions, httpsCallable } from 'firebase/functions'
-import type { AppState, UserProfile, FriendRequest, FriendShelf, Post } from './types'
+import type { AppState, UserProfile, FriendRequest, FriendShelf, Post, Recommendation } from './types'
+import type { ServerNotification } from './lib/notifications'
 
 const firebaseConfig = {
   apiKey: 'AIzaSyAZtjU5A1ay8ZlWf63spiwEzHjxvZCqSUk',
@@ -197,21 +198,17 @@ export const deletePost = async (postId: string): Promise<void> => {
  * 회원 탈퇴. 서버가 게시물·친구관계·기록·프로필·Auth 계정을 한 번에 지운다.
  * 되돌릴 수 없다. 호출 전에 화면에서 반드시 확인을 받아야 한다.
  */
-export interface LikeNotification {
-  id: string
-  actorUid: string
-  postId: string
-  createdAt: string
-}
-
 /**
  * 내 알림을 실시간으로 구독한다. 서버(콜러블)만 쓰고, 보안 규칙상 본인만 읽는다.
- * 게시물은 클라이언트가 직접 못 읽으므로 "내 글에 좋아요가 달렸다"를 알려면 이 통로가 필요하다.
+ * 게시물과 권유는 클라이언트가 직접 못 읽으므로, "내 글에 좋아요가 달렸다"
+ * "책을 권해왔다"를 알려면 이 통로가 필요하다.
+ *
+ * 종류(kind)를 여기서 가리지 않고 그대로 넘긴다 — 무슨 알림인지는 화면이 정한다.
  */
-export const subscribeLikeNotifications = (uid: string, cb: (items: LikeNotification[]) => void): (() => void) =>
+export const subscribeNotifications = (uid: string, cb: (items: ServerNotification[]) => void): (() => void) =>
   onSnapshot(
     collection(db, 'notifications', uid, 'items'),
-    (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<LikeNotification, 'id'>) }))),
+    (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<ServerNotification, 'id'>) }))),
     () => cb([]),
   )
 
@@ -230,6 +227,32 @@ export const getPostLikes = async (
     'getPostLikes',
   )
   return (await call({ postId })).data ?? []
+}
+
+/**
+ * 친구에게 책을 권한다. 책 내용은 서버가 내 서재에서 꺼내므로 id만 보낸다.
+ */
+export const recommendBook = async (toUid: string, bookId: string, message: string): Promise<void> => {
+  const call = httpsCallable<{ toUid: string; bookId: string; message: string }, { id: string }>(
+    functions,
+    'recommendBook',
+  )
+  await call({ toUid, bookId, message })
+}
+
+/** 나에게 온, 아직 처리하지 않은 권유 목록. */
+export const getRecommendations = async (): Promise<Recommendation[]> => {
+  const call = httpsCallable<void, Recommendation[]>(functions, 'getRecommendations')
+  return (await call()).data ?? []
+}
+
+/**
+ * 받은 권유를 수락하거나 거절한다.
+ * 수락해도 **서버는 책을 넣지 않는다** — 담는 건 이쪽(useData.addBook)이다.
+ */
+export const respondRecommendation = async (id: string, accept: boolean): Promise<void> => {
+  const call = httpsCallable<{ id: string; accept: boolean }, { ok: true }>(functions, 'respondRecommendation')
+  await call({ id, accept })
 }
 
 export const deleteAccount = async (): Promise<void> => {

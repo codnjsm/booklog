@@ -87,6 +87,13 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    match /recommendations/{recId} {
+      // 책 권하기도 콜러블로만 만들고 읽고 처리한다.
+      // 클라이언트가 직접 쓰면 남의 알림함에 권유를 꽂거나, 내 서재에 없는 책을
+      // 지어내서 보낼 수 있다. 게시물과 같은 이유로 전면 차단해둔다.
+      allow read, write: if false;
+    }
+
     match /posts/{postId} {
       // 발행(게시물)은 createPost/getFriendFeed/deletePost 콜러블을 통해서만 만들고 읽고 지운다.
       // 클라이언트가 직접 쓰면 스냅샷에 화이트리스트 밖 필드를 넣어 친구에게 그대로 노출시킬

@@ -10,7 +10,7 @@ import type { Tab } from '../contexts/AppUIContext'
 export interface NotificationItem {
   /** 같은 알림을 두 번 그리지 않기 위한 키. 소스의 문서 id를 그대로 쓴다. */
   id: string
-  kind: 'friendRequest' | 'like'
+  kind: 'friendRequest' | 'like' | 'recommend' | 'recommendAccepted'
   /** ISO 문자열. 정렬과 읽음 판정에 쓴다. */
   at: string
   /** 알림을 일으킨 사람 이름. 화면에서 굵게 보여준다. */
@@ -44,23 +44,51 @@ export function friendRequestNotifications(incoming: FriendRequest[]): Notificat
     }))
 }
 
+/** 서버가 알림 문서에 남기는 모양. 종류는 늘어나므로 문자열로 받는다. */
+export interface ServerNotification {
+  id: string
+  /** 2단계(좋아요)보다 먼저 쌓인 문서에는 없을 수 있다. */
+  kind?: string
+  actorUid: string
+  createdAt: string
+}
+
+/** 종류별 문구. 여기 없는 종류는 그릴 줄 모르는 것이므로 목록에서 뺀다. */
+const SERVER_TEXTS: Record<string, string> = {
+  like: '님이 회원님의 글을 좋아합니다',
+  recommend: '님이 책을 권했어요',
+  recommendAccepted: '님이 권한 책을 담았어요',
+}
+
 /**
- * 좋아요 알림을 항목으로 바꾼다.
- * 누른 사람 이름은 서버가 알림에 담지 않으므로, 아는 사람이면 친구 목록에서 찾아 쓴다.
- * 못 찾으면 「내가 모르는 친구」 — 누른 사람 목록과 같은 표현을 쓴다.
+ * 서버가 남긴 알림(좋아요·책 권하기)을 항목으로 바꾼다.
+ *
+ * 한 사람 이름은 서버가 알림에 담지 않으므로, 아는 사람이면 친구 목록에서 찾아 쓴다.
+ * 못 찾으면 「내가 모르는 친구」 — 좋아요 누른 사람 목록과 같은 표현을 쓴다.
+ *
+ * 모르는 종류가 섞여 와도 목록이 깨지지 않게 조용히 건너뛴다.
+ * 앱을 새로 고치지 않은 사용자에게 새 종류의 알림이 닿을 수 있다.
  */
-export function likeNotifications(
-  items: { id: string; actorUid: string; createdAt: string }[],
+export function serverNotifications(
+  items: ServerNotification[],
   nameOf: (uid: string) => string | undefined,
 ): NotificationItem[] {
-  return items.map((n) => ({
-    id: n.id,
-    kind: 'like' as const,
-    at: n.createdAt,
-    actor: nameOf(n.actorUid) || '내가 모르는 친구',
-    text: '님이 회원님의 글을 좋아합니다',
-    goTo: 'friends' as Tab,
-  }))
+  return items.flatMap((n) => {
+    // kind가 없는 건 좋아요만 있던 시절의 알림이다.
+    const kind = n.kind ?? 'like'
+    const text = SERVER_TEXTS[kind]
+    if (!text) return []
+    return [
+      {
+        id: n.id,
+        kind: kind as NotificationItem['kind'],
+        at: n.createdAt,
+        actor: nameOf(n.actorUid) || '내가 모르는 친구',
+        text,
+        goTo: 'friends' as Tab,
+      },
+    ]
+  })
 }
 
 /** 여러 소스에서 모은 알림을 최신순으로 정렬한다. */

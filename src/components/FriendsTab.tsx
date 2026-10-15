@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { User } from 'firebase/auth'
-import type { UserProfile, FriendRequest, BookStatus, FriendShelf, Post } from '../types'
+import type { UserProfile, FriendRequest, BookStatus, FriendShelf, Post, Recommendation } from '../types'
 import BookCard from './BookCard'
 import PageHeader from './layout/PageHeader'
 import { IconSearch, IconBooks, IconFriends } from './layout/icons'
@@ -30,6 +30,10 @@ interface Props {
   onLoadFriendBooks: (uid: string) => Promise<FriendShelf>
   onLoadFriendFeed: () => Promise<Post[]>
   onDeletePost: (postId: string) => Promise<void>
+  onLoadRecommendations: () => Promise<Recommendation[]>
+  onRespondRecommendation: (id: string, accept: boolean) => Promise<void>
+  /** 권한 책을 내 서재에 담는다. 이미 같은 제목이 있으면 담지 않고 false. */
+  onAddRecommendedBook: (rec: Recommendation) => boolean
 }
 
 // 리스트 행 안에 들어가는 버튼이라 작은 사이즈(py-1.5)를 쓴다 — QuoteCard와 같은 규격.
@@ -125,10 +129,42 @@ export default function FriendsTab({
   onLoadFriendBooks,
   onLoadFriendFeed,
   onDeletePost,
+  onLoadRecommendations,
+  onRespondRecommendation,
+  onAddRecommendedBook,
 }: Props) {
   const { openPublishPost, openAddFriend, openLogin, showToast } = useAppUI()
   const queryClient = useQueryClient()
   const [view, setView] = useState<MainView>('friends')
+
+  // 받은 추천. 친구 요청과 달리 실시간 구독이 아니라 — 권유는 콜러블로만 읽는다.
+  // 알림함(실시간)이 "권해왔다"를 알려주고, 목록은 친구 탭을 열 때 받아온다.
+  const recommendationsQuery = useQuery({
+    queryKey: ['recommendations'],
+    queryFn: onLoadRecommendations,
+    enabled: !!user,
+    staleTime: 30_000,
+  })
+  const recommendations = recommendationsQuery.data ?? []
+
+  const [recBusy, setRecBusy] = useState<string | null>(null)
+  const respondToRec = async (rec: Recommendation, accept: boolean) => {
+    if (recBusy) return
+    setRecBusy(rec.id)
+    try {
+      // 담는 건 이쪽이다 — 서버가 내 서재에 직접 쓰면 로컬 데이터에 덮어써져 사라진다.
+      // 이미 가진 책이면 담지 않지만 권유는 처리된 것으로 본다(책이 서재에 있는 건 같다).
+      const added = accept ? onAddRecommendedBook(rec) : false
+      await onRespondRecommendation(rec.id, accept)
+      queryClient.setQueryData<Recommendation[]>(['recommendations'], (old) => old?.filter((r) => r.id !== rec.id))
+      if (!accept) showToast('추천을 지웠어요', 'success')
+      else showToast(added ? '읽고싶음에 담았어요' : '이미 서재에 있어요', 'success')
+    } catch {
+      showToast('처리하지 못했어요. 다시 시도해주세요', 'error')
+    } finally {
+      setRecBusy(null)
+    }
+  }
 
   const feedQuery = useQuery({
     queryKey: ['friendFeed'],
@@ -363,6 +399,48 @@ export default function FriendsTab({
 
       {view === 'friends' && (
         <div className="flex flex-col gap-6">
+          {/* 받은 추천 */}
+          {recommendations.length > 0 && (
+            <div>
+              <div className={SECTION_LABEL}>받은 추천 {recommendations.length}</div>
+              <div className={LIST_CARD}>
+                {recommendations.map((rec) => (
+                  <div key={rec.id} className="px-4 py-4 border-b border-surface2 last:border-b-0">
+                    <div className="flex gap-3">
+                      <div className="w-11 h-16 rounded bg-bg border border-border flex-shrink-0 overflow-hidden flex items-center justify-center">
+                        {rec.bookCover ? (
+                          <img src={rec.bookCover} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-[9px] text-dim text-center px-0.5 leading-tight">{rec.bookTitle}</span>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-ink truncate">{rec.bookTitle}</div>
+                        <div className="text-xs sm:text-[13px] text-dim truncate mt-0.5">{rec.bookAuthor}</div>
+                        <div className="text-xs sm:text-[13px] text-dim mt-1.5">
+                          <span className="font-semibold text-ink">{rec.fromDisplayName || '친구'}</span>님이 권했어요
+                        </div>
+                      </div>
+                    </div>
+                    {rec.message && (
+                      <div className="bg-surface2 rounded-lg px-3 py-2.5 mt-2.5 text-[13px] text-ink leading-[1.6] whitespace-pre-wrap">
+                        {rec.message}
+                      </div>
+                    )}
+                    <div className="flex gap-1.5 mt-2.5">
+                      <button className={BTN_SM} disabled={recBusy === rec.id} onClick={() => respondToRec(rec, true)}>
+                        읽고싶음에 담기
+                      </button>
+                      <button className={BTN_SM_DANGER_SOFT} onClick={() => respondToRec(rec, false)}>
+                        안 담기
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* 받은 요청 */}
           {incoming.length > 0 && (
             <div>

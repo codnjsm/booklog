@@ -13,6 +13,7 @@ export type Modal =
   | { type: 'addWord' }
   | { type: 'publishPost' }
   | { type: 'addFriend' }
+  | { type: 'recommendBook'; bookId: string }
   | { type: 'welcome' }
   /** reason이 'promote'면 로그인/가입 폼 위에 "기록이 쌓이고 있어요" 안내를 얹는다. */
   | { type: 'login'; reason?: 'promote' }
@@ -42,6 +43,7 @@ interface AppUIValue {
   openAddWord: () => void
   openPublishPost: () => void
   openAddFriend: () => void
+  openRecommendBook: (bookId: string) => void
   openWelcome: () => void
   openLogin: (reason?: 'promote') => void
   closeModal: () => void
@@ -152,6 +154,13 @@ export function AppUIProvider({ children }: { children: ReactNode }) {
     },
     [clearBookParam],
   )
+  const openRecommendBook = useCallback(
+    (bookId: string) => {
+      clearBookParam()
+      setLocalModal({ type: 'recommendBook', bookId })
+    },
+    [clearBookParam],
+  )
   const openAddWord = useCallback(() => {
     clearBookParam()
     setLocalModal({ type: 'addWord' })
@@ -193,6 +202,7 @@ export function AppUIProvider({ children }: { children: ReactNode }) {
       openAddWord,
       openPublishPost,
       openAddFriend,
+      openRecommendBook,
       openWelcome,
       openLogin,
       closeModal,
@@ -215,6 +225,7 @@ export function AppUIProvider({ children }: { children: ReactNode }) {
       openAddWord,
       openPublishPost,
       openAddFriend,
+      openRecommendBook,
       openWelcome,
       openLogin,
       closeModal,

@@ -5,13 +5,14 @@ import { IconBell } from './layout/icons'
 import { relativeDay } from '../lib/insights'
 import {
   friendRequestNotifications,
-  likeNotifications,
+  serverNotifications,
   sortNotifications,
   countUnread,
   readSeenAt,
   markSeenNow,
 } from '../lib/notifications'
-import { subscribeLikeNotifications, type LikeNotification } from '../firebase'
+import type { ServerNotification } from '../lib/notifications'
+import { subscribeNotifications } from '../firebase'
 
 /** 바깥 틀. 알림이 몇 건이든 이 안에 담기고, 항목끼리는 선으로 나눈다. */
 const PANEL = 'bg-surface border border-border rounded-xl shadow-card overflow-hidden'
@@ -22,7 +23,7 @@ interface Props {
   /** 받은 친구 요청. */
   incoming: FriendRequest[]
   uid: string
-  /** 좋아요 누른 사람 이름을 찾는 데 쓴다. 친구가 아니면 undefined. */
+  /** 알림을 일으킨 사람 이름을 찾는 데 쓴다. 친구가 아니면 undefined. */
   nameOf: (uid: string) => string | undefined
 }
 
@@ -31,11 +32,11 @@ export default function NotificationBell({ incoming, uid, nameOf }: Props) {
   const [open, setOpen] = useState(false)
   const [seenAt, setSeenAt] = useState<string | null>(() => readSeenAt())
 
-  const [likes, setLikes] = useState<LikeNotification[]>([])
-  useEffect(() => subscribeLikeNotifications(uid, setLikes), [uid])
+  const [fromServer, setFromServer] = useState<ServerNotification[]>([])
+  useEffect(() => subscribeNotifications(uid, setFromServer), [uid])
 
   // 소스가 늘면 여기서 합친다. 목록 자체는 어디서 왔는지 모른다.
-  const items = sortNotifications([...friendRequestNotifications(incoming), ...likeNotifications(likes, nameOf)])
+  const items = sortNotifications([...friendRequestNotifications(incoming), ...serverNotifications(fromServer, nameOf)])
   const unread = countUnread(items, seenAt)
 
   // 모달과 같은 규칙 — 열려 있는 동안 Escape로 닫힌다.

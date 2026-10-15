@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import type { FriendRequest } from '../types'
 import {
   friendRequestNotifications,
-  likeNotifications,
+  serverNotifications,
   sortNotifications,
   countUnread,
   readSeenAt,
@@ -179,29 +179,29 @@ describe('readSeenAt — 저장된 연 시각 읽기', () => {
   })
 })
 
-describe('likeNotifications — 좋아요 알림', () => {
-  const raw = (id: string, actorUid: string, at: string) => ({ id, actorUid, createdAt: at })
+describe('serverNotifications — 서버가 남긴 알림', () => {
+  const raw = (id: string, actorUid: string, at: string, kind = 'like') => ({ id, actorUid, createdAt: at, kind })
   const names: Record<string, string> = { 'u-bob': '밥' }
   const nameOf = (uid: string) => names[uid]
 
   it('아는 사람이면 이름으로 부른다', () => {
-    const [n] = likeNotifications([raw('n1', 'u-bob', '2026-10-13T00:00:00.000Z')], nameOf)
+    const [n] = serverNotifications([raw('n1', 'u-bob', '2026-10-13T00:00:00.000Z')], nameOf)
     expect(n.actor).toBe('밥')
     expect(n.text).toBe('님이 회원님의 글을 좋아합니다')
   })
 
   it('모르는 사람이면 「내가 모르는 친구」 — 누른 사람 목록과 같은 표현', () => {
-    const [n] = likeNotifications([raw('n1', 'u-x', '2026-10-13T00:00:00.000Z')], nameOf)
+    const [n] = serverNotifications([raw('n1', 'u-x', '2026-10-13T00:00:00.000Z')], nameOf)
     expect(n.actor).toBe('내가 모르는 친구')
   })
 
   it('누르면 친구 탭으로 간다', () => {
-    const [n] = likeNotifications([raw('n1', 'u-bob', '2026-10-13T00:00:00.000Z')], nameOf)
+    const [n] = serverNotifications([raw('n1', 'u-bob', '2026-10-13T00:00:00.000Z')], nameOf)
     expect(n.goTo).toBe('friends')
   })
 
   it('알림이 없으면 빈 목록', () => {
-    expect(likeNotifications([], nameOf)).toEqual([])
+    expect(serverNotifications([], nameOf)).toEqual([])
   })
 
   it('친구 요청 알림과 시간순으로 섞인다', () => {
@@ -214,8 +214,44 @@ describe('likeNotifications — 좋아요 알림', () => {
         createdAt: '2026-10-10T00:00:00.000Z',
       },
     ])
-    const lk = likeNotifications([raw('n1', 'u-bob', '2026-10-12T00:00:00.000Z')], nameOf)
+    const lk = serverNotifications([raw('n1', 'u-bob', '2026-10-12T00:00:00.000Z')], nameOf)
     const sorted = sortNotifications([...fr, ...lk])
     expect(sorted.map((x) => x.kind)).toEqual(['like', 'friendRequest'])
+  })
+
+  it('책을 권해오면 권유 알림이 된다', () => {
+    const [n] = serverNotifications([raw('n1', 'u-bob', '2026-10-15T00:00:00.000Z', 'recommend')], nameOf)
+    expect(n.kind).toBe('recommend')
+    expect(n.text).toBe('님이 책을 권했어요')
+  })
+
+  it('권한 책을 담으면 권한 사람에게 알림이 된다', () => {
+    const [n] = serverNotifications([raw('n1', 'u-bob', '2026-10-15T00:00:00.000Z', 'recommendAccepted')], nameOf)
+    expect(n.text).toBe('님이 권한 책을 담았어요')
+  })
+
+  it('kind가 없는 과거 알림은 좋아요로 본다', () => {
+    const [n] = serverNotifications([{ id: 'n1', actorUid: 'u-bob', createdAt: '2026-10-13T00:00:00.000Z' }], nameOf)
+    expect(n.kind).toBe('like')
+  })
+
+  it('안 읽은 수에 권유 알림도 섞여서 센다', () => {
+    const items = sortNotifications([
+      ...friendRequestNotifications([req('r1', { createdAt: '2026-10-14T00:00:00.000Z' })]),
+      ...serverNotifications([raw('n1', 'u-bob', '2026-10-15T00:00:00.000Z', 'recommend')], nameOf),
+    ])
+    expect(countUnread(items, '2026-10-13T00:00:00.000Z')).toBe(2)
+    expect(countUnread(items, '2026-10-14T12:00:00.000Z')).toBe(1)
+  })
+
+  it('모르는 종류가 섞여 와도 목록이 깨지지 않는다 — 그 항목만 빠진다', () => {
+    const items = serverNotifications(
+      [
+        raw('n1', 'u-bob', '2026-10-13T00:00:00.000Z', '아직_모르는_종류'),
+        raw('n2', 'u-bob', '2026-10-14T00:00:00.000Z', 'recommend'),
+      ],
+      nameOf,
+    )
+    expect(items.map((i) => i.id)).toEqual(['n2'])
   })
 })

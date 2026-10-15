@@ -17,7 +17,8 @@ import {
   changeEmail,
   deleteAccount,
 } from './firebase'
-import type { Post } from './types'
+import type { Post, Recommendation } from './types'
+import { normalizeTitle } from './lib/recommend'
 import { AppUIProvider, useAppUI } from './contexts/AppUIContext'
 import AppLayout from './components/layout/AppLayout'
 import HomeTab from './components/HomeTab'
@@ -34,6 +35,7 @@ import BookDetailModal from './components/modals/BookDetailModal'
 import AddQuoteModal from './components/modals/AddQuoteModal'
 import AddWordModal from './components/modals/AddWordModal'
 import PublishPostModal from './components/modals/PublishPostModal'
+import RecommendBookModal from './components/modals/RecommendBookModal'
 import AddFriendModal from './components/modals/AddFriendModal'
 import WelcomeModal from './components/modals/WelcomeModal'
 
@@ -112,9 +114,45 @@ function AppShell() {
     loadFriendFeed,
     publishPost,
     removePost,
+    recommend,
+    loadRecommendations,
+    respondToRecommendation,
   } = useFriends(user)
-  const { tab, modal, showToast, openManualBook, openAddQuote, openWelcome, openLogin, closeModal, changeTab } =
-    useAppUI()
+  const {
+    tab,
+    modal,
+    showToast,
+    openManualBook,
+    openAddQuote,
+    openWelcome,
+    openLogin,
+    closeModal,
+    changeTab,
+    openRecommendBook,
+  } = useAppUI()
+
+  /**
+   * 친구가 권한 책을 내 서재에 담는다. 서버가 아니라 여기서 담는 이유는
+   * 로컬스토리지가 먼저라, 서버가 직접 넣으면 다음 저장 때 덮어써져 사라지기 때문이다.
+   * 이미 같은 책이 있으면 담지 않는다 — 제목 비교는 추천 기능과 같은 규칙을 쓴다.
+   */
+  const takeRecommendedBook = useCallback(
+    (rec: Recommendation): boolean => {
+      const already = state.books.some((b) => normalizeTitle(b.title) === normalizeTitle(rec.bookTitle))
+      if (already) return false
+      addBook({
+        title: rec.bookTitle,
+        author: rec.bookAuthor,
+        cover: rec.bookCover,
+        year: '',
+        status: 'wishlist',
+        rating: 0,
+        review: '',
+      })
+      return true
+    },
+    [state.books, addBook],
+  )
   const queryClient = useQueryClient()
 
   useEffect(() => {
@@ -379,6 +417,9 @@ function AppShell() {
           onLoadFriendBooks={loadFriendBooks}
           onLoadFriendFeed={loadFriendFeed}
           onDeletePost={removePost}
+          onLoadRecommendations={loadRecommendations}
+          onRespondRecommendation={respondToRecommendation}
+          onAddRecommendedBook={takeRecommendedBook}
         />
       )}
       {tab === 'more' && (
@@ -460,6 +501,8 @@ function AppShell() {
           }}
           onAddQuote={(bookId) => openAddQuote(bookId)}
           onEditQuote={(quoteId) => openAddQuote(undefined, quoteId)}
+          canRecommend={friends.length > 0}
+          onRecommend={openRecommendBook}
         />
       )}
       {modal.type === 'addQuote' && (
@@ -507,6 +550,13 @@ function AppShell() {
           onPublished={(post) => queryClient.setQueryData<Post[]>(['friendFeed'], (old) => [post, ...(old ?? [])])}
         />
       )}
+      {modal.type === 'recommendBook' &&
+        (() => {
+          const book = state.books.find((b) => b.id === modal.bookId)
+          if (!book) return null
+          return <RecommendBookModal book={book} friends={friends} onClose={closeModal} onRecommend={recommend} />
+        })()}
+
       {modal.type === 'addFriend' && (
         <AddFriendModal
           user={user}

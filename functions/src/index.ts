@@ -493,6 +493,190 @@ export const deletePost = onCall({ region: 'asia-northeast3', enforceAppCheck: t
   return deletePostHandler(req.auth.uid, postId)
 })
 
+/**
+ * 친구에게 책을 권한다.
+ *
+ * 권유는 recommendations 컬렉션에만 쌓이고 **받는 사람의 서재에는 서버가 손대지 않는다.**
+ * 이 앱은 로컬스토리지가 먼저라(useData) 서버가 상대의 reading-notes에 책을 끼워 넣어도
+ * 그 사람 브라우저의 로컬본이 더 최신이면 다음 저장 때 통째로 덮어쓴다 — 권한 책이 사라진다.
+ * 그래서 담는 일은 받는 사람이 수락을 누를 때 그쪽 클라이언트가 기존 책 추가 경로로 한다.
+ *
+ * 책 내용은 보내는 쪽이 적어 보내는 게 아니라 서버가 내 서재에서 꺼낸다(발행과 같다).
+ * 받는 사람 화면에 그대로 뜨는 내용이라 위조할 수 있으면 안 된다.
+ */
+export async function recommendBookHandler(
+  uid: string,
+  data: { toUid?: unknown; bookId?: unknown; message?: unknown },
+): Promise<{ id: string }> {
+  const toUid = String(data?.toUid ?? '').trim()
+  const bookId = String(data?.bookId ?? '').trim()
+  if (!toUid || !bookId) {
+    throw new HttpsError('invalid-argument', '받는 사람과 책이 필요합니다')
+  }
+  if (toUid === uid) {
+    throw new HttpsError('invalid-argument', '자기 자신에게는 권할 수 없습니다')
+  }
+  const message = String(data?.message ?? '').trim()
+  if (message.length > 300) {
+    throw new HttpsError('invalid-argument', '메모는 300자까지 쓸 수 있습니다')
+  }
+  if (!(await areFriends(uid, toUid))) {
+    throw new HttpsError('permission-denied', '친구에게만 권할 수 있습니다')
+  }
+
+  const db = getDb()
+  const notes = (await db.collection('reading-notes').doc(uid).get()).data() ?? {}
+  const books: Record<string, unknown>[] = Array.isArray(notes.books) ? notes.books : []
+  const book = books.find((b) => b.id === bookId)
+  if (!book) {
+    throw new HttpsError('invalid-argument', '책을 찾을 수 없습니다')
+  }
+  // 비공개로 해둔 책을 친구에게 보내면 설정과 어긋난다. 발행과 같은 기준이다.
+  if (book.isPrivate) {
+    throw new HttpsError('invalid-argument', '비공개 책은 권할 수 없습니다')
+  }
+
+  // 문서 id를 (보낸 사람, 받는 사람, 책)으로 고정해 같은 책이 두 번 쌓이지 않게 한다.
+  const id = `${uid}_${toUid}_${bookId}`
+  const ref = db.collection('recommendations').doc(id)
+  if ((await ref.get()).data()?.status === 'pending') {
+    throw new HttpsError('already-exists', '이미 권한 책이에요')
+  }
+
+  const createdAt = new Date().toISOString()
+  await ref.set({
+    fromUid: uid,
+    toUid,
+    createdAt,
+    message,
+    bookTitle: book.title ?? '',
+    bookAuthor: book.author ?? '',
+    bookCover: book.cover ?? '',
+    status: 'pending',
+  })
+  await db.doc(`notifications/${toUid}/items/recommend_${id}`).set({
+    kind: 'recommend',
+    actorUid: uid,
+    recommendationId: id,
+    createdAt,
+  })
+  return { id }
+}
+
+export const recommendBook = onCall({ region: 'asia-northeast3', enforceAppCheck: true }, async (req) => {
+  if (!req.auth) {
+    throw new HttpsError('unauthenticated', '로그인이 필요합니다')
+  }
+  return recommendBookHandler(req.auth.uid, req.data ?? {})
+})
+
+/** 받은 권유 한 건. 보낸 사람 표시정보를 동봉해 클라이언트가 추가 조회 없이 그릴 수 있게 한다. */
+export interface RecommendationView {
+  id: string
+  fromUid: string
+  fromDisplayName: string
+  fromPhotoURL: string
+  bookTitle: string
+  bookAuthor: string
+  bookCover: string
+  message: string
+  createdAt: string
+}
+
+/**
+ * 나에게 온, 아직 처리하지 않은 권유 목록.
+ *
+ * 정렬은 메모리에서 한다 — Firestore에서 정렬까지 시키면 (toUid, status, createdAt)
+ * 복합 색인이 필요한데, 한 사람 앞으로 온 미처리 권유는 많아야 몇 건이다.
+ */
+export async function getRecommendationsHandler(uid: string): Promise<RecommendationView[]> {
+  const db = getDb()
+  const snap = await db.collection('recommendations').where('toUid', '==', uid).where('status', '==', 'pending').get()
+  if (snap.empty) return []
+
+  const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Record<string, unknown>)
+  const fromUids = [...new Set(docs.map((d) => d.fromUid as string))]
+  const profiles = new Map(
+    (await Promise.all(fromUids.map((u) => db.collection('users').doc(u).get()))).map((d) => [d.id, d.data()]),
+  )
+
+  return docs
+    .map((d) => ({
+      id: d.id as string,
+      fromUid: d.fromUid as string,
+      fromDisplayName: (profiles.get(d.fromUid as string)?.displayName as string) || '',
+      fromPhotoURL: (profiles.get(d.fromUid as string)?.photoURL as string) || '',
+      bookTitle: (d.bookTitle as string) ?? '',
+      bookAuthor: (d.bookAuthor as string) ?? '',
+      bookCover: (d.bookCover as string) ?? '',
+      message: (d.message as string) ?? '',
+      createdAt: (d.createdAt as string) ?? '',
+    }))
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+}
+
+export const getRecommendations = onCall({ region: 'asia-northeast3', enforceAppCheck: true }, async (req) => {
+  if (!req.auth) {
+    throw new HttpsError('unauthenticated', '로그인이 필요합니다')
+  }
+  return getRecommendationsHandler(req.auth.uid)
+})
+
+/**
+ * 받은 권유를 수락하거나 거절한다.
+ *
+ * **수락해도 서버는 책을 넣지 않는다.** 권유를 처리 완료로 바꾸고 알림만 정리한다.
+ * 책을 담는 건 받는 사람의 클라이언트다 — 이유는 recommendBookHandler 주석 참고.
+ */
+export async function respondRecommendationHandler(
+  uid: string,
+  data: { id?: unknown; accept?: unknown },
+): Promise<{ ok: true }> {
+  const id = String(data?.id ?? '').trim()
+  if (!id) {
+    throw new HttpsError('invalid-argument', '권유를 찾을 수 없습니다')
+  }
+  const accept = data?.accept === true
+
+  const db = getDb()
+  const ref = db.collection('recommendations').doc(id)
+  const snap = await ref.get()
+  if (!snap.exists) {
+    throw new HttpsError('not-found', '권유를 찾을 수 없습니다')
+  }
+  const rec = snap.data() ?? {}
+  if (rec.toUid !== uid) {
+    throw new HttpsError('permission-denied', '나에게 온 권유가 아닙니다')
+  }
+  if (rec.status !== 'pending') {
+    throw new HttpsError('failed-precondition', '이미 처리한 권유예요')
+  }
+
+  const now = new Date().toISOString()
+  await ref.update({ status: accept ? 'accepted' : 'rejected', respondedAt: now })
+  // 처리했는데 알림함에 계속 떠 있으면 안 된다.
+  await db.doc(`notifications/${uid}/items/recommend_${id}`).delete()
+
+  // 수락만 알린다. 거절은 알리지 않는다 — 친구 요청과 같은 기준이고,
+  // 거절당한 사실이 알림으로 오면 다음에 권하기가 껄끄러워진다.
+  if (accept) {
+    await db.doc(`notifications/${rec.fromUid}/items/recaccepted_${id}`).set({
+      kind: 'recommendAccepted',
+      actorUid: uid,
+      recommendationId: id,
+      createdAt: now,
+    })
+  }
+  return { ok: true }
+}
+
+export const respondRecommendation = onCall({ region: 'asia-northeast3', enforceAppCheck: true }, async (req) => {
+  if (!req.auth) {
+    throw new HttpsError('unauthenticated', '로그인이 필요합니다')
+  }
+  return respondRecommendationHandler(req.auth.uid, req.data ?? {})
+})
+
 // Vision SDK는 무겁다. 최상단에서 import하면 이 파일에 함께 배포된 함수 전부가
 // (OCR과 무관한 친구 피드·책 검색까지) 콜드 스타트마다 이걸 로딩해 그만큼 느려진다.
 // 그래서 OCR을 실제로 부를 때 처음 한 번만 불러오고, 이후 호출은 만들어둔 클라이언트를 재사용한다.

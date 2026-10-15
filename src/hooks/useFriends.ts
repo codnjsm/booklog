@@ -13,8 +13,11 @@ import {
   getFriendFeed,
   createPost,
   deletePost,
+  recommendBook,
+  getRecommendations,
+  respondRecommendation,
 } from '../firebase'
-import type { FriendRequest, UserProfile, FriendShelf, Post } from '../types'
+import type { FriendRequest, UserProfile, FriendShelf, Post, Recommendation } from '../types'
 
 export function useFriends(user: User | null) {
   const [incoming, setIncoming] = useState<FriendRequest[]>([])
@@ -96,6 +99,17 @@ export function useFriends(user: User | null) {
 
   const removePost = useCallback((postId: string) => deletePost(postId), [])
 
+  // 책 권하기도 서버를 거친다 — 권유는 클라이언트가 직접 읽고 쓰지 못하게 막혀 있다
+  const recommend = useCallback(
+    (toUid: string, bookId: string, message: string) => recommendBook(toUid, bookId, message),
+    [],
+  )
+
+  const loadRecommendations = useCallback((): Promise<Recommendation[]> => getRecommendations(), [])
+
+  // 수락해도 서버는 책을 넣지 않는다. 담는 건 부르는 쪽(FriendsTab -> addBook)이다.
+  const respondToRecommendation = useCallback((id: string, accept: boolean) => respondRecommendation(id, accept), [])
+
   return {
     friends,
     incoming,
@@ -109,5 +123,8 @@ export function useFriends(user: User | null) {
     loadFriendFeed,
     publishPost,
     removePost,
+    recommend,
+    loadRecommendations,
+    respondToRecommendation,
   }
 }

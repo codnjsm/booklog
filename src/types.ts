@@ -123,3 +123,19 @@ export interface Post {
   /** 내가 눌렀는지. */
   likedByMe: boolean
 }
+
+/**
+ * 친구가 권한 책 한 건. 서버(getRecommendations)가 보낸 사람 표시정보를 동봉해서 돌려준다.
+ * 아직 책이 아니다 — 받는 사람이 담기를 눌러야 Book으로 서재에 들어간다.
+ */
+export interface Recommendation {
+  id: string
+  fromUid: string
+  fromDisplayName: string
+  fromPhotoURL: string
+  bookTitle: string
+  bookAuthor: string
+  bookCover: string
+  message: string
+  createdAt: string
+}
