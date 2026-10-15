@@ -239,6 +239,20 @@ describe('serverNotifications — 서버가 남긴 알림', () => {
     expect(n.view).toBe('feed')
   })
 
+  it('좋아요 알림은 어느 글인지까지 들고 간다', () => {
+    const [n] = serverNotifications(
+      [{ id: 'n1', kind: 'like', actorUid: 'u-bob', createdAt: '2026-10-15T00:00:00.000Z', postId: 'p-42' }],
+      nameOf,
+    )
+    expect(n.focus).toBe('p-42')
+  })
+
+  it('postId가 없는 옛 좋아요 알림도 깨지지 않는다 — 글로 데려가지만 않는다', () => {
+    const [n] = serverNotifications([raw('n1', 'u-bob', '2026-10-15T00:00:00.000Z', 'like')], nameOf)
+    expect(n.view).toBe('feed')
+    expect(n.focus).toBeUndefined()
+  })
+
   it('권유 알림은 친구 탭으로 보낸다 — 받은 추천이 거기 쌓인다', () => {
     const [n] = serverNotifications([raw('n1', 'u-bob', '2026-10-15T00:00:00.000Z', 'recommend')], nameOf)
     expect(n.goTo).toBe('friends')

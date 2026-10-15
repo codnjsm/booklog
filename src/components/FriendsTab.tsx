@@ -241,6 +241,35 @@ export default function FriendsTab({
 
   const [friendFilter, setFriendFilter] = useState('')
 
+  /**
+   * 알림에서 넘어온 글로 데려간다 (`?post=`).
+   * 피드는 비동기로 도착하므로 글이 그려진 뒤에 움직여야 한다. 한 번 찾아가면 주소에서 지워서
+   * 다시 그려질 때마다 스크롤이 튀지 않게 한다.
+   */
+  const focusPostId = searchParams.get('post')
+  const [highlightPostId, setHighlightPostId] = useState<string | null>(null)
+  useEffect(() => {
+    if (!focusPostId || !feedQuery.isSuccess) return
+    const el = document.getElementById(`post-${focusPostId}`)
+    if (el) {
+      el.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      setHighlightPostId(focusPostId)
+    } else {
+      // 글쓴이가 지웠거나 피드에 안 들어올 만큼 오래된 글이다.
+      showToast('그 글을 찾지 못했어요', 'info')
+    }
+    const params = new URLSearchParams(searchParams)
+    params.delete('post')
+    setSearchParams(params, { replace: true })
+  }, [focusPostId, feedQuery.isSuccess, feedPosts, searchParams, setSearchParams, showToast])
+
+  // 표시는 잠깐이면 된다 — 어느 글인지 알려주는 용도다.
+  useEffect(() => {
+    if (!highlightPostId) return
+    const t = setTimeout(() => setHighlightPostId(null), 2500)
+    return () => clearTimeout(t)
+  }, [highlightPostId])
+
   const [viewingFriend, setViewingFriend] = useState<UserProfile | null>(null)
 
   // 바깥(알림함)에서 view가 바뀌어 들어오면 보던 친구 책장을 닫는다.
@@ -398,22 +427,25 @@ export default function FriendsTab({
         ) : (
           <div className="flex flex-col gap-3">
             {feedPosts.map((post) => (
-              <PostCard
-                key={post.id}
-                post={post}
-                isOwn={post.authorUid === user.uid}
-                onDelete={() => {
-                  if (confirm('이 게시물을 삭제할까요?')) deletePostMutation.mutate(post.id)
-                }}
-                onOpenAuthor={(() => {
-                  // 피드에는 내 친구 글만 오지만, 친구 목록이 아직 안 받아졌을 수 있어 못 찾으면 넘기지 않는다.
-                  const author = friends.find((f) => f.uid === post.authorUid)
-                  return post.authorUid === user.uid || !author ? undefined : () => handleViewFriend(author)
-                })()}
-                onToggleLike={() => handleToggleLike(post.id)}
-                onOpenLikes={() => openLikes(post.id)}
-                likeBusy={likeBusy === post.id}
-              />
+              // 알림에서 찾아올 수 있게 글마다 앵커를 둔다
+              <div key={post.id} id={`post-${post.id}`}>
+                <PostCard
+                  post={post}
+                  isOwn={post.authorUid === user.uid}
+                  onDelete={() => {
+                    if (confirm('이 게시물을 삭제할까요?')) deletePostMutation.mutate(post.id)
+                  }}
+                  onOpenAuthor={(() => {
+                    // 피드에는 내 친구 글만 오지만, 친구 목록이 아직 안 받아졌을 수 있어 못 찾으면 넘기지 않는다.
+                    const author = friends.find((f) => f.uid === post.authorUid)
+                    return post.authorUid === user.uid || !author ? undefined : () => handleViewFriend(author)
+                  })()}
+                  onToggleLike={() => handleToggleLike(post.id)}
+                  onOpenLikes={() => openLikes(post.id)}
+                  likeBusy={likeBusy === post.id}
+                  highlighted={highlightPostId === post.id}
+                />
+              </div>
             ))}
           </div>
         ))}

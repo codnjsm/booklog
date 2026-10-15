@@ -40,13 +40,28 @@ interface Props {
   likeBusy?: boolean
   /** 글쓴이 책장으로 간다. 내 글이거나 친구 목록에서 못 찾으면 넘어오지 않는다. */
   onOpenAuthor?: () => void
+  /** 알림에서 찾아온 글. 어느 글인지 잠깐 표시한다. */
+  highlighted?: boolean
 }
 
-export default function PostCard({ post, isOwn, onDelete, onToggleLike, onOpenLikes, likeBusy, onOpenAuthor }: Props) {
+export default function PostCard({
+  post,
+  isOwn,
+  onDelete,
+  onToggleLike,
+  onOpenLikes,
+  likeBusy,
+  onOpenAuthor,
+  highlighted,
+}: Props) {
   const { attachment } = post
 
   return (
-    <div className="bg-surface border border-border rounded-[10px] px-4 py-3.5 sm:px-[22px] sm:py-5">
+    <div
+      className={`bg-surface border rounded-[10px] px-4 py-3.5 sm:px-[22px] sm:py-5 transition-colors duration-500 ${
+        highlighted ? 'border-accent' : 'border-border'
+      }`}
+    >
       <div className="flex items-center justify-between gap-2 mb-3">
         {/* 글쓴이를 누르면 그 사람 책장으로 간다. 내 글이면 갈 곳이 없으므로 버튼으로 만들지 않는다. */}
         {onOpenAuthor ? (

@@ -21,6 +21,8 @@ export interface NotificationItem {
   goTo: Tab
   /** 탭 안에서 더 들어가야 하는 화면. 지금은 친구 탭의 피드뿐이다. */
   view?: 'feed'
+  /** 그 화면에서 찾아가 보여줄 대상. 지금은 피드의 게시물 id뿐이다. */
+  focus?: string
 }
 
 /** 보낸 사람 이름. 프로필이 아직 안 붙었거나 이름이 비어 있으면 이메일 앞부분, 그것도 없으면 "누군가". */
@@ -53,6 +55,8 @@ export interface ServerNotification {
   kind?: string
   actorUid: string
   createdAt: string
+  /** 좋아요 알림에만 있다 — 어떤 글에 달렸는지. */
+  postId?: string
 }
 
 /**
@@ -92,6 +96,8 @@ export function serverNotifications(
         text: spec.text,
         goTo: 'friends' as Tab,
         ...(spec.view ? { view: spec.view } : {}),
+        // 좋아요는 어느 글에 달렸는지까지 안다. 피드에서 그 글로 데려간다.
+        ...(kind === 'like' && n.postId ? { focus: n.postId } : {}),
       },
     ]
   })
