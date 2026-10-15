@@ -10,6 +10,9 @@ import {
   countUnread,
   readSeenAt,
   markSeenNow,
+  readDismissed,
+  dismissNotification,
+  withoutDismissed,
 } from '../lib/notifications'
 import type { ServerNotification } from '../lib/notifications'
 import { subscribeNotifications } from '../firebase'
@@ -31,12 +34,15 @@ export default function NotificationBell({ incoming, uid, nameOf }: Props) {
   const { changeTab } = useAppUI()
   const [open, setOpen] = useState(false)
   const [seenAt, setSeenAt] = useState<string | null>(() => readSeenAt())
+  const [dismissed, setDismissed] = useState<string[]>(() => readDismissed())
 
   const [fromServer, setFromServer] = useState<ServerNotification[]>([])
   useEffect(() => subscribeNotifications(uid, setFromServer), [uid])
 
   // 소스가 늘면 여기서 합친다. 목록 자체는 어디서 왔는지 모른다.
-  const items = sortNotifications([...friendRequestNotifications(incoming), ...serverNotifications(fromServer, nameOf)])
+  const all = sortNotifications([...friendRequestNotifications(incoming), ...serverNotifications(fromServer, nameOf)])
+  // 눌러서 본 알림은 치운다. 가서 처리할 것(친구 요청·받은 추천)은 그 탭에 그대로 남아 있다.
+  const items = withoutDismissed(all, dismissed)
   const unread = countUnread(items, seenAt)
 
   // 모달과 같은 규칙 — 열려 있는 동안 Escape로 닫힌다.
@@ -96,6 +102,7 @@ export default function NotificationBell({ incoming, uid, nameOf }: Props) {
                   type="button"
                   role="menuitem"
                   onClick={() => {
+                    setDismissed(dismissNotification(n, all))
                     setOpen(false)
                     changeTab(n.goTo)
                   }}

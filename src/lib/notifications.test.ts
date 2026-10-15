@@ -7,6 +7,9 @@ import {
   countUnread,
   readSeenAt,
   markSeenNow,
+  readDismissed,
+  dismissNotification,
+  withoutDismissed,
 } from './notifications'
 
 const req = (id: string, extra: Partial<FriendRequest> = {}): FriendRequest => ({
@@ -253,5 +256,77 @@ describe('serverNotifications — 서버가 남긴 알림', () => {
       nameOf,
     )
     expect(items.map((i) => i.id)).toEqual(['n2'])
+  })
+})
+
+describe('치운 알림 — 눌러서 들어간 알림은 목록에서 빠진다', () => {
+  const item = (id: string, at: string) => ({
+    id,
+    kind: 'like' as const,
+    at,
+    actor: '밥',
+    text: '님이 회원님의 글을 좋아합니다',
+    goTo: 'friends' as const,
+  })
+
+  // 위 읽음 시각 테스트와 같은 방식의 스텁
+  const store: Record<string, string> = {}
+  beforeEach(() => {
+    for (const k of Object.keys(store)) delete store[k]
+    vi.stubGlobal('localStorage', {
+      getItem: (k: string) => store[k] ?? null,
+      setItem: (k: string, v: string) => {
+        store[k] = v
+      },
+    })
+  })
+
+  it('치운 알림은 목록에서 빠지고 나머지는 남는다', () => {
+    const a = item('n1', '2026-10-15T00:00:00.000Z')
+    const b = item('n2', '2026-10-15T01:00:00.000Z')
+    const next = dismissNotification(a, [a, b])
+    expect(withoutDismissed([a, b], next).map((x) => x.id)).toEqual(['n2'])
+  })
+
+  it('새로고침해도 치운 채로 남는다', () => {
+    const a = item('n1', '2026-10-15T00:00:00.000Z')
+    dismissNotification(a, [a])
+    expect(withoutDismissed([a], readDismissed())).toEqual([])
+  })
+
+  it('같은 id라도 시각이 다르면 다시 보인다 — 좋아요를 취소했다 다시 누른 경우', () => {
+    const before = item('like_p1_bob', '2026-10-15T00:00:00.000Z')
+    dismissNotification(before, [before])
+    const again = item('like_p1_bob', '2026-10-15T09:00:00.000Z')
+    expect(withoutDismissed([again], readDismissed()).map((x) => x.id)).toEqual(['like_p1_bob'])
+  })
+
+  it('이미 사라진 알림의 기록은 버려서 목록이 길어지지 않는다', () => {
+    const old = item('n1', '2026-10-01T00:00:00.000Z')
+    dismissNotification(old, [old])
+    const fresh = item('n2', '2026-10-15T00:00:00.000Z')
+    // 이제 n1은 서버에서 사라졌다 — 지금 목록에는 n2만 있다
+    expect(dismissNotification(fresh, [fresh])).toEqual(['n2@2026-10-15T00:00:00.000Z'])
+  })
+
+  it('치운 알림은 안 읽은 수에서도 빠진다', () => {
+    const a = item('n1', '2026-10-15T00:00:00.000Z')
+    const b = item('n2', '2026-10-15T01:00:00.000Z')
+    const next = dismissNotification(a, [a, b])
+    expect(countUnread(withoutDismissed([a, b], next), '2026-10-14T00:00:00.000Z')).toBe(1)
+  })
+
+  it('저장소가 막혀 있어도 터지지 않는다', () => {
+    vi.stubGlobal('localStorage', {
+      getItem: () => {
+        throw new Error('blocked')
+      },
+      setItem: () => {
+        throw new Error('blocked')
+      },
+    })
+    const a = item('n1', '2026-10-15T00:00:00.000Z')
+    expect(readDismissed()).toEqual([])
+    expect(() => dismissNotification(a, [a])).not.toThrow()
   })
 })
