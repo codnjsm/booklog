@@ -414,7 +414,7 @@ export default function FriendsTab({
                       <div className="flex items-center gap-2">
                         <Avatar url={rec.fromPhotoURL} name={rec.fromDisplayName || '?'} size="md" />
                         <span className="text-sm text-ink">
-                          <span className="font-semibold">{rec.fromDisplayName || '친구'}</span>님이 권했어요
+                          <span className="font-semibold">{rec.fromDisplayName || '친구'}</span>님이 책을 권했어요
                         </span>
                       </div>
                       <span className="font-mono text-xs sm:text-[13px] text-dim flex-shrink-0">
@@ -439,15 +439,15 @@ export default function FriendsTab({
                     </div>
 
                     <div className="flex justify-end gap-1.5 mt-3">
+                      <button className={BTN_SM} disabled={recBusy === rec.id} onClick={() => respondToRec(rec, true)}>
+                        책장에 담기
+                      </button>
                       <button
                         className={BTN_SM_DANGER_SOFT}
                         disabled={recBusy === rec.id}
                         onClick={() => respondToRec(rec, false)}
                       >
                         안 담기
-                      </button>
-                      <button className={BTN_SM} disabled={recBusy === rec.id} onClick={() => respondToRec(rec, true)}>
-                        읽고싶음에 담기
                       </button>
                     </div>
                   </div>
