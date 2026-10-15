@@ -7,6 +7,7 @@ import PageHeader from './layout/PageHeader'
 import { IconSearch, IconBooks, IconFriends } from './layout/icons'
 import { useAppUI } from '../contexts/AppUIContext'
 import PostCard from './PostCard'
+import { relativeDay } from '../lib/insights'
 import PostLikesModal, { type Liker } from './modals/PostLikesModal'
 import { toggleLike, getPostLikes } from '../firebase'
 
@@ -399,40 +400,54 @@ export default function FriendsTab({
 
       {view === 'friends' && (
         <div className="flex flex-col gap-6">
-          {/* 받은 추천 */}
+          {/* 받은 추천 — 피드 게시물(PostCard)과 같은 뼈대. 보낸 사람이 위, 메모가 본문, 책이 첨부. */}
           {recommendations.length > 0 && (
             <div>
               <div className={SECTION_LABEL}>받은 추천 {recommendations.length}</div>
-              <div className={LIST_CARD}>
+              <div className="flex flex-col gap-3">
                 {recommendations.map((rec) => (
-                  <div key={rec.id} className="px-4 py-4 border-b border-surface2 last:border-b-0">
-                    <div className="flex gap-3">
+                  <div
+                    key={rec.id}
+                    className="bg-surface border border-border rounded-[10px] px-4 py-3.5 sm:px-[22px] sm:py-5"
+                  >
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <div className="flex items-center gap-2">
+                        <Avatar url={rec.fromPhotoURL} name={rec.fromDisplayName || '?'} size="md" />
+                        <span className="text-sm text-ink">
+                          <span className="font-semibold">{rec.fromDisplayName || '친구'}</span>님이 권했어요
+                        </span>
+                      </div>
+                      <span className="font-mono text-xs sm:text-[13px] text-dim flex-shrink-0">
+                        {relativeDay(rec.createdAt)}
+                      </span>
+                    </div>
+
+                    {rec.message && <div className="text-sm text-ink leading-[1.7] mb-3">{rec.message}</div>}
+
+                    <div className="flex items-center gap-2.5 bg-surface2 rounded-lg p-2.5">
                       <div className="w-11 h-16 rounded bg-bg border border-border flex-shrink-0 overflow-hidden flex items-center justify-center">
                         {rec.bookCover ? (
-                          <img src={rec.bookCover} alt="" className="w-full h-full object-cover" />
+                          <img loading="lazy" src={rec.bookCover} alt="" className="w-full h-full object-cover" />
                         ) : (
                           <span className="text-[9px] text-dim text-center px-0.5 leading-tight">{rec.bookTitle}</span>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-ink truncate">{rec.bookTitle}</div>
+                        <div className="text-[13px] font-medium text-ink truncate">{rec.bookTitle}</div>
                         <div className="text-xs sm:text-[13px] text-dim truncate mt-0.5">{rec.bookAuthor}</div>
-                        <div className="text-xs sm:text-[13px] text-dim mt-1.5">
-                          <span className="font-semibold text-ink">{rec.fromDisplayName || '친구'}</span>님이 권했어요
-                        </div>
                       </div>
                     </div>
-                    {rec.message && (
-                      <div className="bg-surface2 rounded-lg px-3 py-2.5 mt-2.5 text-[13px] text-ink leading-[1.6] whitespace-pre-wrap">
-                        {rec.message}
-                      </div>
-                    )}
-                    <div className="flex gap-1.5 mt-2.5">
+
+                    <div className="flex justify-end gap-1.5 mt-3">
+                      <button
+                        className={BTN_SM_DANGER_SOFT}
+                        disabled={recBusy === rec.id}
+                        onClick={() => respondToRec(rec, false)}
+                      >
+                        안 담기
+                      </button>
                       <button className={BTN_SM} disabled={recBusy === rec.id} onClick={() => respondToRec(rec, true)}>
                         읽고싶음에 담기
-                      </button>
-                      <button className={BTN_SM_DANGER_SOFT} onClick={() => respondToRec(rec, false)}>
-                        안 담기
                       </button>
                     </div>
                   </div>
