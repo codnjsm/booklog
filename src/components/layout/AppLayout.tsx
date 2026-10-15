@@ -74,7 +74,10 @@ export default function AppLayout({
   // dvh 미지원 브라우저용 폴백은 index.css의 body 규칙이 담당한다.
   return (
     <div className="min-h-[100dvh] flex bg-bg">
-      <aside className="hidden sm:flex w-[var(--sidebar-w)] flex-shrink-0 flex-col gap-7 bg-surface border-r border-border px-3.5 py-6 fixed inset-y-0 left-0">
+      {/* z-[70] — fixed라 그 자체가 쌓임 맥락이다. 값을 안 주면 본문 카드(relative)와 같은 층에
+          DOM 순서로 겹쳐서, 사이드바 안에서 펼친 알림 패널이 카드 밑으로 들어간다.
+          층 순서: 70 사이드바 < 80 하단탭 < 90·95 플로팅 버튼 < 100 모달 < 200 토스트 */}
+      <aside className="hidden sm:flex w-[var(--sidebar-w)] flex-shrink-0 flex-col gap-7 bg-surface border-r border-border px-3.5 py-6 fixed inset-y-0 left-0 z-[70]">
         {/* 로고 줄 오른쪽이 데스크톱에서 화면 전환과 무관하게 유지되는 유일한 자리다 */}
         <div className="flex items-center justify-between gap-2 px-2.5">
           <button
