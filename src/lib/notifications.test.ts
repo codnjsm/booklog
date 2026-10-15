@@ -233,6 +233,24 @@ describe('serverNotifications — 서버가 남긴 알림', () => {
     expect(n.text).toBe('님이 권한 책을 담았어요')
   })
 
+  it('좋아요 알림은 피드로 보낸다 — 내 글이 있는 곳', () => {
+    const [n] = serverNotifications([raw('n1', 'u-bob', '2026-10-15T00:00:00.000Z', 'like')], nameOf)
+    expect(n.goTo).toBe('friends')
+    expect(n.view).toBe('feed')
+  })
+
+  it('권유 알림은 친구 탭으로 보낸다 — 받은 추천이 거기 쌓인다', () => {
+    const [n] = serverNotifications([raw('n1', 'u-bob', '2026-10-15T00:00:00.000Z', 'recommend')], nameOf)
+    expect(n.goTo).toBe('friends')
+    expect(n.view).toBeUndefined()
+  })
+
+  it('친구 요청 알림도 친구 탭으로 보낸다', () => {
+    const [n] = friendRequestNotifications([req('r1')])
+    expect(n.goTo).toBe('friends')
+    expect(n.view).toBeUndefined()
+  })
+
   it('kind가 없는 과거 알림은 좋아요로 본다', () => {
     const [n] = serverNotifications([{ id: 'n1', actorUid: 'u-bob', createdAt: '2026-10-13T00:00:00.000Z' }], nameOf)
     expect(n.kind).toBe('like')

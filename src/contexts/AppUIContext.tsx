@@ -33,7 +33,8 @@ interface ToastState {
 
 interface AppUIValue {
   tab: Tab
-  changeTab: (t: Tab) => void
+  /** view를 주면 탭 안의 화면까지 지정한다 (지금은 친구 탭의 피드뿐). */
+  changeTab: (t: Tab, opts?: { view?: 'feed' }) => void
 
   modal: Modal
   openAddBook: () => void
@@ -112,7 +113,10 @@ export function AppUIProvider({ children }: { children: ReactNode }) {
     [searchParams, setSearchParams],
   )
 
-  const changeTab = useCallback((t: Tab) => navigate(TAB_PATHS[t]), [navigate])
+  const changeTab = useCallback(
+    (t: Tab, opts?: { view?: 'feed' }) => navigate(opts?.view ? `${TAB_PATHS[t]}?view=${opts.view}` : TAB_PATHS[t]),
+    [navigate],
+  )
 
   const closeModal = useCallback(() => {
     setLocalModal({ type: 'none' })

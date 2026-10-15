@@ -104,7 +104,7 @@ export default function NotificationBell({ incoming, uid, nameOf }: Props) {
                   onClick={() => {
                     setDismissed(dismissNotification(n, all))
                     setOpen(false)
-                    changeTab(n.goTo)
+                    changeTab(n.goTo, n.view ? { view: n.view } : undefined)
                   }}
                   className={`${ROW} cursor-pointer hover:bg-surface2`}
                 >

@@ -17,8 +17,10 @@ export interface NotificationItem {
   actor: string
   /** 이름 뒤에 붙는 문구. 이름과 나눠둬야 이름만 굵게 그릴 수 있다. */
   text: string
-  /** 눌렀을 때 갈 화면. */
+  /** 눌렀을 때 갈 탭. */
   goTo: Tab
+  /** 탭 안에서 더 들어가야 하는 화면. 지금은 친구 탭의 피드뿐이다. */
+  view?: 'feed'
 }
 
 /** 보낸 사람 이름. 프로필이 아직 안 붙었거나 이름이 비어 있으면 이메일 앞부분, 그것도 없으면 "누군가". */
@@ -53,11 +55,14 @@ export interface ServerNotification {
   createdAt: string
 }
 
-/** 종류별 문구. 여기 없는 종류는 그릴 줄 모르는 것이므로 목록에서 뺀다. */
-const SERVER_TEXTS: Record<string, string> = {
-  like: '님이 회원님의 글을 좋아합니다',
-  recommend: '님이 책을 권했어요',
-  recommendAccepted: '님이 권한 책을 담았어요',
+/**
+ * 종류별 문구와 갈 곳. 여기 없는 종류는 그릴 줄 모르는 것이므로 목록에서 뺀다.
+ * 좋아요는 내 글에 달린 것이므로 글이 있는 피드로 보낸다.
+ */
+const SERVER_KINDS: Record<string, { text: string; view?: 'feed' }> = {
+  like: { text: '님이 회원님의 글을 좋아합니다', view: 'feed' },
+  recommend: { text: '님이 책을 권했어요' },
+  recommendAccepted: { text: '님이 권한 책을 담았어요' },
 }
 
 /**
@@ -76,16 +81,17 @@ export function serverNotifications(
   return items.flatMap((n) => {
     // kind가 없는 건 좋아요만 있던 시절의 알림이다.
     const kind = n.kind ?? 'like'
-    const text = SERVER_TEXTS[kind]
-    if (!text) return []
+    const spec = SERVER_KINDS[kind]
+    if (!spec) return []
     return [
       {
         id: n.id,
         kind: kind as NotificationItem['kind'],
         at: n.createdAt,
         actor: nameOf(n.actorUid) || '내가 모르는 친구',
-        text,
+        text: spec.text,
         goTo: 'friends' as Tab,
+        ...(spec.view ? { view: spec.view } : {}),
       },
     ]
   })

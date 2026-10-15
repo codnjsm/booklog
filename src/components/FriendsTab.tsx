@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useSearchParams } from 'react-router-dom'
 import type { User } from 'firebase/auth'
 import type { UserProfile, FriendRequest, BookStatus, FriendShelf, Post, Recommendation } from '../types'
 import BookCard from './BookCard'
@@ -136,7 +137,17 @@ export default function FriendsTab({
 }: Props) {
   const { openPublishPost, openAddFriend, openLogin, showToast } = useAppUI()
   const queryClient = useQueryClient()
-  const [view, setView] = useState<MainView>('friends')
+  // 피드/친구 전환을 URL에 둔다 — 알림함에서 "회원님의 글을 좋아합니다"를 누르면
+  // 친구 탭이 아니라 피드로 바로 들어와야 하는데, 지역 상태면 바깥에서 지정할 길이 없다.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const view: MainView = searchParams.get('view') === 'feed' ? 'feed' : 'friends'
+  const setView = (next: MainView) => {
+    const params = new URLSearchParams(searchParams)
+    if (next === 'feed') params.set('view', 'feed')
+    else params.delete('view')
+    // replace로 둔다 — 탭 안의 전환까지 뒤로가기 기록에 쌓일 일은 아니다.
+    setSearchParams(params, { replace: true })
+  }
 
   // 받은 추천. 친구 요청과 달리 실시간 구독이 아니라 — 권유는 콜러블로만 읽는다.
   // 알림함(실시간)이 "권해왔다"를 알려주고, 목록은 친구 탭을 열 때 받아온다.
@@ -231,6 +242,15 @@ export default function FriendsTab({
   const [friendFilter, setFriendFilter] = useState('')
 
   const [viewingFriend, setViewingFriend] = useState<UserProfile | null>(null)
+
+  // 바깥(알림함)에서 view가 바뀌어 들어오면 보던 친구 책장을 닫는다.
+  // 피드에서 책장을 여는 건 view를 건드리지 않으므로 여기 걸리지 않는다.
+  const prevView = useRef(view)
+  useEffect(() => {
+    if (prevView.current === view) return
+    prevView.current = view
+    setViewingFriend(null)
+  }, [view])
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
 
   // 같은 친구를 다시 열 때 매번 새로 불러오지 않도록 캐싱한다 (친구 피드와 동일한 패턴).
