@@ -733,19 +733,44 @@ export const ocrBookPage = onCall(
  * 삭제 순서: 데이터 → Auth 계정. 반대로 하면 계정이 사라진 뒤 데이터 삭제가 실패했을 때
  * 주인 없는 데이터가 남아 손댈 방법이 없어진다.
  */
-export async function deleteAccountHandler(uid: string) {
+/**
+ * 탈퇴할 때 지울 Firestore 데이터를 전부 정리한다. Auth 계정 삭제는 부르는 쪽이 한다 —
+ * 그래야 Auth 에뮬레이터 없이 이 정리만 따로 테스트할 수 있다.
+ *
+ * 내 문서만 지워서는 부족하다. 내가 남긴 알림은 **남의 알림함**에 들어 있어서,
+ * 그대로 두면 탈퇴한 사람이 권한 책이 상대 목록에 계속 뜨고 「내가 모르는 친구」로 남는다.
+ */
+export async function deleteUserDataHandler(uid: string) {
   const db = getDb()
 
-  const [posts, outgoing, incoming] = await Promise.all([
+  const [posts, outgoing, incoming, myNotifications, recsFrom, recsTo, likedPosts] = await Promise.all([
     db.collection('posts').where('authorUid', '==', uid).get(),
     db.collection('friendRequests').where('fromUid', '==', uid).get(),
     db.collection('friendRequests').where('toUid', '==', uid).get(),
+    db.collection(`notifications/${uid}/items`).get(),
+    db.collection('recommendations').where('fromUid', '==', uid).get(),
+    db.collection('recommendations').where('toUid', '==', uid).get(),
+    db.collection('posts').where('likes', 'array-contains', uid).get(),
   ])
+
+  // 내가 일으켜서 남의 알림함에 들어간 것들. 문서 id가 정해진 규칙이라 조회 없이 바로 짚을 수 있다.
+  // 이미 없는 문서를 지우는 건 아무 일도 하지 않으므로, 처리된 권유까지 한꺼번에 넣어도 된다.
+  const notificationsILeft = [
+    ...recsFrom.docs.map((d) => db.doc(`notifications/${d.data().toUid}/items/recommend_${d.id}`)),
+    ...recsTo.docs.map((d) => db.doc(`notifications/${d.data().fromUid}/items/recaccepted_${d.id}`)),
+    ...likedPosts.docs
+      .filter((d) => d.data().authorUid !== uid)
+      .map((d) => db.doc(`notifications/${d.data().authorUid}/items/like_${d.id}_${uid}`)),
+  ]
 
   const docs = [
     ...posts.docs.map((d) => d.ref),
     ...outgoing.docs.map((d) => d.ref),
     ...incoming.docs.map((d) => d.ref),
+    ...myNotifications.docs.map((d) => d.ref),
+    ...recsFrom.docs.map((d) => d.ref),
+    ...recsTo.docs.map((d) => d.ref),
+    ...notificationsILeft,
     db.collection('reading-notes').doc(uid),
     db.collection('users').doc(uid),
   ]
@@ -757,8 +782,28 @@ export async function deleteAccountHandler(uid: string) {
     await batch.commit()
   }
 
+  // 남의 글에 눌러둔 좋아요를 거둔다. 안 그러면 없는 사람이 센 수가 그대로 남는다.
+  // 내 글은 위에서 통째로 지웠으므로 건드리지 않는다.
+  const othersILiked = likedPosts.docs.filter((d) => d.data().authorUid !== uid)
+  for (let i = 0; i < othersILiked.length; i += 400) {
+    const batch = db.batch()
+    othersILiked.slice(i, i + 400).forEach((d) => batch.update(d.ref, { likes: FieldValue.arrayRemove(uid) }))
+    await batch.commit()
+  }
+
+  return {
+    posts: posts.size,
+    friendRequests: outgoing.size + incoming.size,
+    notifications: myNotifications.size + notificationsILeft.length,
+    recommendations: recsFrom.size + recsTo.size,
+    likes: othersILiked.length,
+  }
+}
+
+export async function deleteAccountHandler(uid: string) {
+  const deleted = await deleteUserDataHandler(uid)
   await getAuth().deleteUser(uid)
-  return { ok: true as const, deleted: { posts: posts.size, friendRequests: outgoing.size + incoming.size } }
+  return { ok: true as const, deleted }
 }
 
 export const deleteAccount = onCall({ region: 'asia-northeast3', enforceAppCheck: true }, async (req) => {
