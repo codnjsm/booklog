@@ -290,7 +290,9 @@ export default function MoreTab({
                 친구 기능을 쓸 수 없고, 주소가 잘못돼 있으면 나중에 비밀번호를 찾을 수 없어요.
               </span>
             </div>
-            <div className="flex flex-wrap gap-2">
+            {/* 홈 화면 추가 안내와 같은 자리에 버튼을 둔다 — 두 안내가 나란히 뜰 때 눈이 따라가기 쉽다.
+                줄바꿈은 두지 않는다. 둘이 한 묶음으로 오른쪽에 붙어 있어야 한다. */}
+            <div className="flex justify-end gap-2">
               <button
                 type="button"
                 onClick={handleResendVerification}
