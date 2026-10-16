@@ -493,6 +493,53 @@ export const deletePost = onCall({ region: 'asia-northeast3', enforceAppCheck: t
   return deletePostHandler(req.auth.uid, postId)
 })
 
+/** 알림함에 남겨둘 최대 건수. 넘치면 오래된 것부터 정리한다. */
+const NOTIFICATION_KEEP = 100
+/** 눌러보지 않아도 이만큼 지나면 정리한다. */
+const NOTIFICATION_MAX_AGE_DAYS = 90
+
+/**
+ * 읽은 알림을 지우고, 겸사겸사 묵은 알림을 정리한다.
+ *
+ * 알림은 보안 규칙상 서버만 쓸 수 있어서(남의 알림함에 아무거나 꽂지 못하게) 여기를 거친다.
+ * 화면에서만 가리면 문서가 영영 남아 읽기량과 저장이 계속 늘어난다.
+ *
+ * 정리까지 같이 하는 이유 — 알림을 한 번도 안 누르는 사람의 알림함은 줄어들 계기가 없다.
+ */
+export async function dismissNotificationsHandler(uid: string, ids: unknown): Promise<{ removed: number }> {
+  const db = getDb()
+  const col = db.collection(`notifications/${uid}/items`)
+
+  // 한 번에 받는 개수를 묶는다. 화면에서 누를 수 있는 건 어차피 한 번에 하나다.
+  const asked = Array.isArray(ids) ? ids.filter((x): x is string => typeof x === 'string' && !!x).slice(0, 50) : []
+
+  const cutoff = new Date(Date.now() - NOTIFICATION_MAX_AGE_DAYS * 24 * 60 * 60 * 1000).toISOString()
+  const [overflow, stale] = await Promise.all([
+    col.orderBy('createdAt', 'desc').offset(NOTIFICATION_KEEP).get(),
+    col.where('createdAt', '<', cutoff).get(),
+  ])
+
+  // 세 갈래가 겹칠 수 있으니 경로로 한 번 걸러낸다.
+  const refs = new Map<string, FirebaseFirestore.DocumentReference>()
+  for (const id of asked) refs.set(`${col.path}/${id}`, col.doc(id))
+  for (const d of [...overflow.docs, ...stale.docs]) refs.set(d.ref.path, d.ref)
+
+  const list = [...refs.values()]
+  for (let i = 0; i < list.length; i += 400) {
+    const batch = db.batch()
+    list.slice(i, i + 400).forEach((ref) => batch.delete(ref))
+    await batch.commit()
+  }
+  return { removed: list.length }
+}
+
+export const dismissNotifications = onCall({ region: 'asia-northeast3', enforceAppCheck: true }, async (req) => {
+  if (!req.auth) {
+    throw new HttpsError('unauthenticated', '로그인이 필요합니다')
+  }
+  return dismissNotificationsHandler(req.auth.uid, req.data?.ids)
+})
+
 /**
  * 친구에게 책을 권한다.
  *

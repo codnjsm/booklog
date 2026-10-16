@@ -22,6 +22,8 @@ import {
   collection,
   query,
   where,
+  orderBy,
+  limit,
   updateDoc,
   deleteDoc,
   onSnapshot,
@@ -205,12 +207,25 @@ export const deletePost = async (postId: string): Promise<void> => {
  *
  * 종류(kind)를 여기서 가리지 않고 그대로 넘긴다 — 무슨 알림인지는 화면이 정한다.
  */
+/** 한 번에 받아둘 알림 수. 종을 눌렀을 때 보여줄 만큼이면 충분하다. */
+const NOTIFICATION_FEED_LIMIT = 50
+
 export const subscribeNotifications = (uid: string, cb: (items: ServerNotification[]) => void): (() => void) =>
   onSnapshot(
-    collection(db, 'notifications', uid, 'items'),
+    // 최신 것만 받는다. 알림이 쌓여도 앱을 열 때마다 읽는 양이 늘어나지 않게 상한을 둔다.
+    query(collection(db, 'notifications', uid, 'items'), orderBy('createdAt', 'desc'), limit(NOTIFICATION_FEED_LIMIT)),
     (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<ServerNotification, 'id'>) }))),
     () => cb([]),
   )
+
+/**
+ * 읽은 알림을 서버에서 지운다. 화면에서만 가리면 문서가 영영 남는다.
+ * 서버가 이 참에 묵은 알림도 같이 정리한다.
+ */
+export const dismissNotifications = async (ids: string[]): Promise<void> => {
+  const call = httpsCallable<{ ids: string[] }, { removed: number }>(functions, 'dismissNotifications')
+  await call({ ids })
+}
 
 /** 좋아요를 켜고 끈다. 서버가 바뀐 상태와 수를 돌려준다. */
 export const toggleLike = async (postId: string): Promise<{ liked: boolean; count: number }> => {

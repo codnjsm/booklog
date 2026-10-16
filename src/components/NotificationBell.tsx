@@ -15,7 +15,7 @@ import {
   withoutDismissed,
 } from '../lib/notifications'
 import type { ServerNotification } from '../lib/notifications'
-import { subscribeNotifications } from '../firebase'
+import { subscribeNotifications, dismissNotifications } from '../firebase'
 
 /** 바깥 틀. 알림이 몇 건이든 이 안에 담기고, 항목끼리는 선으로 나눈다. */
 const PANEL = 'bg-surface border border-border rounded-xl shadow-card overflow-hidden'
@@ -103,6 +103,9 @@ export default function NotificationBell({ incoming, uid, nameOf }: Props) {
                   role="menuitem"
                   onClick={() => {
                     setDismissed(dismissNotification(n, all))
+                    // 서버에도 지워달라고 한다. 실패해도 이 브라우저에서는 치워진 채로 둔다 —
+                    // 친구 요청 알림처럼 서버에 문서가 없는 것도 있어서 로컬 기록은 그대로 쓴다.
+                    void dismissNotifications([n.id]).catch(() => {})
                     setOpen(false)
                     changeTab(n.goTo, n.view || n.focus ? { view: n.view, focus: n.focus } : undefined)
                   }}
