@@ -2,9 +2,15 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
+import { handleKillSwitch } from './lib/serviceWorker'
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+// 주소에 ?sw-off가 붙어 있으면 서비스워커를 걷어내고 다시 연다.
+// 앱을 그리기 전에 처리해야 한다 — 옛 화면이 떠서 손쓸 수 없게 되는 걸 막는 길이다.
+handleKillSwitch().then((reloading) => {
+  if (reloading) return
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <App />
+    </StrictMode>,
+  )
+})

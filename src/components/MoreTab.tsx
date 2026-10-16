@@ -4,6 +4,13 @@ import type { SyncStatus } from '../hooks/useData'
 import type { VerifyResult } from '../hooks/useAuth'
 import { useAppUI } from '../contexts/AppUIContext'
 import { isStorageAtRiskBrowser } from '../lib/browser'
+import {
+  isStandalone,
+  readInstallDismissed,
+  markInstallDismissed,
+  shouldOfferInstall,
+  installHow,
+} from '../lib/install'
 import PageHeader from './layout/PageHeader'
 import AvatarCropModal from './modals/AvatarCropModal'
 import NameEditModal from './modals/NameEditModal'
@@ -48,6 +55,13 @@ interface Props {
 const ROW =
   'w-full flex items-center gap-3 px-4 py-3.5 bg-surface border border-border rounded-xl text-left cursor-pointer'
 
+/** 기기별 「어떻게 추가하나」 한 줄. iOS는 설치 버튼을 띄울 수 없어 경로를 글로 알려준다. */
+const INSTALL_HOW: Record<ReturnType<typeof installHow>, string> = {
+  ios: '아래 공유 버튼 → 「홈 화면에 추가」',
+  android: '메뉴(⋮) → 「홈 화면에 추가」',
+  desktop: '주소창 오른쪽 설치 아이콘',
+}
+
 export default function MoreTab({
   user,
   photoURL,
@@ -67,6 +81,14 @@ export default function MoreTab({
 }: Props) {
   const { changeTab, theme, toggleTheme, openWelcome, openLogin, showToast } = useAppUI()
   const photoInputRef = useRef<HTMLInputElement>(null)
+  // 지금 창이 홈화면 앱인지만 알 수 있다. 설치 여부 자체는 브라우저가 알려주지 않는다.
+  const [installDismissed, setInstallDismissed] = useState(() => readInstallDismissed())
+  const offerInstall = shouldOfferInstall({
+    signedIn: !!user,
+    standalone: isStandalone(),
+    dismissed: installDismissed,
+  })
+
   const [photoSaving, setPhotoSaving] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [cropFile, setCropFile] = useState<File | null>(null)
@@ -306,6 +328,26 @@ export default function MoreTab({
             </span>
             <IconChevronRight />
           </button>
+        )}
+
+        {/* 홈화면 추가 안내. 설치해두고 브라우저로 들어오면 알 길이 없어 또 뜨므로,
+            「이미 추가했어요」로 닫으면 다시 묻지 않는다. */}
+        {offerInstall && (
+          <div className="flex flex-col gap-2.5 px-4 py-3.5 bg-surface border border-border rounded-xl">
+            <div className="text-sm text-ink">홈 화면에 추가하면 앱처럼 열려요</div>
+            <div className="text-xs sm:text-[13px] text-dim leading-[1.6]">{INSTALL_HOW[installHow()]}</div>
+            <div className="flex justify-end">
+              <button
+                onClick={() => {
+                  markInstallDismissed()
+                  setInstallDismissed(true)
+                }}
+                className="bg-transparent text-dim border-none px-2 py-1.5 -mr-2 -my-1.5 text-xs sm:text-[13px] cursor-pointer hover:text-ink"
+              >
+                이미 추가했어요
+              </button>
+            </div>
+          </div>
         )}
 
         <div className="flex flex-col gap-2">
