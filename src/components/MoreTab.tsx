@@ -339,23 +339,24 @@ export default function MoreTab({
         {offerInstall && (
           <div className="flex flex-col gap-2.5 px-4 py-3.5 bg-accentsoft rounded-xl">
             <div className="flex flex-col gap-1">
-              <div className="flex items-start justify-between gap-2">
-                <span className="text-[13px] sm:text-sm font-semibold text-ink">홈 화면에 추가해보세요</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    markInstallDismissed()
-                    setInstallDismissed(true)
-                  }}
-                  className="-mr-1 flex-shrink-0 px-1 py-0.5 text-[13px] text-accent bg-transparent border-none cursor-pointer hover:underline"
-                >
-                  이미 추가했어요
-                </button>
-              </div>
+              <span className="text-[13px] sm:text-sm font-semibold text-ink">홈 화면에 추가해보세요</span>
               <span className="text-xs sm:text-[13px] text-dim leading-relaxed">
                 <span className="font-semibold text-ink">{INSTALL_HOW[installHow()].path}</span>
                 {INSTALL_HOW[installHow()].josa} 누르면 주소창 없이 앱처럼 열리고, 앞으로 알림도 받을 수 있어요.
               </span>
+            </div>
+            {/* 다른 작업으로 가는 링크가 아니라 이 안내를 닫는 버튼이라, 제목 옆이 아니라 아래에 둔다. */}
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={() => {
+                  markInstallDismissed()
+                  setInstallDismissed(true)
+                }}
+                className="px-3 py-1.5 rounded-lg text-[13px] bg-surface text-ink border border-border cursor-pointer hover:bg-surface2"
+              >
+                이미 추가했어요
+              </button>
             </div>
           </div>
         )}
