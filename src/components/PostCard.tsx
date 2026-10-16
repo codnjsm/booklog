@@ -58,8 +58,9 @@ export default function PostCard({
 
   return (
     <div
-      className={`bg-surface border rounded-[10px] px-4 py-3.5 sm:px-[22px] sm:py-5 transition-colors duration-500 ${
-        highlighted ? 'border-accent' : 'border-border'
+      // 켜질 땐 빨리(어느 글인지 바로 보여야 한다), 꺼질 땐 천천히 사라진다.
+      className={`bg-surface border rounded-[10px] px-4 py-3.5 sm:px-[22px] sm:py-5 transition-colors ${
+        highlighted ? 'border-accent duration-150' : 'border-border duration-[1200ms]'
       }`}
     >
       <div className="flex items-center justify-between gap-2 mb-3">
