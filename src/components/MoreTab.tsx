@@ -55,11 +55,14 @@ interface Props {
 const ROW =
   'w-full flex items-center gap-3 px-4 py-3.5 bg-surface border border-border rounded-xl text-left cursor-pointer'
 
-/** 기기별 「어떻게 추가하나」 한 줄. iOS는 설치 버튼을 띄울 수 없어 경로를 글로 알려준다. */
-const INSTALL_HOW: Record<ReturnType<typeof installHow>, string> = {
-  ios: '아래 공유 버튼 → 「홈 화면에 추가」',
-  android: '메뉴(⋮) → 「홈 화면에 추가」',
-  desktop: '주소창 오른쪽 설치 아이콘',
+/**
+ * 기기별 「어떻게 추가하나」. iOS는 설치 버튼을 띄울 수 없어 경로를 글로 알려줘야 한다.
+ * 조사를 따로 두는 이유 — 「추가」 뒤에는 를, 「아이콘」 뒤에는 을이 붙는다.
+ */
+const INSTALL_HOW: Record<ReturnType<typeof installHow>, { path: string; josa: string }> = {
+  ios: { path: '아래 공유 버튼에서 「홈 화면에 추가」', josa: '를' },
+  android: { path: '메뉴(⋮)에서 「홈 화면에 추가」', josa: '를' },
+  desktop: { path: '주소창 오른쪽의 설치 아이콘', josa: '을' },
 }
 
 export default function MoreTab({
@@ -330,22 +333,29 @@ export default function MoreTab({
           </button>
         )}
 
-        {/* 홈화면 추가 안내. 설치해두고 브라우저로 들어오면 알 길이 없어 또 뜨므로,
-            「이미 추가했어요」로 닫으면 다시 묻지 않는다. */}
+        {/* 이메일 인증 안내와 같은 뼈대. 다만 색은 accentsoft로 둔다 —
+            인증 미비는 고쳐야 할 문제지만 홈 화면 추가는 권유라, danger로 겁줄 일이 아니다.
+            설치해두고 브라우저로 들어오면 알 길이 없어 또 뜨므로 닫는 길을 같이 둔다. */}
         {offerInstall && (
-          <div className="flex flex-col gap-2.5 px-4 py-3.5 bg-surface border border-border rounded-xl">
-            <div className="text-sm text-ink">홈 화면에 추가하면 앱처럼 열려요</div>
-            <div className="text-xs sm:text-[13px] text-dim leading-[1.6]">{INSTALL_HOW[installHow()]}</div>
-            <div className="flex justify-end">
-              <button
-                onClick={() => {
-                  markInstallDismissed()
-                  setInstallDismissed(true)
-                }}
-                className="bg-transparent text-dim border-none px-2 py-1.5 -mr-2 -my-1.5 text-xs sm:text-[13px] cursor-pointer hover:text-ink"
-              >
-                이미 추가했어요
-              </button>
+          <div className="flex flex-col gap-2.5 px-4 py-3.5 bg-accentsoft rounded-xl">
+            <div className="flex flex-col gap-1">
+              <div className="flex items-start justify-between gap-2">
+                <span className="text-[13px] sm:text-sm font-semibold text-ink">홈 화면에 추가해보세요</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    markInstallDismissed()
+                    setInstallDismissed(true)
+                  }}
+                  className="-mr-1 flex-shrink-0 px-1 py-0.5 text-[13px] text-accent bg-transparent border-none cursor-pointer hover:underline"
+                >
+                  이미 추가했어요
+                </button>
+              </div>
+              <span className="text-xs sm:text-[13px] text-dim leading-relaxed">
+                <span className="font-semibold text-ink">{INSTALL_HOW[installHow()].path}</span>
+                {INSTALL_HOW[installHow()].josa} 누르면 주소창 없이 앱처럼 열리고, 앞으로 알림도 받을 수 있어요.
+              </span>
             </div>
           </div>
         )}
