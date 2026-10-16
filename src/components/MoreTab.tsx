@@ -346,14 +346,16 @@ export default function MoreTab({
               </span>
             </div>
             {/* 다른 작업으로 가는 링크가 아니라 이 안내를 닫는 버튼이라, 제목 옆이 아니라 아래에 둔다. */}
-            <div className="flex justify-center">
+            {/* 이메일 인증 안내의 「인증했어요」와 성격이 같다 — 사용자가 "했다"고 알리는 확인 버튼이라
+                같은 진한 파랑으로 맞춘다. 연한 파랑은 카드 배경과 같은 토큰이라 버튼이 묻힌다. */}
+            <div className="flex justify-end">
               <button
                 type="button"
                 onClick={() => {
                   markInstallDismissed()
                   setInstallDismissed(true)
                 }}
-                className="px-3 py-1.5 rounded-lg text-[13px] bg-surface text-ink border border-border cursor-pointer hover:bg-surface2"
+                className="px-3 py-1.5 rounded-lg text-[13px] bg-accentfill text-white border-none cursor-pointer hover:bg-accentfillhover"
               >
                 이미 추가했어요
               </button>
