@@ -8,19 +8,51 @@
  * 그래서 주소만으로 되돌릴 수 있는 길을 만들어 둔다. 설치하기 **전에** 넣어야 의미가 있다.
  */
 
-/** 이 값이 주소에 붙어 있으면 서비스워커를 걷어낸다. 예: https://…/?sw-off */
+/** 이 값이 주소에 붙어 있으면 서비스워커를 걷어내고 **꺼둔 상태로 기억한다.** 예: https://…/?sw-off */
 const KILL_PARAM = 'sw-off'
+/** 다시 켜는 신호. 예: https://…/?sw-on */
+const REVIVE_PARAM = 'sw-on'
+/**
+ * 꺼둔 상태를 이 브라우저에 남긴다.
+ *
+ * 기억하지 않으면 걷어낸 직후 새로고침에서 다시 깔린다 — sw.js 자체가 망가진 상황에서는
+ * 망가진 걸 다시 설치하는 꼴이라 탈출구 구실을 못 한다.
+ */
+const DISABLED_KEY = 'reading-notes-sw-disabled-v1'
 
 /** 주소에 탈출 신호가 들어 있는지. 값은 보지 않는다 — 붙어 있기만 하면 된다. */
 export function wantsUnregister(search: string): boolean {
   return new URLSearchParams(search).has(KILL_PARAM)
 }
 
-/** 걷어낸 뒤 돌아갈 주소. 신호를 빼야 새로고침할 때마다 반복되지 않는다. */
+/** 주소에 다시 켜는 신호가 들어 있는지. */
+export function wantsRegister(search: string): boolean {
+  return new URLSearchParams(search).has(REVIVE_PARAM)
+}
+
+/** 처리한 뒤 돌아갈 주소. 신호를 빼야 새로고침할 때마다 반복되지 않는다. */
 export function urlWithoutKillParam(href: string): string {
   const url = new URL(href)
   url.searchParams.delete(KILL_PARAM)
+  url.searchParams.delete(REVIVE_PARAM)
   return url.toString()
+}
+
+export function readDisabled(): boolean {
+  try {
+    return localStorage.getItem(DISABLED_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+export function setDisabled(next: boolean): void {
+  try {
+    if (next) localStorage.setItem(DISABLED_KEY, '1')
+    else localStorage.removeItem(DISABLED_KEY)
+  } catch {
+    /* 저장을 못 해도 이번 방문에서는 처리된 대로 동작한다 */
+  }
 }
 
 /**
@@ -49,8 +81,38 @@ export async function unregisterAll(): Promise<void> {
  * @returns 새로고침을 예약했으면 true. 이때는 앱을 그리지 않는다.
  */
 export async function handleKillSwitch(): Promise<boolean> {
-  if (!wantsUnregister(window.location.search)) return false
+  const search = window.location.search
+  if (wantsRegister(search)) {
+    setDisabled(false)
+    window.location.replace(urlWithoutKillParam(window.location.href))
+    return true
+  }
+  if (!wantsUnregister(search)) return false
   await unregisterAll()
+  // 꺼둔 상태를 기억한다. ?sw-on으로 들어와야 다시 깔린다.
+  setDisabled(true)
   window.location.replace(urlWithoutKillParam(window.location.href))
   return true
+}
+
+/**
+ * 서비스워커를 등록한다.
+ *
+ * 탈출 신호가 붙어 있으면 등록하지 않는다 — 걷어내러 들어온 사람에게 다시 깔면 안 된다.
+ * 지원하지 않는 브라우저에서는 조용히 넘어간다. 앱은 서비스워커 없이도 그대로 동작한다.
+ */
+export function shouldRegister(search: string, disabled: boolean): boolean {
+  if (wantsUnregister(search)) return false
+  return !disabled
+}
+
+export function registerServiceWorker(): void {
+  if (!shouldRegister(window.location.search, readDisabled())) return
+  if (!('serviceWorker' in navigator)) return
+  // 첫 화면 그리기와 경쟁하지 않게 로드가 끝난 뒤에 붙인다.
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      /* 등록에 실패해도 앱은 그대로 동작한다. 푸시만 못 받을 뿐이다. */
+    })
+  })
 }
