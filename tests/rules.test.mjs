@@ -114,6 +114,44 @@ describe('posts 직접 접근 차단', () => {
   })
 })
 
+describe('fcmTokens 접근 제어', () => {
+  before(async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      const db = ctx.firestore()
+      await setDoc(doc(db, 'users', ALICE, 'fcmTokens', 't1'), { token: 't1', updatedAt: '2026-10-19' })
+    })
+  })
+
+  it('본인은 자기 기기 토큰을 읽고 쓴다', async () => {
+    const db = testEnv.authenticatedContext(ALICE).firestore()
+    await assertSucceeds(getDocs(collection(db, 'users', ALICE, 'fcmTokens')))
+    await assertSucceeds(setDoc(doc(db, 'users', ALICE, 'fcmTokens', 't2'), { token: 't2' }))
+  })
+
+  it('친구여도 남의 토큰은 읽지 못한다 — users 문서는 읽히지만 하위 컬렉션은 아니다', async () => {
+    const db = testEnv.authenticatedContext(BOB).firestore()
+    await assertSucceeds(getDoc(doc(db, 'users', ALICE)))
+    await assertFails(getDoc(doc(db, 'users', ALICE, 'fcmTokens', 't1')))
+    await assertFails(getDocs(collection(db, 'users', ALICE, 'fcmTokens')))
+  })
+
+  it('남남은 더더욱 읽지 못한다', async () => {
+    const db = testEnv.authenticatedContext(CAROL).firestore()
+    await assertFails(getDoc(doc(db, 'users', ALICE, 'fcmTokens', 't1')))
+  })
+
+  it('남의 토큰 자리에 쓰지 못한다 — 남의 기기로 알림을 보내게 만들 수 있다', async () => {
+    const db = testEnv.authenticatedContext(BOB).firestore()
+    await assertFails(setDoc(doc(db, 'users', ALICE, 'fcmTokens', 'evil'), { token: 'evil' }))
+  })
+
+  it('로그인하지 않으면 읽지도 쓰지도 못한다', async () => {
+    const db = testEnv.unauthenticatedContext().firestore()
+    await assertFails(getDoc(doc(db, 'users', ALICE, 'fcmTokens', 't1')))
+    await assertFails(setDoc(doc(db, 'users', ALICE, 'fcmTokens', 'x'), { token: 'x' }))
+  })
+})
+
 describe('notifications 접근 제어', () => {
   before(async () => {
     await testEnv.withSecurityRulesDisabled(async (ctx) => {

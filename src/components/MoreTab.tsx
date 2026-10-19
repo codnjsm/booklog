@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { User } from 'firebase/auth'
 import type { SyncStatus } from '../hooks/useData'
 import type { VerifyResult } from '../hooks/useAuth'
@@ -11,6 +11,8 @@ import {
   shouldOfferInstall,
   installHow,
 } from '../lib/install'
+import { pushUiState, permissionState, readSavedToken, isPushConfigured, type PushUiState } from '../lib/push'
+import { enablePush, disablePush, isPushSupported } from '../firebase'
 import PageHeader from './layout/PageHeader'
 import AvatarCropModal from './modals/AvatarCropModal'
 import NameEditModal from './modals/NameEditModal'
@@ -21,6 +23,7 @@ import {
   IconExport,
   IconSun,
   IconMoon,
+  IconBell,
   IconSignOut,
   IconChevronRight,
   IconBooks,
@@ -84,6 +87,46 @@ export default function MoreTab({
 }: Props) {
   const { changeTab, theme, toggleTheme, openWelcome, openLogin, showToast } = useAppUI()
   const photoInputRef = useRef<HTMLInputElement>(null)
+  // 알림 줄. 지원 여부(isPushSupported)가 비동기라 처음엔 모름으로 두고 확인되면 갱신한다.
+  const [pushState, setPushState] = useState<PushUiState | null>(null)
+  const [pushBusy, setPushBusy] = useState(false)
+  const refreshPushState = useCallback(async () => {
+    setPushState(
+      pushUiState({
+        configured: isPushConfigured(),
+        supported: await isPushSupported(),
+        iosNeedsInstall: installHow() === 'ios' && !isStandalone(),
+        permission: permissionState(),
+        hasToken: !!readSavedToken(),
+      }),
+    )
+  }, [])
+  useEffect(() => {
+    if (user) void refreshPushState()
+    else setPushState(null)
+  }, [user, refreshPushState])
+
+  const togglePush = async () => {
+    if (!user || pushBusy) return
+    setPushBusy(true)
+    try {
+      if (pushState === 'on') {
+        await disablePush(user.uid)
+        showToast('알림을 껐어요', 'success')
+      } else {
+        const r = await enablePush(user.uid)
+        if (r === 'granted') showToast('알림을 켰어요', 'success')
+        else if (r === 'denied') showToast('브라우저에서 알림이 막혀 있어요', 'error')
+        else showToast('알림을 켜지 못했어요', 'error')
+      }
+    } catch {
+      showToast('알림을 바꾸지 못했어요', 'error')
+    } finally {
+      await refreshPushState()
+      setPushBusy(false)
+    }
+  }
+
   // 지금 창이 홈화면 앱인지만 알 수 있다. 설치 여부 자체는 브라우저가 알려주지 않는다.
   const [installDismissed, setInstallDismissed] = useState(() => readInstallDismissed())
   const offerInstall = shouldOfferInstall({
@@ -366,6 +409,55 @@ export default function MoreTab({
         )}
 
         <div className="flex flex-col gap-2">
+          {/* 알림 줄. 로그인한 사람에게만 보인다 — 끌 알림 자체가 없다.
+              못 켜는 경우(브라우저 차단·미설치 iOS)는 토글 대신 이유를 보여준다.
+              토글만 두면 "왜 안 켜지지"를 설명할 길이 없다. */}
+          {user && pushState && (
+            <div
+              className={ROW.replace(
+                'cursor-pointer',
+                pushState === 'on' || pushState === 'off' ? 'cursor-pointer' : '',
+              )}
+            >
+              <span className="text-dim">
+                <IconBell size={19} />
+              </span>
+              <span className="flex flex-col gap-px min-w-0">
+                <span className="text-sm text-ink">알림</span>
+                {pushState === 'denied' && (
+                  <span className="text-xs sm:text-[13px] text-dim">
+                    브라우저에서 막혀 있어요. 설정에서 허용해주세요
+                  </span>
+                )}
+                {pushState === 'needsInstall' && (
+                  <span className="text-xs sm:text-[13px] text-dim">홈 화면에 추가하면 받을 수 있어요</span>
+                )}
+                {pushState === 'unsupported' && (
+                  <span className="text-xs sm:text-[13px] text-dim">이 브라우저는 알림을 받을 수 없어요</span>
+                )}
+              </span>
+              <span className="flex-1" />
+              {(pushState === 'on' || pushState === 'off') && (
+                <button
+                  type="button"
+                  onClick={togglePush}
+                  disabled={pushBusy}
+                  aria-pressed={pushState === 'on'}
+                  aria-label={pushState === 'on' ? '알림 끄기' : '알림 켜기'}
+                  className="bg-transparent border-none p-0 cursor-pointer flex-shrink-0 disabled:opacity-50"
+                >
+                  <span
+                    className={`relative block w-[38px] h-[22px] rounded-full transition-colors ${pushState === 'on' ? 'bg-accent' : 'bg-border'}`}
+                  >
+                    <span
+                      className={`absolute top-[3px] w-4 h-4 rounded-full bg-surface transition-all ${pushState === 'on' ? 'left-[19px]' : 'left-[3px]'}`}
+                    />
+                  </span>
+                </button>
+              )}
+            </div>
+          )}
+
           <div className={ROW.replace('cursor-pointer', '')}>
             <span className="text-dim">{theme === 'light' ? <IconSun size={19} /> : <IconMoon size={19} />}</span>
             <span className="text-sm text-ink">테마</span>

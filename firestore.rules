@@ -27,6 +27,14 @@ service cloud.firestore {
       allow write: if signedIn() && request.auth.uid == userId;
     }
 
+    match /users/{userId}/fcmTokens/{tokenId} {
+      // 푸시를 보낼 주소. 본인만 읽고 쓴다.
+      //
+      // users 문서 자체는 친구가 읽을 수 있지만(프로필 조회), 하위 컬렉션은 상위 규칙을
+      // 물려받지 않으므로 여기서 따로 막는다. 토큰이 새 나가면 남이 그 기기로 알림을 보낼 수 있다.
+      allow read, write: if signedIn() && request.auth.uid == userId;
+    }
+
     match /friendRequests/{docId} {
       function isParticipant() {
         return signedIn()

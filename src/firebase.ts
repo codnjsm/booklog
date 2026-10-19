@@ -32,6 +32,9 @@ import {
 import { getFunctions, httpsCallable } from 'firebase/functions'
 import type { AppState, UserProfile, FriendRequest, FriendShelf, Post, Recommendation } from './types'
 import type { ServerNotification } from './lib/notifications'
+// getToken은 App Check 쪽과 이름이 겹쳐서 별칭을 준다.
+import { getMessaging, getToken as getMessagingToken, deleteToken, isSupported } from 'firebase/messaging'
+import { tokenDocId, VAPID_PUBLIC_KEY, isPushConfigured, readSavedToken, writeSavedToken } from './lib/push'
 
 const firebaseConfig = {
   apiKey: 'AIzaSyAZtjU5A1ay8ZlWf63spiwEzHjxvZCqSUk',
@@ -242,6 +245,85 @@ export const getPostLikes = async (
     'getPostLikes',
   )
   return (await call({ postId })).data ?? []
+}
+
+/** 이 브라우저가 웹 푸시를 쓸 수 있는지. Notification API와 FCM 지원을 모두 본다. */
+export const isPushSupported = async (): Promise<boolean> => {
+  if (typeof Notification === 'undefined') return false
+  try {
+    return await isSupported()
+  } catch {
+    return false
+  }
+}
+
+/** 푸시를 켠 결과. 화면이 뭘 안내할지 이걸로 정한다. */
+export type EnablePushResult = 'granted' | 'denied' | 'unsupported' | 'unconfigured' | 'failed'
+
+/**
+ * 알림을 켠다. 권한을 묻고, 이 기기의 토큰을 받아 저장한다.
+ *
+ * 토큰 발급에는 서비스워커가 필요하다. Firebase는 기본적으로 /firebase-messaging-sw.js를
+ * 찾는데, 우리는 이미 /sw.js를 쓰고 있으므로 그 등록을 직접 넘긴다.
+ */
+export const enablePush = async (uid: string): Promise<EnablePushResult> => {
+  if (!isPushConfigured()) return 'unconfigured'
+  if (typeof Notification === 'undefined' || !(await isSupported())) return 'unsupported'
+
+  // 브라우저는 한 번 거절당하면 다시 묻지 못한다. 이미 정해진 답이 있으면 그대로 따른다.
+  const permission =
+    Notification.permission === 'default' ? await Notification.requestPermission() : Notification.permission
+  if (permission !== 'granted') return 'denied'
+
+  try {
+    const registration = await navigator.serviceWorker.ready
+    const token = await getMessagingToken(getMessaging(app), {
+      vapidKey: VAPID_PUBLIC_KEY,
+      serviceWorkerRegistration: registration,
+    })
+    if (!token) return 'failed'
+    await saveFcmToken(uid, token)
+    writeSavedToken(token)
+    return 'granted'
+  } catch {
+    // 발급에 실패해도 앱은 그대로 동작한다. 앱 내 알림함만 쓰게 된다.
+    return 'failed'
+  }
+}
+
+/**
+ * 알림을 끈다. 이 기기 토큰만 지운다 — 다른 기기는 계속 받아야 한다.
+ * 로그아웃할 때도 부른다. 안 지우면 남의 계정으로 바꿔 로그인한 기기에 옛 주인 알림이 간다.
+ */
+export const disablePush = async (uid: string): Promise<void> => {
+  const token = readSavedToken()
+  writeSavedToken(null)
+  if (token) {
+    await deleteFcmToken(uid, token).catch(() => {})
+  }
+  try {
+    if (await isSupported()) await deleteToken(getMessaging(app))
+  } catch {
+    /* 이미 없는 토큰을 지우는 건 아무 일도 아니다 */
+  }
+}
+
+/**
+ * 푸시를 보낼 기기 주소를 저장한다. 기기마다 하나씩 쌓인다.
+ *
+ * users 문서가 아니라 하위 컬렉션에 두는 이유 — users 문서는 친구가 읽을 수 있다(프로필 조회).
+ * 토큰이 새 나가면 남이 그 기기로 알림을 보낼 수 있어서, 본인만 읽는 자리에 따로 둔다.
+ */
+export const saveFcmToken = async (uid: string, token: string): Promise<void> => {
+  await setDoc(doc(db, 'users', uid, 'fcmTokens', tokenDocId(token)), {
+    token,
+    updatedAt: new Date().toISOString(),
+  })
+}
+
+/** 이 기기 토큰만 지운다. 로그아웃하거나 알림을 끌 때 쓴다. */
+export const deleteFcmToken = async (uid: string, token: string): Promise<void> => {
+  await deleteDoc(doc(db, 'users', uid, 'fcmTokens', tokenDocId(token)))
 }
 
 /**

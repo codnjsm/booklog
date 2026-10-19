@@ -16,6 +16,7 @@ import {
   sendVerificationEmail,
   changeEmail,
   deleteAccount,
+  disablePush,
 } from './firebase'
 import type { Post, Recommendation } from './types'
 import { normalizeTitle } from './lib/recommend'
@@ -353,9 +354,12 @@ function AppShell() {
   }, [showToast])
   const handleSignOut = useCallback(async () => {
     if (!confirm('로그아웃할까요?\n이 계정의 데이터는 그대로 남아있어요.')) return
+    // 이 기기 푸시 주소를 먼저 거둔다. 안 그러면 다른 사람이 이 기기로 로그인했을 때
+    // 옛 주인 앞으로 온 알림이 이 폰에 뜬다. uid가 필요하므로 로그아웃보다 먼저 한다.
+    if (user) await disablePush(user.uid).catch(() => {})
     await signOut()
     showToast('로그아웃됐어요', 'success')
-  }, [signOut, showToast])
+  }, [signOut, showToast, user])
 
   return (
     <AppLayout

@@ -19,6 +19,7 @@ const MINE = [GONE, FRIEND, OTHER]
 async function wipe() {
   for (const u of MINE) {
     for (const d of (await db.collection(`notifications/${u}/items`).get()).docs) await d.ref.delete()
+    for (const d of (await db.collection(`users/${u}/fcmTokens`).get()).docs) await d.ref.delete()
     await db.doc(`reading-notes/${u}`).delete()
     await db.doc(`users/${u}`).delete()
   }
@@ -55,6 +56,17 @@ describe('deleteUserData — 내 데이터', () => {
     assert.equal(await exists(`users/${GONE}`), false)
     assert.equal(await exists(`friendRequests/${GONE}_${FRIEND}`), false)
     assert.equal((await db.collection('posts').where('authorUid', '==', GONE).get()).size, 0)
+  })
+
+  it('푸시 기기 토큰이 같이 지워진다 — 남겨두면 없는 사람 기기로 알림을 보내려 든다', async () => {
+    await db.doc(`users/${GONE}/fcmTokens/t1`).set({ token: 't1' })
+    await db.doc(`users/${GONE}/fcmTokens/t2`).set({ token: 't2' })
+    await db.doc(`users/${FRIEND}/fcmTokens/t9`).set({ token: 't9' })
+
+    await deleteUserDataHandler(GONE)
+
+    assert.equal((await db.collection(`users/${GONE}/fcmTokens`).get()).size, 0)
+    assert.equal((await db.collection(`users/${FRIEND}/fcmTokens`).get()).size, 1)
   })
 
   it('내 알림함이 비워진다', async () => {
@@ -140,8 +152,11 @@ describe('deleteUserData — 남의 알림함에 내가 남긴 것', () => {
       .set({ fromUid: GONE, toUid: FRIEND, status: 'pending', bookTitle: '책' })
     await db.collection('posts').add({ authorUid: FRIEND, createdAt: '2026-01-01', caption: '친구 글', likes: [GONE] })
 
+    await db.doc(`users/${GONE}/fcmTokens/t1`).set({ token: 't1' })
+
     const r = await deleteUserDataHandler(GONE)
 
+    assert.equal(r.fcmTokens, 1)
     assert.equal(r.posts, 1)
     assert.equal(r.friendRequests, 1)
     assert.equal(r.recommendations, 1)
@@ -154,6 +169,6 @@ describe('deleteUserData — 남의 알림함에 내가 남긴 것', () => {
 describe('deleteUserData — 아무것도 없을 때', () => {
   it('데이터가 하나도 없어도 터지지 않는다', async () => {
     const r = await deleteUserDataHandler(GONE)
-    assert.deepEqual(r, { posts: 0, friendRequests: 0, notifications: 0, recommendations: 0, likes: 0 })
+    assert.deepEqual(r, { posts: 0, friendRequests: 0, notifications: 0, recommendations: 0, likes: 0, fcmTokens: 0 })
   })
 })

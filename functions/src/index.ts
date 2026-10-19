@@ -4,6 +4,8 @@ import { initializeApp } from 'firebase-admin/app'
 import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 import { getAppCheck } from 'firebase-admin/app-check'
 import { getAuth } from 'firebase-admin/auth'
+import { getMessaging } from 'firebase-admin/messaging'
+import { onDocumentCreated } from 'firebase-functions/v2/firestore'
 import type { Request, Response } from 'express'
 
 initializeApp()
@@ -394,13 +396,16 @@ export async function toggleLikeHandler(uid: string, postId: unknown): Promise<{
   if (authorUid !== uid) {
     const notif = db.doc(`notifications/${authorUid}/items/like_${postId}_${uid}`)
     if (liked) await notif.delete()
-    else
+    else {
       await notif.set({
         kind: 'like',
         actorUid: uid,
         postId,
         createdAt: new Date().toISOString(),
       })
+      // 알림함에서 누른 것과 같은 곳으로 데려간다 — 피드에서 그 글.
+      await sendPush(authorUid, 'like', uid, `/friends?view=feed&post=${postId}`)
+    }
   }
 
   return { liked: !liked, count: liked ? likes.length - 1 : likes.length + 1 }
@@ -540,6 +545,84 @@ export const dismissNotifications = onCall({ region: 'asia-northeast3', enforceA
   return dismissNotificationsHandler(req.auth.uid, req.data?.ids)
 })
 
+/* ─────────────── 푸시 발송 ─────────────── */
+
+/**
+ * 푸시 문구. **알림함과 같은 말을 해야 한다** — 같은 일을 두고 다르게 말하면 안 된다.
+ * 짝: src/lib/notifications.ts의 SERVER_KINDS. 한쪽을 고치면 다른 쪽도 고쳐야 한다.
+ */
+const PUSH_BODY: Record<string, (actor: string) => string> = {
+  friendRequest: (a) => `${a}님이 친구 요청을 보냈어요`,
+  like: (a) => `${a}님이 회원님의 글을 좋아합니다`,
+  recommend: (a) => `${a}님이 책을 권했어요`,
+  recommendAccepted: (a) => `${a}님이 권한 책을 담았어요`,
+}
+
+/** 그릴 줄 모르는 종류는 보내지 않는다. 알림함과 같은 기준이다. */
+export function pushBodyFor(kind: string, actorName: string): string | null {
+  return PUSH_BODY[kind]?.(actorName) ?? null
+}
+
+/** 보낸 뒤 쓸모없어진 토큰인지. 기기를 바꾸거나 앱을 지우면 이렇게 돌아온다. */
+function isDeadToken(code: string | undefined): boolean {
+  return code === 'messaging/registration-token-not-registered' || code === 'messaging/invalid-registration-token'
+}
+
+/**
+ * 한 사람의 모든 기기로 푸시를 보낸다.
+ *
+ * **실패해도 부르는 쪽에 영향을 주지 않는다.** 푸시는 덤이고, 알림함이 본체다.
+ * 여기서 던지면 좋아요나 책 권하기 자체가 실패해버린다.
+ *
+ * 알림 내용은 data로만 보낸다 — 화면에 어떻게 띄울지는 서비스워커가 정한다.
+ * notification으로 보내면 브라우저마다 다르게 그려지고 두 번 뜨기도 한다.
+ */
+export async function sendPush(toUid: string, kind: string, actorUid: string, link: string): Promise<number> {
+  try {
+    const db = getDb()
+    const tokensSnap = await db.collection(`users/${toUid}/fcmTokens`).get()
+    if (tokensSnap.empty) return 0
+
+    const profile = (await db.collection('users').doc(actorUid).get()).data()
+    const actorName = (profile?.displayName as string)?.trim() || '친구'
+    const body = pushBodyFor(kind, actorName)
+    if (!body) return 0
+
+    const tokens = tokensSnap.docs.map((d) => (d.data().token as string) ?? d.id)
+    const res = await getMessaging().sendEachForMulticast({
+      tokens,
+      data: { title: 'Booklog', body, url: link },
+    })
+
+    // 죽은 토큰은 거둔다. 안 그러면 보낼 때마다 실패하는 주소가 쌓인다.
+    await Promise.all(
+      res.responses.map((r, i) =>
+        !r.success && isDeadToken(r.error?.code) ? tokensSnap.docs[i].ref.delete().catch(() => {}) : Promise.resolve(),
+      ),
+    )
+    return res.successCount
+  } catch {
+    // 푸시가 안 가도 알림함은 그대로 뜬다.
+    return 0
+  }
+}
+
+/**
+ * 친구 요청이 들어오면 푸시를 보낸다.
+ *
+ * 요청은 클라이언트가 Firestore에 직접 쓰므로(보안 규칙으로 허용) 콜러블을 거치지 않는다.
+ * 그래서 푸시를 보낼 자리가 없어 문서가 생기는 순간을 지켜본다.
+ * 수락·거절은 문서 수정이라 여기 걸리지 않는다 — 그때는 푸시를 보내지 않는다.
+ */
+export const onFriendRequestCreated = onDocumentCreated(
+  { document: 'friendRequests/{requestId}', region: 'asia-northeast3' },
+  async (event) => {
+    const data = event.data?.data()
+    if (!data || data.status !== 'pending') return
+    await sendPush(data.toUid as string, 'friendRequest', data.fromUid as string, '/friends')
+  },
+)
+
 /**
  * 친구에게 책을 권한다.
  *
@@ -607,6 +690,7 @@ export async function recommendBookHandler(
     recommendationId: id,
     createdAt,
   })
+  await sendPush(toUid, 'recommend', uid, '/friends')
   return { id }
 }
 
@@ -713,6 +797,7 @@ export async function respondRecommendationHandler(
       recommendationId: id,
       createdAt: now,
     })
+    await sendPush(rec.fromUid as string, 'recommendAccepted', uid, '/friends')
   }
   return { ok: true }
 }
@@ -790,7 +875,7 @@ export const ocrBookPage = onCall(
 export async function deleteUserDataHandler(uid: string) {
   const db = getDb()
 
-  const [posts, outgoing, incoming, myNotifications, recsFrom, recsTo, likedPosts] = await Promise.all([
+  const [posts, outgoing, incoming, myNotifications, recsFrom, recsTo, likedPosts, fcmTokens] = await Promise.all([
     db.collection('posts').where('authorUid', '==', uid).get(),
     db.collection('friendRequests').where('fromUid', '==', uid).get(),
     db.collection('friendRequests').where('toUid', '==', uid).get(),
@@ -798,6 +883,7 @@ export async function deleteUserDataHandler(uid: string) {
     db.collection('recommendations').where('fromUid', '==', uid).get(),
     db.collection('recommendations').where('toUid', '==', uid).get(),
     db.collection('posts').where('likes', 'array-contains', uid).get(),
+    db.collection(`users/${uid}/fcmTokens`).get(),
   ])
 
   // 내가 일으켜서 남의 알림함에 들어간 것들. 문서 id가 정해진 규칙이라 조회 없이 바로 짚을 수 있다.
@@ -815,6 +901,7 @@ export async function deleteUserDataHandler(uid: string) {
     ...outgoing.docs.map((d) => d.ref),
     ...incoming.docs.map((d) => d.ref),
     ...myNotifications.docs.map((d) => d.ref),
+    ...fcmTokens.docs.map((d) => d.ref),
     ...recsFrom.docs.map((d) => d.ref),
     ...recsTo.docs.map((d) => d.ref),
     ...notificationsILeft,
@@ -842,6 +929,7 @@ export async function deleteUserDataHandler(uid: string) {
     posts: posts.size,
     friendRequests: outgoing.size + incoming.size,
     notifications: myNotifications.size + notificationsILeft.length,
+    fcmTokens: fcmTokens.size,
     recommendations: recsFrom.size + recsTo.size,
     likes: othersILiked.length,
   }
