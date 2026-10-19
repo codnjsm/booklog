@@ -77,13 +77,15 @@ export default function PostComments({
         type="button"
         onClick={onToggle}
         aria-expanded={open}
-        className="bg-transparent border-none px-1.5 py-1.5 -mx-1.5 text-xs sm:text-[13px] text-dim cursor-pointer hover:text-ink"
+        // 좋아요 수 버튼과 달리 이 줄의 맨 앞이다. 왼쪽 음수 마진을 두면 하트·아바타·입력칸이 만드는
+        // 기준선에서 6px 튀어나온다. 터치 영역은 위아래 여백으로만 채운다.
+        className="bg-transparent border-none pr-1.5 py-1.5 -my-1.5 text-xs sm:text-[13px] text-dim cursor-pointer hover:text-ink"
       >
         {count > 0 ? `댓글 ${count}` : '댓글 쓰기'}
       </button>
 
       {open && (
-        <div className="mt-2 flex flex-col gap-2.5">
+        <div className="mt-3 flex flex-col gap-3">
           {comments === null ? (
             <div className="text-xs text-dim">불러오는 중…</div>
           ) : (
@@ -116,7 +118,10 @@ export default function PostComments({
             ))
           )}
 
-          <div className="flex gap-1.5">
+          {/* 읽는 자리와 쓰는 자리를 선으로 나눈다. 댓글이 없으면 나눌 것이 없으므로 선도 없다. */}
+          <div
+            className={`flex gap-1.5 ${comments && comments.length > 0 ? 'pt-3 border-0 border-t border-border' : ''}`}
+          >
             <input
               value={text}
               onChange={(e) => setText(e.target.value)}
