@@ -545,6 +545,254 @@ export const dismissNotifications = onCall({ region: 'asia-northeast3', enforceA
   return dismissNotificationsHandler(req.auth.uid, req.data?.ids)
 })
 
+/* ─────────────── 독서 챌린지 ─────────────── */
+
+/** 한 사람의 기록. reading-notes 문서에서 날짜에 필요한 것만 추린 모양. */
+interface ReadingNotes {
+  books?: { createdAt?: unknown; finishedAt?: unknown; readDates?: unknown }[]
+  quotes?: { createdAt?: unknown }[]
+  words?: { createdAt?: unknown }[]
+}
+
+/**
+ * 저장된 값 → 날짜.
+ *
+ * 시각은 UTC로 저장되므로 그냥 자르면 한국 새벽(자정~오전 9시) 기록이 전날로 잡힌다.
+ * 서버는 기기 시간대를 알 수 없어 **서울 기준**으로 옮긴다 — 함수도 쓰는 사람도 한국에 있다.
+ * 짝: src/lib/day.ts의 isoToDay(거기선 기기 시간 기준). 해외에서 쓰면 하루 어긋날 수 있다.
+ *
+ * 날짜만 있는 값(달력에서 고른 읽은 날)은 그대로 둔다.
+ */
+function dayOf(value: unknown): string | null {
+  if (typeof value !== 'string' || value.length < 10) return null
+  if (value.length === 10) return value
+  const t = Date.parse(value)
+  return Number.isNaN(t) ? null : new Date(t + 9 * 60 * 60 * 1000).toISOString().slice(0, 10)
+}
+
+/**
+ * 기간 안에 기록을 남긴 **날 수**.
+ *
+ * 책 추가·완독, 문장·단어 저장에 더해 달력에 고른 읽은 날(readDates)도 센다.
+ * 짝: src/lib/insights.ts의 recordedDays. 한쪽을 고치면 다른 쪽도 고쳐야 한다.
+ *
+ * 클라이언트가 보낸 숫자를 믿지 않고 여기서 세는 이유 — 겨루는 기능이라 고쳐 보낼 수 있다.
+ * 날짜만 모으고 **무슨 책을 읽었는지는 꺼내지 않는다.** 비공개 책도 날짜에는 들어간다.
+ */
+export function countRecordedDays(notes: ReadingNotes | undefined, from: string, to: string): number {
+  if (!notes) return 0
+  const days = new Set<string>()
+  const add = (value: unknown) => {
+    const d = dayOf(value)
+    // 하루에 여러 번 기록해도 Set이 하루로 묶는다.
+    if (d && d >= from && d <= to) days.add(d)
+  }
+  for (const b of notes.books ?? []) {
+    add(b.createdAt)
+    add(b.finishedAt)
+    if (Array.isArray(b.readDates)) b.readDates.forEach(add)
+  }
+  for (const q of notes.quotes ?? []) add(q.createdAt)
+  for (const w of notes.words ?? []) add(w.createdAt)
+  return days.size
+}
+
+/** 한 챌린지에 들어올 수 있는 최대 인원. 현황을 볼 때 참여자 수만큼 문서를 읽으므로 상한을 둔다. */
+const CHALLENGE_MAX_MEMBERS = 20
+/** 기간 상한. 달 단위로 쓰므로 한 달을 넘지 않는다. */
+const CHALLENGE_MAX_DAYS = 31
+
+/** YYYY-MM-DD 형식이고 실제로 있는 날짜인지. */
+export function isDayString(value: unknown): value is string {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false
+  const d = new Date(`${value}T00:00:00Z`)
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === value
+}
+
+/** 양끝을 포함한 날 수. 2026-10-01 ~ 2026-10-03이면 3이다. */
+export function daysInclusive(from: string, to: string): number {
+  const a = Date.parse(`${from}T00:00:00Z`)
+  const b = Date.parse(`${to}T00:00:00Z`)
+  return Math.floor((b - a) / 86400000) + 1
+}
+
+/**
+ * 서울 기준 오늘.
+ *
+ * UTC로 자르면 자정 직후(한국 시간)에 전날로 나온다 — 사용자가 보는 날짜와 어긋난다.
+ * 함수가 asia-northeast3에 있고 쓰는 사람도 한국이라 서울을 기준으로 둔다.
+ */
+export function todayInSeoul(now: Date = new Date()): string {
+  return new Date(now.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10)
+}
+
+/** 챌린지 문서에서 쓰는 모양. */
+interface Challenge {
+  ownerUid: string
+  from: string
+  to: string
+  goalDays: number
+  members: string[]
+  invited: string[]
+  createdAt: string
+}
+
+/**
+ * 챌린지를 만든다. 만든 사람이 곧 첫 참여자다.
+ *
+ * 기간과 목표는 만들 때 못 박는다 — 중간에 목표를 낮출 수 있으면 겨루는 의미가 없다.
+ */
+export async function createChallengeHandler(
+  uid: string,
+  data: { from?: unknown; to?: unknown; goalDays?: unknown; invite?: unknown },
+): Promise<{ id: string }> {
+  const { from, to } = data
+  if (!isDayString(from) || !isDayString(to)) {
+    throw new HttpsError('invalid-argument', '기간을 올바르게 정해주세요')
+  }
+  if (from > to) {
+    throw new HttpsError('invalid-argument', '끝나는 날이 시작하는 날보다 빠릅니다')
+  }
+  const span = daysInclusive(from, to)
+  if (span > CHALLENGE_MAX_DAYS) {
+    throw new HttpsError('invalid-argument', '기간은 한 달까지예요')
+  }
+  if (to < todayInSeoul()) {
+    throw new HttpsError('invalid-argument', '이미 지난 기간으로는 만들 수 없어요')
+  }
+
+  const goalDays = typeof data.goalDays === 'number' ? Math.floor(data.goalDays) : NaN
+  if (!Number.isFinite(goalDays) || goalDays < 1 || goalDays > span) {
+    throw new HttpsError('invalid-argument', `목표는 1일에서 ${span}일 사이로 정해주세요`)
+  }
+
+  const invite = Array.isArray(data.invite)
+    ? [...new Set(data.invite.filter((x): x is string => typeof x === 'string' && !!x && x !== uid))]
+    : []
+  if (invite.length + 1 > CHALLENGE_MAX_MEMBERS) {
+    throw new HttpsError('invalid-argument', `한 챌린지에는 ${CHALLENGE_MAX_MEMBERS}명까지 들어올 수 있어요`)
+  }
+  // 친구가 아닌 사람을 부를 수 없다. 모르는 사람에게 초대가 가면 안 된다.
+  const friendFlags = await Promise.all(invite.map((u) => areFriends(uid, u)))
+  if (friendFlags.some((ok) => !ok)) {
+    throw new HttpsError('permission-denied', '친구만 부를 수 있어요')
+  }
+
+  const db = getDb()
+  const ref = db.collection('challenges').doc()
+  await ref.set({
+    ownerUid: uid,
+    from,
+    to,
+    goalDays,
+    members: [uid],
+    invited: invite,
+    createdAt: new Date().toISOString(),
+  } satisfies Challenge)
+  return { id: ref.id }
+}
+
+/** 챌린지 문서를 읽고 없으면 거부한다. */
+async function getChallenge(id: unknown): Promise<{ ref: FirebaseFirestore.DocumentReference; data: Challenge }> {
+  if (typeof id !== 'string' || !id) {
+    throw new HttpsError('invalid-argument', '챌린지를 찾을 수 없습니다')
+  }
+  const ref = getDb().collection('challenges').doc(id)
+  const snap = await ref.get()
+  if (!snap.exists) {
+    throw new HttpsError('not-found', '챌린지를 찾을 수 없습니다')
+  }
+  return { ref, data: snap.data() as Challenge }
+}
+
+/** 친구를 더 부른다. 방장만 할 수 있다. */
+export async function inviteToChallengeHandler(
+  uid: string,
+  data: { challengeId?: unknown; toUid?: unknown },
+): Promise<{ ok: true }> {
+  const { ref, data: c } = await getChallenge(data.challengeId)
+  if (c.ownerUid !== uid) {
+    throw new HttpsError('permission-denied', '만든 사람만 부를 수 있어요')
+  }
+  const toUid = String(data.toUid ?? '').trim()
+  if (!toUid || toUid === uid) {
+    throw new HttpsError('invalid-argument', '부를 사람이 필요합니다')
+  }
+  if (c.to < todayInSeoul()) {
+    throw new HttpsError('failed-precondition', '이미 끝난 챌린지예요')
+  }
+  if (!(await areFriends(uid, toUid))) {
+    throw new HttpsError('permission-denied', '친구만 부를 수 있어요')
+  }
+  if (c.members.includes(toUid)) return { ok: true }
+  if (c.members.length + c.invited.length + 1 > CHALLENGE_MAX_MEMBERS) {
+    throw new HttpsError('failed-precondition', `한 챌린지에는 ${CHALLENGE_MAX_MEMBERS}명까지 들어올 수 있어요`)
+  }
+  // 원소 단위로 더해서 같은 사람을 두 번 불러도 쌓이지 않는다.
+  await ref.update({ invited: FieldValue.arrayUnion(toUid) })
+  return { ok: true }
+}
+
+/** 초대를 받아들인다. 초대받은 사람만 할 수 있다. */
+export async function joinChallengeHandler(uid: string, data: { challengeId?: unknown }): Promise<{ ok: true }> {
+  const { ref, data: c } = await getChallenge(data.challengeId)
+  if (c.members.includes(uid)) return { ok: true }
+  if (!c.invited.includes(uid)) {
+    throw new HttpsError('permission-denied', '초대받지 않은 챌린지예요')
+  }
+  if (c.to < todayInSeoul()) {
+    throw new HttpsError('failed-precondition', '이미 끝난 챌린지예요')
+  }
+  if (c.members.length + 1 > CHALLENGE_MAX_MEMBERS) {
+    throw new HttpsError('failed-precondition', `한 챌린지에는 ${CHALLENGE_MAX_MEMBERS}명까지 들어올 수 있어요`)
+  }
+  await ref.update({ members: FieldValue.arrayUnion(uid), invited: FieldValue.arrayRemove(uid) })
+  return { ok: true }
+}
+
+/** 초대를 물린다. 조용히 사라진다 — 거절을 알리지 않는다(친구 요청과 같은 기준). */
+export async function declineChallengeHandler(uid: string, data: { challengeId?: unknown }): Promise<{ ok: true }> {
+  const { ref, data: c } = await getChallenge(data.challengeId)
+  if (!c.invited.includes(uid)) {
+    throw new HttpsError('permission-denied', '초대받지 않은 챌린지예요')
+  }
+  await ref.update({ invited: FieldValue.arrayRemove(uid) })
+  return { ok: true }
+}
+
+/** 챌린지를 지운다. 방장만 할 수 있다. */
+export async function deleteChallengeHandler(uid: string, data: { challengeId?: unknown }): Promise<{ ok: true }> {
+  const { ref, data: c } = await getChallenge(data.challengeId)
+  if (c.ownerUid !== uid) {
+    throw new HttpsError('permission-denied', '만든 사람만 지울 수 있어요')
+  }
+  await ref.delete()
+  return { ok: true }
+}
+
+const callable = { region: 'asia-northeast3', enforceAppCheck: true } as const
+
+export const createChallenge = onCall(callable, async (req) => {
+  if (!req.auth) throw new HttpsError('unauthenticated', '로그인이 필요합니다')
+  return createChallengeHandler(req.auth.uid, req.data ?? {})
+})
+export const inviteToChallenge = onCall(callable, async (req) => {
+  if (!req.auth) throw new HttpsError('unauthenticated', '로그인이 필요합니다')
+  return inviteToChallengeHandler(req.auth.uid, req.data ?? {})
+})
+export const joinChallenge = onCall(callable, async (req) => {
+  if (!req.auth) throw new HttpsError('unauthenticated', '로그인이 필요합니다')
+  return joinChallengeHandler(req.auth.uid, req.data ?? {})
+})
+export const declineChallenge = onCall(callable, async (req) => {
+  if (!req.auth) throw new HttpsError('unauthenticated', '로그인이 필요합니다')
+  return declineChallengeHandler(req.auth.uid, req.data ?? {})
+})
+export const deleteChallenge = onCall(callable, async (req) => {
+  if (!req.auth) throw new HttpsError('unauthenticated', '로그인이 필요합니다')
+  return deleteChallengeHandler(req.auth.uid, req.data ?? {})
+})
+
 /* ─────────────── 푸시 발송 ─────────────── */
 
 /**

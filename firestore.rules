@@ -102,6 +102,12 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    match /challenges/{challengeId} {
+      // 챌린지도 콜러블로만 만들고 읽고 고친다.
+      // 클라이언트가 직접 쓰면 남의 챌린지에 자기를 끼워 넣거나 목표를 낮출 수 있다.
+      allow read, write: if false;
+    }
+
     match /posts/{postId} {
       // 발행(게시물)은 createPost/getFriendFeed/deletePost 콜러블을 통해서만 만들고 읽고 지운다.
       // 클라이언트가 직접 쓰면 스냅샷에 화이트리스트 밖 필드를 넣어 친구에게 그대로 노출시킬

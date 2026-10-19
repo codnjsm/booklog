@@ -114,6 +114,36 @@ describe('posts 직접 접근 차단', () => {
   })
 })
 
+describe('challenges 직접 접근 차단', () => {
+  before(async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'challenges', 'c1'), {
+        ownerUid: ALICE,
+        from: '2026-10-01',
+        to: '2026-10-31',
+        goalDays: 10,
+        members: [ALICE],
+        invited: [BOB],
+      })
+    })
+  })
+
+  it('참여자도 직접 읽지 못한다 — 콜러블로만 본다', async () => {
+    const db = testEnv.authenticatedContext(ALICE).firestore()
+    await assertFails(getDoc(doc(db, 'challenges', 'c1')))
+  })
+
+  it('직접 만들지 못한다 — 남의 챌린지에 자기를 끼워 넣을 수 있다', async () => {
+    const db = testEnv.authenticatedContext(BOB).firestore()
+    await assertFails(setDoc(doc(db, 'challenges', 'evil'), { ownerUid: BOB, members: [BOB] }))
+  })
+
+  it('목표를 낮추지 못한다', async () => {
+    const db = testEnv.authenticatedContext(ALICE).firestore()
+    await assertFails(setDoc(doc(db, 'challenges', 'c1'), { goalDays: 1 }, { merge: true }))
+  })
+})
+
 describe('fcmTokens 접근 제어', () => {
   before(async () => {
     await testEnv.withSecurityRulesDisabled(async (ctx) => {
