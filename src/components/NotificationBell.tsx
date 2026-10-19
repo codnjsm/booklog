@@ -24,12 +24,13 @@ import { shouldOfferPush, readPromptDismissed, markPromptDismissed } from '../li
 const PANEL = 'bg-surface border border-border rounded-xl shadow-card overflow-hidden'
 /** border-none과 border-b를 같이 주면 style이 none이라 선이 안 그려진다. border-0으로 폭만 0으로 둔다. */
 const ROW = 'w-full px-4 py-3 text-left bg-transparent border-0 border-b border-border last:border-b-0'
-// 친구 요청의 수락·거절과 같은 규격(px-3 py-1.5, 테두리 없음).
+// 친구 요청의 수락·거절과 같은 모양(연한/진한 채움, 테두리 없음)이되 한 단계 작게.
+// 알림함 패널은 280px이라 목록을 밀어내지 않는 게 더 중요하다.
 // 「켜기」만 진한 채움이다 — 카드 배경이 accentsoft라 연한 채움으로 두면 묻힌다.
 const BTN_OK =
-  'bg-accentfill text-white border-none font-medium px-3 py-1.5 rounded-lg text-[13px] cursor-pointer transition-all duration-150 hover:bg-accentfillhover disabled:opacity-50 disabled:cursor-not-allowed'
+  'bg-accentfill text-white border-none font-medium px-2.5 py-1 rounded-lg text-xs cursor-pointer transition-all duration-150 hover:bg-accentfillhover disabled:opacity-50 disabled:cursor-not-allowed'
 const BTN_NEUTRAL =
-  'bg-surface text-dim border-none font-medium px-3 py-1.5 rounded-lg text-[13px] cursor-pointer transition-all duration-150 hover:text-ink'
+  'bg-surface text-dim border-none font-medium px-2.5 py-1 rounded-lg text-xs cursor-pointer transition-all duration-150 hover:text-ink'
 
 interface Props {
   /** 받은 친구 요청. */
@@ -148,8 +149,7 @@ export default function NotificationBell({ incoming, uid, user, nameOf }: Props)
               <div className="px-4 py-3.5 bg-accentsoft flex flex-col gap-2">
                 <span className="text-[13px] font-semibold text-ink">폰으로도 받아보세요</span>
                 <span className="text-xs text-dim leading-relaxed">앱을 열지 않아도 알림이 떠요</span>
-                {/* 친구 요청의 수락·거절과 같은 규격(px-3 py-1.5, 연한 채움).
-                    「나중에」는 거절이 아니라 미루기라 danger(빨강) 대신 중립으로 둔다. */}
+                {/* 「나중에」는 거절이 아니라 미루기라 danger(빨강) 대신 중립으로 둔다. */}
                 <div className="flex gap-1.5 justify-end">
                   <button
                     type="button"
