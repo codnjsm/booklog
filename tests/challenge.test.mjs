@@ -278,3 +278,298 @@ describe('deleteChallenge', () => {
     assert.equal((await db.doc(`challenges/${id}`).get()).exists, false)
   })
 })
+
+// ── 현황 조회와 정산 ──────────────────────────────────────────
+import { getChallengeHandler, listChallengesHandler } from '../functions/lib/index.js'
+
+/** 이미 끝난 기간으로 바꾼다. 만들 때는 미래만 허용되므로 규칙을 거치지 않고 직접 고친다. */
+async function endPeriod(id, from = '2026-09-01', to = '2026-09-10') {
+  await db.doc(`challenges/${id}`).update({ from, to })
+}
+
+async function giveRecords(uid, dates) {
+  await db.doc(`reading-notes/${uid}`).set({
+    books: [{ id: 'b1', title: '책', createdAt: dates[0] + 'T03:00:00.000Z', readDates: dates }],
+    quotes: [],
+    words: [],
+  })
+}
+
+describe('getChallenge — 현황', () => {
+  beforeEach(async () => {
+    for (const u of MINE) {
+      await db.doc(`users/${u}`).set({ displayName: u.toUpperCase(), photoURL: '' })
+      await db.doc(`reading-notes/${u}`).delete()
+      for (const d of (await db.collection(`users/${u}/badges`).get()).docs) await d.ref.delete()
+    }
+  })
+
+  it('참여자별 기록한 날 수가 나온다', async () => {
+    const { from, to } = period(10)
+    const { id } = await createChallengeHandler(HAN, { from, to, goalDays: 3, invite: [SEO] })
+    await joinChallengeHandler(SEO, { challengeId: id })
+    await giveRecords(HAN, [from])
+    await giveRecords(SEO, [from, to])
+
+    const v = await getChallengeHandler(HAN, { challengeId: id })
+
+    const byUid = Object.fromEntries(v.members.map((m) => [m.uid, m.days]))
+    assert.equal(byUid[HAN], 1)
+    assert.equal(byUid[SEO], 2)
+  })
+
+  it('참여하지 않은 사람의 기록은 세지 않는다', async () => {
+    const { from, to } = period()
+    const { id } = await createChallengeHandler(HAN, { from, to, goalDays: 3 })
+    await giveRecords(MIN, [from, to])
+
+    const v = await getChallengeHandler(HAN, { challengeId: id })
+
+    assert.deepEqual(
+      v.members.map((m) => m.uid),
+      [HAN],
+    )
+  })
+
+  it('탈퇴한 참여자는 빼고 보여준다', async () => {
+    const { from, to } = period()
+    const { id } = await createChallengeHandler(HAN, { from, to, goalDays: 3, invite: [SEO] })
+    await joinChallengeHandler(SEO, { challengeId: id })
+    await db.doc(`users/${SEO}`).delete() // 탈퇴
+
+    const v = await getChallengeHandler(HAN, { challengeId: id })
+
+    assert.deepEqual(
+      v.members.map((m) => m.uid),
+      [HAN],
+    )
+  })
+
+  it('날짜 수 말고 기록 내용은 나가지 않는다', async () => {
+    const { from, to } = period()
+    const { id } = await createChallengeHandler(HAN, { from, to, goalDays: 3 })
+    await db.doc(`reading-notes/${HAN}`).set({
+      books: [{ id: 'b1', title: '아무도 몰라야 하는 책', createdAt: from + 'T03:00:00.000Z', isPrivate: true }],
+      quotes: [{ id: 'q1', text: '비밀 문장', createdAt: from + 'T03:00:00.000Z' }],
+      words: [],
+    })
+
+    const v = await getChallengeHandler(HAN, { challengeId: id })
+
+    const dumped = JSON.stringify(v)
+    assert.equal(dumped.includes('아무도 몰라야 하는 책'), false)
+    assert.equal(dumped.includes('비밀 문장'), false)
+    assert.equal(v.members[0].days, 1)
+  })
+
+  it('참여하지 않은 사람은 볼 수 없다', async () => {
+    const { from, to } = period()
+    const { id } = await createChallengeHandler(HAN, { from, to, goalDays: 3 })
+    await assertCode(getChallengeHandler(NAM, { challengeId: id }), 'permission-denied')
+  })
+})
+
+describe('정산과 뱃지', () => {
+  beforeEach(async () => {
+    for (const u of MINE) {
+      await db.doc(`users/${u}`).set({ displayName: u.toUpperCase(), photoURL: '' })
+      await db.doc(`reading-notes/${u}`).delete()
+      for (const d of (await db.collection(`users/${u}/badges`).get()).docs) await d.ref.delete()
+    }
+  })
+
+  async function endedChallenge(goalDays = 2) {
+    const { from, to } = period()
+    const { id } = await createChallengeHandler(HAN, { from, to, goalDays, invite: [SEO] })
+    await joinChallengeHandler(SEO, { challengeId: id })
+    await endPeriod(id)
+    return id
+  }
+
+  it('기간이 끝나기 전에는 뱃지가 안 생긴다', async () => {
+    const { from, to } = period()
+    const { id } = await createChallengeHandler(HAN, { from, to, goalDays: 1 })
+    await giveRecords(HAN, [from])
+
+    const v = await getChallengeHandler(HAN, { challengeId: id })
+
+    assert.equal(v.ended, false)
+    assert.equal((await db.collection(`users/${HAN}/badges`).get()).size, 0)
+  })
+
+  it('목표를 채우면 뱃지가 남는다', async () => {
+    const id = await endedChallenge(2)
+    await giveRecords(HAN, ['2026-09-02', '2026-09-03'])
+
+    const v = await getChallengeHandler(HAN, { challengeId: id })
+
+    assert.equal(v.ended, true)
+    const badges = await db.collection(`users/${HAN}/badges`).get()
+    assert.equal(badges.size, 1)
+    assert.equal(badges.docs[0].id, id)
+    assert.equal(badges.docs[0].data().days, 2)
+  })
+
+  it('여러 명이 동시에 달성할 수 있다 — 1등만 주면 나머지가 그만둔다', async () => {
+    const id = await endedChallenge(2)
+    await giveRecords(HAN, ['2026-09-02', '2026-09-03'])
+    await giveRecords(SEO, ['2026-09-02', '2026-09-03', '2026-09-04'])
+
+    await getChallengeHandler(HAN, { challengeId: id })
+
+    assert.equal((await db.collection(`users/${HAN}/badges`).get()).size, 1)
+    assert.equal((await db.collection(`users/${SEO}/badges`).get()).size, 1)
+  })
+
+  it('못 채우면 뱃지가 안 남는다', async () => {
+    const id = await endedChallenge(3)
+    await giveRecords(HAN, ['2026-09-02'])
+
+    await getChallengeHandler(HAN, { challengeId: id })
+
+    assert.equal((await db.collection(`users/${HAN}/badges`).get()).size, 0)
+  })
+
+  it('여러 번 열어도 뱃지가 두 번 생기지 않는다', async () => {
+    const id = await endedChallenge(1)
+    await giveRecords(HAN, ['2026-09-02'])
+
+    await getChallengeHandler(HAN, { challengeId: id })
+    await getChallengeHandler(HAN, { challengeId: id })
+    await getChallengeHandler(SEO, { challengeId: id })
+
+    assert.equal((await db.collection(`users/${HAN}/badges`).get()).size, 1)
+  })
+
+  it('먼저 연 사람이 모두의 몫을 정산한다 — 본인이 안 열어도 뱃지가 남는다', async () => {
+    const id = await endedChallenge(1)
+    await giveRecords(SEO, ['2026-09-02'])
+
+    await getChallengeHandler(HAN, { challengeId: id }) // HAN만 열었다
+
+    assert.equal((await db.collection(`users/${SEO}/badges`).get()).size, 1)
+  })
+})
+
+describe('listChallenges', () => {
+  beforeEach(async () => {
+    for (const u of MINE) await db.doc(`users/${u}`).set({ displayName: u.toUpperCase(), photoURL: '' })
+  })
+
+  it('참여 중인 것과 초대받은 것이 나뉘어 나온다', async () => {
+    const { from, to } = period()
+    const { id } = await createChallengeHandler(HAN, { from, to, goalDays: 3, invite: [SEO] })
+
+    const mine = await listChallengesHandler(HAN)
+    assert.deepEqual(
+      mine.joined.map((c) => c.id),
+      [id],
+    )
+    assert.deepEqual(mine.invited, [])
+
+    const theirs = await listChallengesHandler(SEO)
+    assert.deepEqual(theirs.joined, [])
+    assert.deepEqual(
+      theirs.invited.map((c) => c.id),
+      [id],
+    )
+  })
+
+  it('남의 챌린지는 안 나온다', async () => {
+    const { from, to } = period()
+    await createChallengeHandler(HAN, { from, to, goalDays: 3 })
+    const v = await listChallengesHandler(NAM)
+    assert.deepEqual(v.joined, [])
+    assert.deepEqual(v.invited, [])
+  })
+})
+
+// ── 알림 ──────────────────────────────────────────────────────
+describe('챌린지 알림', () => {
+  beforeEach(async () => {
+    for (const u of MINE) {
+      await db.doc(`users/${u}`).set({ displayName: u.toUpperCase(), photoURL: '' })
+      await db.doc(`reading-notes/${u}`).delete()
+      for (const d of (await db.collection(`notifications/${u}/items`).get()).docs) await d.ref.delete()
+      for (const d of (await db.collection(`users/${u}/badges`).get()).docs) await d.ref.delete()
+    }
+  })
+
+  const notisOf = async (uid) =>
+    (await db.collection(`notifications/${uid}/items`).get()).docs.map((d) => ({ id: d.id, ...d.data() }))
+
+  it('만들면서 부른 사람에게 초대 알림이 간다', async () => {
+    const { from, to } = period()
+    const { id } = await createChallengeHandler(HAN, { from, to, goalDays: 3, invite: [SEO] })
+
+    const n = await notisOf(SEO)
+    assert.equal(n.length, 1)
+    assert.equal(n[0].kind, 'challengeInvite')
+    assert.equal(n[0].actorUid, HAN)
+    assert.equal(n[0].id, `challengeInvite_${id}`)
+  })
+
+  it('방장 자신에게는 초대 알림이 안 간다', async () => {
+    const { from, to } = period()
+    await createChallengeHandler(HAN, { from, to, goalDays: 3, invite: [SEO] })
+    assert.deepEqual(await notisOf(HAN), [])
+  })
+
+  it('같은 사람을 두 번 불러도 알림이 쌓이지 않는다', async () => {
+    const { from, to } = period()
+    const { id } = await createChallengeHandler(HAN, { from, to, goalDays: 3, invite: [SEO] })
+    await inviteToChallengeHandler(HAN, { challengeId: id, toUid: SEO })
+    assert.equal((await notisOf(SEO)).length, 1)
+  })
+
+  it('참여하면 방장에게 알림이 간다', async () => {
+    const { from, to } = period()
+    const { id } = await createChallengeHandler(HAN, { from, to, goalDays: 3, invite: [SEO] })
+    await joinChallengeHandler(SEO, { challengeId: id })
+
+    const n = await notisOf(HAN)
+    assert.equal(n.length, 1)
+    assert.equal(n[0].kind, 'challengeJoined')
+    assert.equal(n[0].actorUid, SEO)
+  })
+
+  it('거절하면 아무에게도 알림이 가지 않는다 — 친구 요청과 같은 기준', async () => {
+    const { from, to } = period()
+    const { id } = await createChallengeHandler(HAN, { from, to, goalDays: 3, invite: [SEO] })
+    await declineChallengeHandler(SEO, { challengeId: id })
+    assert.deepEqual(await notisOf(HAN), [])
+  })
+
+  it('완주하면 본인에게 알림이 간다 — 보낸 사람이 없는 알림이다', async () => {
+    const { from, to } = period()
+    const { id } = await createChallengeHandler(HAN, { from, to, goalDays: 1, invite: [SEO] })
+    await joinChallengeHandler(SEO, { challengeId: id })
+    await endPeriod(id)
+    await giveRecords(SEO, ['2026-09-02'])
+    for (const d of (await db.collection(`notifications/${HAN}/items`).get()).docs) await d.ref.delete()
+
+    await getChallengeHandler(HAN, { challengeId: id })
+
+    const n = await notisOf(SEO)
+    const achieved = n.filter((x) => x.kind === 'challengeAchieved')
+    assert.equal(achieved.length, 1)
+    assert.equal(achieved[0].id, `challengeAchieved_${id}`)
+    // 완주 못 한 방장에게는 안 간다
+    assert.deepEqual(
+      (await notisOf(HAN)).filter((x) => x.kind === 'challengeAchieved'),
+      [],
+    )
+  })
+
+  it('여러 번 정산해도 완주 알림이 쌓이지 않는다', async () => {
+    const { from, to } = period()
+    const { id } = await createChallengeHandler(HAN, { from, to, goalDays: 1 })
+    await endPeriod(id)
+    await giveRecords(HAN, ['2026-09-02'])
+
+    await getChallengeHandler(HAN, { challengeId: id })
+    await getChallengeHandler(HAN, { challengeId: id })
+
+    assert.equal((await notisOf(HAN)).filter((x) => x.kind === 'challengeAchieved').length, 1)
+  })
+})

@@ -635,6 +635,8 @@ interface Challenge {
   members: string[]
   invited: string[]
   createdAt: string
+  /** 정산한 시각. 있으면 뱃지를 이미 나눠줬다는 뜻. */
+  settledAt?: string
 }
 
 /**
@@ -689,6 +691,7 @@ export async function createChallengeHandler(
     invited: invite,
     createdAt: new Date().toISOString(),
   } satisfies Challenge)
+  await Promise.all(invite.map((u) => notifyChallenge(u, 'challengeInvite', uid, `challengeInvite_${ref.id}`)))
   return { id: ref.id }
 }
 
@@ -730,6 +733,7 @@ export async function inviteToChallengeHandler(
   }
   // 원소 단위로 더해서 같은 사람을 두 번 불러도 쌓이지 않는다.
   await ref.update({ invited: FieldValue.arrayUnion(toUid) })
+  await notifyChallenge(toUid, 'challengeInvite', uid, `challengeInvite_${ref.id}`)
   return { ok: true }
 }
 
@@ -747,6 +751,7 @@ export async function joinChallengeHandler(uid: string, data: { challengeId?: un
     throw new HttpsError('failed-precondition', `한 챌린지에는 ${CHALLENGE_MAX_MEMBERS}명까지 들어올 수 있어요`)
   }
   await ref.update({ members: FieldValue.arrayUnion(uid), invited: FieldValue.arrayRemove(uid) })
+  await notifyChallenge(c.ownerUid, 'challengeJoined', uid, `challengeJoined_${ref.id}_${uid}`)
   return { ok: true }
 }
 
@@ -770,6 +775,136 @@ export async function deleteChallengeHandler(uid: string, data: { challengeId?: 
   return { ok: true }
 }
 
+/**
+ * 챌린지 알림을 남기고 푸시도 보낸다.
+ *
+ * 문서 id를 정해진 규칙으로 두어 같은 일로 두 번 쌓이지 않게 한다.
+ * 알림함이 본체고 푸시는 덤이라, 푸시가 실패해도 여기서 막지 않는다.
+ */
+async function notifyChallenge(toUid: string, kind: string, actorUid: string, id: string): Promise<void> {
+  if (toUid === actorUid) return // 내가 일으킨 일로 나에게 알리지 않는다
+  await getDb().doc(`notifications/${toUid}/items/${id}`).set({ kind, actorUid, createdAt: new Date().toISOString() })
+  await sendPush(toUid, kind, actorUid, '/records')
+}
+
+/** 화면에 내보내는 챌린지 한 건. **날짜 수 말고는 기록을 꺼내지 않는다.** */
+export interface ChallengeView {
+  id: string
+  ownerUid: string
+  from: string
+  to: string
+  goalDays: number
+  /** 기간이 끝났는지 (서울 기준) */
+  ended: boolean
+  members: { uid: string; displayName: string; photoURL: string; days: number; achieved: boolean }[]
+}
+
+/**
+ * 참여자별로 기록한 날 수를 센다.
+ *
+ * 탈퇴한 사람은 뺀다 — 프로필이 없으면 화면에 이름 없는 줄로 남는다.
+ * 비공개 책도 날짜에는 들어가지만 **무슨 책인지는 나가지 않는다.**
+ */
+async function memberProgress(c: Challenge): Promise<ChallengeView['members']> {
+  const db = getDb()
+  const uids = c.members.slice(0, CHALLENGE_MAX_MEMBERS)
+  const [notesSnaps, profileSnaps] = await Promise.all([
+    Promise.all(uids.map((u) => db.collection('reading-notes').doc(u).get())),
+    Promise.all(uids.map((u) => db.collection('users').doc(u).get())),
+  ])
+  return uids
+    .map((uid, i) => ({ uid, notes: notesSnaps[i], profile: profileSnaps[i] }))
+    .filter((m) => m.profile.exists)
+    .map((m) => {
+      const days = countRecordedDays(m.notes.data() as ReadingNotes | undefined, c.from, c.to)
+      return {
+        uid: m.uid,
+        displayName: (m.profile.data()?.displayName as string) || '',
+        photoURL: (m.profile.data()?.photoURL as string) || '',
+        days,
+        achieved: days >= c.goalDays,
+      }
+    })
+}
+
+/**
+ * 기간이 끝났으면 목표를 채운 사람에게 뱃지를 남긴다.
+ *
+ * 정해진 시각에 도는 스케줄러를 두지 않고 **누군가 현황을 열 때** 정산한다.
+ * 먼저 연 사람이 모두의 몫을 함께 정산하므로, 본인이 안 열어도 뱃지는 남는다.
+ *
+ * 문서 id를 챌린지 id로 고정해 **같은 챌린지로 두 번 생기지 않는다.**
+ */
+async function settleChallenge(
+  ref: FirebaseFirestore.DocumentReference,
+  c: Challenge,
+  members: ChallengeView['members'],
+): Promise<void> {
+  const db = getDb()
+  const winners = members.filter((m) => m.achieved)
+  const batch = db.batch()
+  for (const w of winners) {
+    batch.set(db.doc(`users/${w.uid}/badges/${ref.id}`), {
+      kind: 'challenge',
+      challengeId: ref.id,
+      from: c.from,
+      to: c.to,
+      goalDays: c.goalDays,
+      days: w.days,
+      createdAt: new Date().toISOString(),
+    })
+  }
+  batch.update(ref, { settledAt: new Date().toISOString() })
+  await batch.commit()
+
+  // 완주는 내가 해낸 일이라 「누가」가 없다. 본인에게만 남긴다.
+  await Promise.all(
+    winners.map(async (w) => {
+      await db.doc(`notifications/${w.uid}/items/challengeAchieved_${ref.id}`).set({
+        kind: 'challengeAchieved',
+        actorUid: w.uid,
+        createdAt: new Date().toISOString(),
+      })
+      await sendPush(w.uid, 'challengeAchieved', w.uid, '/records')
+    }),
+  )
+}
+
+/** 챌린지 하나의 현황. 참여자만 볼 수 있다. */
+export async function getChallengeHandler(uid: string, data: { challengeId?: unknown }): Promise<ChallengeView> {
+  const { ref, data: c } = await getChallenge(data.challengeId)
+  if (!c.members.includes(uid) && !c.invited.includes(uid)) {
+    throw new HttpsError('permission-denied', '참여하지 않은 챌린지예요')
+  }
+  const members = await memberProgress(c)
+  const ended = c.to < todayInSeoul()
+  // 끝났는데 아직 정산 안 했으면 지금 한다.
+  if (ended && !c.settledAt) await settleChallenge(ref, c, members)
+  return { id: ref.id, ownerUid: c.ownerUid, from: c.from, to: c.to, goalDays: c.goalDays, ended, members }
+}
+
+/** 내가 참여 중이거나 초대받은 챌린지 목록. */
+export async function listChallengesHandler(
+  uid: string,
+): Promise<{ joined: ChallengeView[]; invited: ChallengeView[] }> {
+  const db = getDb()
+  const [mine, invites] = await Promise.all([
+    db.collection('challenges').where('members', 'array-contains', uid).get(),
+    db.collection('challenges').where('invited', 'array-contains', uid).get(),
+  ])
+  const toView = async (d: FirebaseFirestore.QueryDocumentSnapshot): Promise<ChallengeView> => {
+    const c = d.data() as Challenge
+    const members = await memberProgress(c)
+    const ended = c.to < todayInSeoul()
+    if (ended && !c.settledAt) await settleChallenge(d.ref, c, members)
+    return { id: d.id, ownerUid: c.ownerUid, from: c.from, to: c.to, goalDays: c.goalDays, ended, members }
+  }
+  return {
+    joined: await Promise.all(mine.docs.map(toView)),
+    invited: await Promise.all(invites.docs.map(toView)),
+  }
+}
+
 const callable = { region: 'asia-northeast3', enforceAppCheck: true } as const
 
 export const createChallenge = onCall(callable, async (req) => {
@@ -788,6 +923,14 @@ export const declineChallenge = onCall(callable, async (req) => {
   if (!req.auth) throw new HttpsError('unauthenticated', '로그인이 필요합니다')
   return declineChallengeHandler(req.auth.uid, req.data ?? {})
 })
+export const getChallengeDetail = onCall(callable, async (req) => {
+  if (!req.auth) throw new HttpsError('unauthenticated', '로그인이 필요합니다')
+  return getChallengeHandler(req.auth.uid, req.data ?? {})
+})
+export const listChallenges = onCall(callable, async (req) => {
+  if (!req.auth) throw new HttpsError('unauthenticated', '로그인이 필요합니다')
+  return listChallengesHandler(req.auth.uid)
+})
 export const deleteChallenge = onCall(callable, async (req) => {
   if (!req.auth) throw new HttpsError('unauthenticated', '로그인이 필요합니다')
   return deleteChallengeHandler(req.auth.uid, req.data ?? {})
@@ -802,6 +945,10 @@ export const deleteChallenge = onCall(callable, async (req) => {
 const PUSH_BODY: Record<string, (actor: string) => string> = {
   friendRequest: (a) => `${a}님이 친구 요청을 보냈어요`,
   friendAccepted: (a) => `${a}님이 친구 요청을 수락했어요`,
+  challengeInvite: (a) => `${a}님이 챌린지에 초대했어요`,
+  challengeJoined: (a) => `${a}님이 챌린지에 참여했어요`,
+  // 일으킨 사람이 없는 알림. 이름을 넣지 않는다.
+  challengeAchieved: () => '챌린지를 완주했어요',
   like: (a) => `${a}님이 회원님의 글을 좋아합니다`,
   recommend: (a) => `${a}님이 책을 권했어요`,
   recommendAccepted: (a) => `${a}님이 권한 책을 담았어요`,

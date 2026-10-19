@@ -114,6 +114,30 @@ describe('posts 직접 접근 차단', () => {
   })
 })
 
+describe('badges 접근 제어', () => {
+  before(async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'users', ALICE, 'badges', 'c1'), { kind: 'challenge', days: 10 })
+    })
+  })
+
+  it('본인은 자기 뱃지를 읽는다', async () => {
+    const db = testEnv.authenticatedContext(ALICE).firestore()
+    await assertSucceeds(getDocs(collection(db, 'users', ALICE, 'badges')))
+  })
+
+  it('직접 만들지 못한다 — 완주하지 않고도 달 수 있으면 안 된다', async () => {
+    const db = testEnv.authenticatedContext(ALICE).firestore()
+    await assertFails(setDoc(doc(db, 'users', ALICE, 'badges', 'fake'), { kind: 'challenge' }))
+  })
+
+  it('남의 뱃지를 만들거나 읽지 못한다', async () => {
+    const db = testEnv.authenticatedContext(BOB).firestore()
+    await assertFails(setDoc(doc(db, 'users', ALICE, 'badges', 'evil'), { kind: 'challenge' }))
+    await assertFails(getDoc(doc(db, 'users', ALICE, 'badges', 'c1')))
+  })
+})
+
 describe('challenges 직접 접근 차단', () => {
   before(async () => {
     await testEnv.withSecurityRulesDisabled(async (ctx) => {

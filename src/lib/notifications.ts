@@ -10,10 +10,18 @@ import type { Tab } from '../contexts/AppUIContext'
 export interface NotificationItem {
   /** 같은 알림을 두 번 그리지 않기 위한 키. 소스의 문서 id를 그대로 쓴다. */
   id: string
-  kind: 'friendRequest' | 'like' | 'recommend' | 'recommendAccepted' | 'friendAccepted'
+  kind:
+    | 'friendRequest'
+    | 'like'
+    | 'recommend'
+    | 'recommendAccepted'
+    | 'friendAccepted'
+    | 'challengeInvite'
+    | 'challengeJoined'
+    | 'challengeAchieved'
   /** ISO 문자열. 정렬과 읽음 판정에 쓴다. */
   at: string
-  /** 알림을 일으킨 사람 이름. 화면에서 굵게 보여준다. */
+  /** 알림을 일으킨 사람 이름. 화면에서 굵게 보여준다. 사람이 없는 알림(완주 등)은 빈 문자열. */
   actor: string
   /** 이름 뒤에 붙는 문구. 이름과 나눠둬야 이름만 굵게 그릴 수 있다. */
   text: string
@@ -61,13 +69,20 @@ export interface ServerNotification {
 
 /**
  * 종류별 문구와 갈 곳. 여기 없는 종류는 그릴 줄 모르는 것이므로 목록에서 뺀다.
+ *
  * 좋아요는 내 글에 달린 것이므로 글이 있는 피드로 보낸다.
+ * 챌린지는 기록 탭에 있다.
+ *
+ * `solo`는 **일으킨 사람이 없는 알림**이다. 완주는 내가 해낸 일이라 「누가」가 없다.
  */
-const SERVER_KINDS: Record<string, { text: string; view?: 'feed' }> = {
-  like: { text: '님이 회원님의 글을 좋아합니다', view: 'feed' },
-  recommend: { text: '님이 책을 권했어요' },
-  recommendAccepted: { text: '님이 권한 책을 담았어요' },
-  friendAccepted: { text: '님이 친구 요청을 수락했어요' },
+const SERVER_KINDS: Record<string, { text: string; goTo: Tab; view?: 'feed'; solo?: true }> = {
+  like: { text: '님이 회원님의 글을 좋아합니다', goTo: 'friends', view: 'feed' },
+  recommend: { text: '님이 책을 권했어요', goTo: 'friends' },
+  recommendAccepted: { text: '님이 권한 책을 담았어요', goTo: 'friends' },
+  friendAccepted: { text: '님이 친구 요청을 수락했어요', goTo: 'friends' },
+  challengeInvite: { text: '님이 챌린지에 초대했어요', goTo: 'records' },
+  challengeJoined: { text: '님이 챌린지에 참여했어요', goTo: 'records' },
+  challengeAchieved: { text: '챌린지를 완주했어요', goTo: 'records', solo: true },
 }
 
 /**
@@ -93,9 +108,10 @@ export function serverNotifications(
         id: n.id,
         kind: kind as NotificationItem['kind'],
         at: n.createdAt,
-        actor: nameOf(n.actorUid) || '내가 모르는 친구',
+        // 일으킨 사람이 없는 알림은 이름을 비운다. 화면이 문구만 그린다.
+        actor: spec.solo ? '' : nameOf(n.actorUid) || '내가 모르는 친구',
         text: spec.text,
-        goTo: 'friends' as Tab,
+        goTo: spec.goTo,
         ...(spec.view ? { view: spec.view } : {}),
         // 좋아요는 어느 글에 달렸는지까지 안다. 피드에서 그 글로 데려간다.
         ...(kind === 'like' && n.postId ? { focus: n.postId } : {}),

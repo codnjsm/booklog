@@ -139,3 +139,23 @@ export interface Recommendation {
   message: string
   createdAt: string
 }
+
+/** 챌린지 한 건. 서버가 날짜 수만 세어 돌려준다 — 무슨 책을 읽었는지는 오지 않는다. */
+export interface ChallengeMember {
+  uid: string
+  displayName: string
+  photoURL: string
+  days: number
+  achieved: boolean
+}
+
+export interface Challenge {
+  id: string
+  ownerUid: string
+  from: string
+  to: string
+  goalDays: number
+  /** 기간이 끝났는지 (서울 기준) */
+  ended: boolean
+  members: ChallengeMember[]
+}

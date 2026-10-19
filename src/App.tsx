@@ -413,7 +413,14 @@ function AppShell() {
         />
       )}
       {tab === 'records' && (
-        <RecordsTab books={state.books} quotes={state.quotes} goal={state.readingGoal} onSetGoal={setGoal} />
+        <RecordsTab
+          books={state.books}
+          quotes={state.quotes}
+          goal={state.readingGoal}
+          onSetGoal={setGoal}
+          user={user}
+          friends={friends}
+        />
       )}
       {tab === 'friends' && (
         <FriendsTab

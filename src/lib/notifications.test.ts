@@ -271,6 +271,23 @@ describe('serverNotifications — 서버가 남긴 알림', () => {
     expect(n.view).toBeUndefined()
   })
 
+  it('챌린지 초대·참여는 기록 탭으로 보낸다', () => {
+    const [a] = serverNotifications([raw('n1', 'u-bob', '2026-10-19T00:00:00.000Z', 'challengeInvite')], nameOf)
+    expect(a.text).toBe('님이 챌린지에 초대했어요')
+    expect(a.goTo).toBe('records')
+
+    const [b] = serverNotifications([raw('n2', 'u-bob', '2026-10-19T00:00:00.000Z', 'challengeJoined')], nameOf)
+    expect(b.text).toBe('님이 챌린지에 참여했어요')
+    expect(b.goTo).toBe('records')
+  })
+
+  it('완주 알림은 보낸 사람이 없다 — 이름을 비워 문구만 그린다', () => {
+    const [n] = serverNotifications([raw('n1', 'u-bob', '2026-10-19T00:00:00.000Z', 'challengeAchieved')], nameOf)
+    expect(n.actor).toBe('')
+    expect(n.text).toBe('챌린지를 완주했어요')
+    expect(n.goTo).toBe('records')
+  })
+
   it('kind가 없는 과거 알림은 좋아요로 본다', () => {
     const [n] = serverNotifications([{ id: 'n1', actorUid: 'u-bob', createdAt: '2026-10-13T00:00:00.000Z' }], nameOf)
     expect(n.kind).toBe('like')

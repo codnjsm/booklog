@@ -1,18 +1,23 @@
 import { useState } from 'react'
-import type { Book, Quote } from '../types'
+import type { User } from 'firebase/auth'
+import type { Book, Quote, UserProfile } from '../types'
 import StatsTab from './StatsTab'
 import CalendarTab from './CalendarTab'
 import PageHeader from './layout/PageHeader'
+import ChallengeSection from './ChallengeSection'
 
 interface Props {
   books: Book[]
   quotes: Quote[]
   goal?: number
   onSetGoal: (n: number) => void
+  /** 챌린지는 로그인한 사람만 쓴다. */
+  user: User | null
+  friends: UserProfile[]
 }
 
 /** 통계와 달력은 둘 다 '돌아보기'라 한 섹션. 데스크톱은 둘 다 펼치고, 모바일에서만 나눈다. */
-export default function RecordsTab({ books, quotes, goal, onSetGoal }: Props) {
+export default function RecordsTab({ books, quotes, goal, onSetGoal, user, friends }: Props) {
   const [view, setView] = useState<'stats' | 'calendar'>('calendar')
 
   const seg = (id: 'stats' | 'calendar', label: string) => (
@@ -41,6 +46,13 @@ export default function RecordsTab({ books, quotes, goal, onSetGoal }: Props) {
       <div className={`${view === 'stats' ? '' : 'hidden sm:block'} sm:mt-4`}>
         <StatsTab books={books} quotes={quotes} goal={goal} onSetGoal={onSetGoal} />
       </div>
+
+      {/* 챌린지도 '돌아보기'라 같은 탭에 둔다. 세는 지표(기록한 날)가 여기 있다. */}
+      {user && (
+        <div className="mt-4">
+          <ChallengeSection user={user} friends={friends} />
+        </div>
+      )}
     </div>
   )
 }

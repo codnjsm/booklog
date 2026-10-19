@@ -30,7 +30,7 @@ import {
   type Unsubscribe,
 } from 'firebase/firestore'
 import { getFunctions, httpsCallable } from 'firebase/functions'
-import type { AppState, UserProfile, FriendRequest, FriendShelf, Post, Recommendation } from './types'
+import type { AppState, UserProfile, FriendRequest, FriendShelf, Post, Recommendation, Challenge } from './types'
 import type { ServerNotification } from './lib/notifications'
 // getToken은 App Check 쪽과 이름이 겹쳐서 별칭을 준다.
 import { getMessaging, getToken as getMessagingToken, deleteToken, isSupported } from 'firebase/messaging'
@@ -395,6 +395,36 @@ export const getRecommendations = async (): Promise<Recommendation[]> => {
 export const respondRecommendation = async (id: string, accept: boolean): Promise<void> => {
   const call = httpsCallable<{ id: string; accept: boolean }, { ok: true }>(functions, 'respondRecommendation')
   await call({ id, accept })
+}
+
+/* ─────────────── 독서 챌린지 ─────────────── */
+
+/** 참여 중인 것과 초대받은 것. 날짜 수는 서버가 세어서 온다. */
+export const listChallenges = async (): Promise<{ joined: Challenge[]; invited: Challenge[] }> => {
+  const call = httpsCallable<void, { joined: Challenge[]; invited: Challenge[] }>(functions, 'listChallenges')
+  return (await call()).data ?? { joined: [], invited: [] }
+}
+
+export const createChallenge = async (data: {
+  from: string
+  to: string
+  goalDays: number
+  invite: string[]
+}): Promise<string> => {
+  const call = httpsCallable<typeof data, { id: string }>(functions, 'createChallenge')
+  return (await call(data)).data.id
+}
+
+export const joinChallenge = async (challengeId: string): Promise<void> => {
+  await httpsCallable<{ challengeId: string }, { ok: true }>(functions, 'joinChallenge')({ challengeId })
+}
+
+export const declineChallenge = async (challengeId: string): Promise<void> => {
+  await httpsCallable<{ challengeId: string }, { ok: true }>(functions, 'declineChallenge')({ challengeId })
+}
+
+export const deleteChallenge = async (challengeId: string): Promise<void> => {
+  await httpsCallable<{ challengeId: string }, { ok: true }>(functions, 'deleteChallenge')({ challengeId })
 }
 
 export const deleteAccount = async (): Promise<void> => {
