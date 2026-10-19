@@ -120,7 +120,7 @@ export default function PostComments({
 
           {/* 읽는 자리와 쓰는 자리를 선으로 나눈다. 댓글이 없으면 나눌 것이 없으므로 선도 없다. */}
           <div
-            className={`flex gap-1.5 ${comments && comments.length > 0 ? 'pt-3 border-0 border-t border-border' : ''}`}
+            className={`flex gap-2.5 ${comments && comments.length > 0 ? 'pt-3 border-0 border-t border-border' : ''}`}
           >
             <input
               value={text}
