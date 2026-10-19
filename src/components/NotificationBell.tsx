@@ -51,6 +51,7 @@ export default function NotificationBell({ incoming, uid, user, nameOf }: Props)
   const { state: pushState, busy: pushBusy, enable: enablePushFlow } = usePush(user)
   const [promptDismissed, setPromptDismissed] = useState(() => readPromptDismissed())
   const offerPush = shouldOfferPush(pushState, promptDismissed)
+  const isDesktop = installHow() === 'desktop'
 
   const [fromServer, setFromServer] = useState<ServerNotification[]>([])
   useEffect(() => subscribeNotifications(uid, setFromServer), [uid])
@@ -148,10 +149,10 @@ export default function NotificationBell({ incoming, uid, user, nameOf }: Props)
                 배경을 깔아 목록과 갈라낸다. 같은 줄 모양이면 또 하나의 알림처럼 보인다. */}
             {offerPush && (
               <div className="px-4 py-3.5 bg-accentsoft flex flex-col gap-2">
-                {/* 데스크톱에서 「폰으로도」는 말이 안 된다. iOS만 홈 화면 추가가 필요하고,
-                    데스크톱·안드로이드 크롬은 브라우저에서 그대로 받는다. */}
+                {/* 데스크톱에서 「폰으로도」·「앱」은 말이 안 된다 — 거기선 브라우저 탭이다.
+                    iOS만 홈 화면 추가가 필요하고, 데스크톱·안드로이드 크롬은 브라우저에서 그대로 받는다. */}
                 <span className="text-[13px] font-semibold text-ink">
-                  {installHow() === 'desktop' ? '알림을 받아보세요' : '폰으로도 받아보세요'}
+                  {isDesktop ? '알림을 받아보세요' : '폰으로도 받아보세요'}
                 </span>
                 {/* 홈 화면에 없으면 여기서 켤 수 없다. 대신 켜러 가는 길을 알려준다. */}
                 {pushState === 'needsInstall' ? (
@@ -160,7 +161,9 @@ export default function NotificationBell({ incoming, uid, user, nameOf }: Props)
                     {INSTALL_HOW[installHow()].josa} 누르면 알림을 받을 수 있어요
                   </span>
                 ) : (
-                  <span className="text-xs text-dim leading-relaxed">앱을 열지 않아도 알림이 떠요</span>
+                  <span className="text-xs text-dim leading-relaxed">
+                    {isDesktop ? '웹을 열지 않아도 알림이 떠요' : '앱을 열지 않아도 알림이 떠요'}
+                  </span>
                 )}
                 {/* 「나중에」는 거절이 아니라 미루기라 danger(빨강) 대신 중립으로 둔다. */}
                 <div className="flex gap-1.5 justify-end">
