@@ -23,10 +23,11 @@ export function usePush(user: User | null) {
         supported: await isPushSupported(),
         iosNeedsInstall: installHow() === 'ios' && !isStandalone(),
         permission: permissionState(),
-        hasToken: !!readSavedToken(),
+        // 다른 계정으로 켠 기록이면 이 계정 기준으로는 꺼진 것이다
+        hasToken: readSavedToken()?.uid === user?.uid,
       }),
     )
-  }, [])
+  }, [user])
 
   useEffect(() => {
     if (user) void refresh()

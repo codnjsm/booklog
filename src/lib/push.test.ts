@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import {
   tokenDocId,
   canAskPermission,
@@ -7,6 +7,8 @@ import {
   pushUiState,
   shouldOfferPush,
   shouldAskAfterAccept,
+  readSavedToken,
+  writeSavedToken,
 } from './push'
 
 describe('tokenDocId — 토큰을 문서 id로', () => {
@@ -146,5 +148,68 @@ describe('shouldAskAfterAccept — 친구 요청 수락 직후에 물을지', ()
 
   it('상태를 모르면 묻지 않는다', () => {
     expect(shouldAskAfterAccept(null, false)).toBe(false)
+  })
+})
+
+describe('readSavedToken / writeSavedToken — 토큰과 주인 기억하기', () => {
+  const store: Record<string, string> = {}
+  beforeEach(() => {
+    for (const k of Object.keys(store)) delete store[k]
+    vi.stubGlobal('localStorage', {
+      getItem: (k: string) => store[k] ?? null,
+      setItem: (k: string, v: string) => {
+        store[k] = v
+      },
+      removeItem: (k: string) => {
+        delete store[k]
+      },
+    })
+  })
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('저장한 토큰과 계정이 그대로 돌아온다', () => {
+    writeSavedToken({ token: 't1', uid: 'u1' })
+    expect(readSavedToken()).toEqual({ token: 't1', uid: 'u1' })
+  })
+
+  it('비우면 없어진다', () => {
+    writeSavedToken({ token: 't1', uid: 'u1' })
+    writeSavedToken(null)
+    expect(readSavedToken()).toBeNull()
+  })
+
+  it('저장된 적 없으면 null', () => {
+    expect(readSavedToken()).toBeNull()
+  })
+
+  it('계정을 적기 전에 저장된 값도 받아준다 — 주인은 모르는 것으로 둔다', () => {
+    store['reading-notes-fcm-token-v1'] = '옛날토큰'
+    expect(readSavedToken()).toEqual({ token: '옛날토큰', uid: '' })
+  })
+
+  it('값이 깨져 있으면 null — 앱이 멈추면 안 된다', () => {
+    store['reading-notes-fcm-token-v1'] = '{깨진JSON'
+    expect(readSavedToken()).toBeNull()
+  })
+
+  it('토큰이 빠진 값도 null로 본다', () => {
+    store['reading-notes-fcm-token-v1'] = JSON.stringify({ uid: 'u1' })
+    expect(readSavedToken()).toBeNull()
+  })
+
+  it('저장소가 막혀 있어도 터지지 않는다', () => {
+    vi.stubGlobal('localStorage', {
+      getItem: () => {
+        throw new Error('blocked')
+      },
+      setItem: () => {
+        throw new Error('blocked')
+      },
+      removeItem: () => {
+        throw new Error('blocked')
+      },
+    })
+    expect(readSavedToken()).toBeNull()
+    expect(() => writeSavedToken({ token: 't', uid: 'u' })).not.toThrow()
   })
 })

@@ -50,24 +50,37 @@ export function canAskPermission(state: PermissionState): boolean {
 }
 
 /**
- * 이 브라우저가 마지막으로 받은 토큰.
+ * 이 브라우저가 마지막으로 받은 토큰과 **그때의 계정**.
  *
  * 끌 때 다시 발급받아 지우면 **지우려는 순간에 새 토큰을 만드는** 꼴이라, 켤 때 받아둔 걸 기억한다.
- * 로그아웃할 때도 이 값으로 그 기기 것만 지운다.
+ * 계정을 같이 적는 이유 — 로그아웃 때 삭제가 실패하면 남의 계정 문서에 이 기기 주소가 남는데,
+ * 누구 것이었는지 알아야 다음 로그인 때 수습할 수 있다.
  */
 const TOKEN_KEY = 'reading-notes-fcm-token-v1'
 
-export function readSavedToken(): string | null {
+export interface SavedToken {
+  token: string
+  uid: string
+}
+
+export function readSavedToken(): SavedToken | null {
   try {
-    return localStorage.getItem(TOKEN_KEY)
+    const raw = localStorage.getItem(TOKEN_KEY)
+    if (!raw) return null
+    // 계정을 같이 적기 전에 저장된 값은 토큰 문자열 하나뿐이다. 주인을 모르는 채로 받아준다.
+    if (!raw.startsWith('{')) return { token: raw, uid: '' }
+    const parsed: unknown = JSON.parse(raw)
+    if (typeof parsed !== 'object' || parsed === null) return null
+    const { token, uid } = parsed as Partial<SavedToken>
+    return typeof token === 'string' && token ? { token, uid: typeof uid === 'string' ? uid : '' } : null
   } catch {
     return null
   }
 }
 
-export function writeSavedToken(token: string | null): void {
+export function writeSavedToken(saved: SavedToken | null): void {
   try {
-    if (token) localStorage.setItem(TOKEN_KEY, token)
+    if (saved) localStorage.setItem(TOKEN_KEY, JSON.stringify(saved))
     else localStorage.removeItem(TOKEN_KEY)
   } catch {
     /* 저장을 못 해도 이번 방문에서는 동작한다 */

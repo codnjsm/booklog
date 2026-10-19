@@ -283,7 +283,7 @@ export const enablePush = async (uid: string): Promise<EnablePushResult> => {
     })
     if (!token) return 'failed'
     await saveFcmToken(uid, token)
-    writeSavedToken(token)
+    writeSavedToken({ token, uid })
     return 'granted'
   } catch {
     // 발급에 실패해도 앱은 그대로 동작한다. 앱 내 알림함만 쓰게 된다.
@@ -296,16 +296,52 @@ export const enablePush = async (uid: string): Promise<EnablePushResult> => {
  * 로그아웃할 때도 부른다. 안 지우면 남의 계정으로 바꿔 로그인한 기기에 옛 주인 알림이 간다.
  */
 export const disablePush = async (uid: string): Promise<void> => {
-  const token = readSavedToken()
-  writeSavedToken(null)
-  if (token) {
-    await deleteFcmToken(uid, token).catch(() => {})
+  const saved = readSavedToken()
+  // 문서를 먼저 지우고, 성공했을 때만 기록을 비운다.
+  // 기록부터 지우면 삭제가 실패했을 때 **무슨 토큰이었는지조차 잃어** 나중에 수습할 길이 없다.
+  if (saved) {
+    try {
+      await deleteFcmToken(uid, saved.token)
+      writeSavedToken(null)
+    } catch {
+      /* 기록은 남겨둔다. 다음 로그인 때 reconcilePush가 수습한다 */
+    }
+  } else {
+    writeSavedToken(null)
   }
   try {
     if (await isSupported()) await deleteToken(getMessaging(app))
   } catch {
     /* 이미 없는 토큰을 지우는 건 아무 일도 아니다 */
   }
+}
+
+/**
+ * 로그인 직후, 남의 계정 앞으로 남아 있는 이 기기 주소를 무력화한다.
+ *
+ * 로그아웃 때 삭제가 실패하면 그 계정 문서에 이 기기 주소가 남는다. 보안 규칙상
+ * 남의 문서는 지울 수 없지만, **토큰 자체를 폐기**하면 죽은 주소가 되어
+ * 다음 발송 때 서버가 거둬간다. 그래야 그 계정 알림이 이 기기로 오지 않는다.
+ */
+export const reconcilePush = async (uid: string): Promise<void> => {
+  const saved = readSavedToken()
+  if (!saved || saved.uid === uid) return
+
+  // 계정을 적기 전에 저장된 기록. 내 계정에 그 토큰이 있으면 내 것이므로 주인만 적어준다.
+  // 안 그러면 푸시는 오는데 토글은 꺼짐으로 보인다.
+  if (saved.uid === '') {
+    if (await fcmTokenExists(uid, saved.token)) {
+      writeSavedToken({ token: saved.token, uid })
+      return
+    }
+  }
+
+  try {
+    if (await isSupported()) await deleteToken(getMessaging(app))
+  } catch {
+    /* 폐기에 실패해도 앱은 그대로 동작한다 */
+  }
+  writeSavedToken(null)
 }
 
 /**
@@ -319,6 +355,15 @@ export const saveFcmToken = async (uid: string, token: string): Promise<void> =>
     token,
     updatedAt: new Date().toISOString(),
   })
+}
+
+/** 이 계정에 이 토큰이 저장돼 있는지. 주인을 모르는 옛 기록을 가려낼 때 쓴다. */
+export const fcmTokenExists = async (uid: string, token: string): Promise<boolean> => {
+  try {
+    return (await getDoc(doc(db, 'users', uid, 'fcmTokens', tokenDocId(token)))).exists()
+  } catch {
+    return false
+  }
 }
 
 /** 이 기기 토큰만 지운다. 로그아웃하거나 알림을 끌 때 쓴다. */

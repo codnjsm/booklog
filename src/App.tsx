@@ -17,6 +17,7 @@ import {
   changeEmail,
   deleteAccount,
   disablePush,
+  reconcilePush,
 } from './firebase'
 import type { Post, Recommendation } from './types'
 import { normalizeTitle } from './lib/recommend'
@@ -352,6 +353,12 @@ function AppShell() {
     sessionStorage.setItem(DELETED_KEY, '1')
     location.replace('/')
   }, [showToast])
+  // 로그인하면 남의 계정 앞으로 남아 있는 이 기기 주소를 무력화한다.
+  // 로그아웃 때 삭제가 실패한 경우를 수습하는 자리다.
+  useEffect(() => {
+    if (user) void reconcilePush(user.uid)
+  }, [user])
+
   const handleSignOut = useCallback(async () => {
     if (!confirm('로그아웃할까요?\n이 계정의 데이터는 그대로 남아있어요.')) return
     // 이 기기 푸시 주소를 먼저 거둔다. 안 그러면 다른 사람이 이 기기로 로그인했을 때
