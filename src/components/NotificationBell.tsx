@@ -130,31 +130,32 @@ export default function NotificationBell({ incoming, uid, user, nameOf }: Props)
             )}
 
             {/* 알림함을 여는 사람은 이미 알림을 보러 온 사람이다. 더보기까지 찾아 들어가는 사람은 없다.
-                켤 수 있는 상태일 때만 보여준다 — 눌러도 안 되는 안내는 거짓말이다. */}
+                켤 수 있는 상태일 때만 보여준다 — 눌러도 안 되는 안내는 거짓말이다.
+                배경을 깔아 목록과 갈라낸다. 같은 줄 모양이면 또 하나의 알림처럼 보인다. */}
             {offerPush && (
-              <div className={`${ROW} flex items-center gap-2`}>
-                <span className="text-dim flex-shrink-0">
-                  <IconBell size={15} />
-                </span>
-                <button
-                  type="button"
-                  onClick={() => void enablePushFlow()}
-                  disabled={pushBusy}
-                  className="flex-1 min-w-0 text-left bg-transparent border-none p-0 text-[13px] text-accent cursor-pointer disabled:opacity-50"
-                >
-                  {pushBusy ? '켜는 중…' : '폰으로도 받기'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    markPromptDismissed()
-                    setPromptDismissed(true)
-                  }}
-                  aria-label="이 안내 닫기"
-                  className="flex-shrink-0 bg-transparent border-none text-dim text-xs cursor-pointer px-1.5 py-1.5 -mr-1.5 -my-1.5 hover:text-ink"
-                >
-                  ✕
-                </button>
+              <div className="px-4 py-3.5 bg-accentsoft flex flex-col gap-2">
+                <span className="text-[13px] font-semibold text-ink">폰으로도 받아보세요</span>
+                <span className="text-xs text-dim leading-relaxed">앱을 열지 않아도 알림이 떠요</span>
+                <div className="flex gap-1.5 justify-end">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      markPromptDismissed()
+                      setPromptDismissed(true)
+                    }}
+                    className="px-2.5 py-1 rounded-lg text-xs bg-transparent text-dim border-none cursor-pointer hover:text-ink"
+                  >
+                    나중에
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void enablePushFlow()}
+                    disabled={pushBusy}
+                    className="px-3 py-1 rounded-lg text-xs bg-accentfill text-white border-none cursor-pointer hover:bg-accentfillhover disabled:opacity-50"
+                  >
+                    {pushBusy ? '켜는 중…' : '켜기'}
+                  </button>
+                </div>
               </div>
             )}
           </div>
