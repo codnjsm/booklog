@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { isoToDay, today as todayString } from '../../lib/day'
 import Modal from './Modal'
 import type { Book, BookPrefill, BookStatus } from '../../types'
 import DateMultiPicker from '../DateMultiPicker'
@@ -10,10 +11,10 @@ const STATUSES: { id: BookStatus; label: string }[] = [
   { id: 'done', label: '완독' },
 ]
 
-const today = new Date().toISOString().slice(0, 10)
+const today = todayString()
 
 function toInputDate(iso?: string) {
-  return iso ? iso.slice(0, 10) : ''
+  return iso ? isoToDay(iso) : ''
 }
 function toISOFromInput(val: string) {
   return val ? val + 'T12:00:00.000Z' : undefined

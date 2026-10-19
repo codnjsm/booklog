@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { toDayString, isoToDay } from '../lib/day'
 import type { Book } from '../types'
 import { useAppUI } from '../contexts/AppUIContext'
 import { IconBooks } from './layout/icons'
@@ -11,16 +12,8 @@ interface Props {
 const DOW_LABELS = ['월', '화', '수', '목', '금', '토', '일']
 const MONTH_NAMES = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월']
 
-function toDateStr(date: Date) {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  return `${y}-${m}-${d}`
-}
-
-function isoToLocalDateStr(iso: string) {
-  return toDateStr(new Date(iso))
-}
+const toDateStr = toDayString
+const isoToLocalDateStr = isoToDay
 
 function dow(date: Date) {
   return (date.getDay() + 6) % 7

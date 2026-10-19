@@ -1,4 +1,5 @@
 import type { AppState, Book } from '../types'
+import { isoToDay } from './day'
 
 /** 이번 주 월요일 0시 */
 export function startOfWeek(now = new Date()): Date {
@@ -31,15 +32,24 @@ export function readDaysCount(book: Book, now = new Date()): number {
   return daysSince(readingSince(book), book.finishedAt ? new Date(book.finishedAt) : now)
 }
 
-/** 기록을 남긴 날(책 추가·완독, 문장·단어 저장)의 날짜 집합 */
-function recordedDays(state: AppState): Set<string> {
+/**
+ * 기록을 남긴 날의 날짜 집합.
+ *
+ * 책 추가·완독, 문장·단어 저장에 더해 **달력에 고른 읽은 날(readDates)도 센다.**
+ * 안 세면 매일 읽고 달력에 표시해도 「기록한 날 0일」이 되어 사실과 어긋난다.
+ *
+ * 짝: functions/src/index.ts의 countRecordedDays — 독서 챌린지가 서버에서 같은 기준으로 센다.
+ * 한쪽을 고치면 다른 쪽도 고쳐야 한다.
+ */
+export function recordedDays(state: AppState): Set<string> {
   const days = new Set<string>()
   const add = (iso?: string) => {
-    if (iso) days.add(iso.slice(0, 10))
+    if (iso) days.add(isoToDay(iso))
   }
   state.books.forEach((b) => {
     add(b.createdAt)
     add(b.finishedAt)
+    b.readDates?.forEach((d) => add(d))
   })
   state.quotes.forEach((q) => add(q.createdAt))
   state.words.forEach((w) => add(w.createdAt))
@@ -104,7 +114,7 @@ export function recentActivity(state: AppState, limit = 5): ActivityItem[] {
 
   const byDayBook = new Map<string, { at: string; count: number; title: string }>()
   state.quotes.forEach((q) => {
-    const key = q.createdAt.slice(0, 10) + '|' + (q.bookId ?? '')
+    const key = isoToDay(q.createdAt) + '|' + (q.bookId ?? '')
     const book = state.books.find((b) => b.id === q.bookId)
     const cur = byDayBook.get(key)
     if (cur) {
@@ -118,7 +128,7 @@ export function recentActivity(state: AppState, limit = 5): ActivityItem[] {
 
   const wordsByDay = new Map<string, { at: string; count: number; term: string }>()
   state.words.forEach((w) => {
-    const key = w.createdAt.slice(0, 10)
+    const key = isoToDay(w.createdAt)
     const cur = wordsByDay.get(key)
     if (cur) {
       cur.count += 1

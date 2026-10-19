@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { isoToDay, today } from '../lib/day'
 import type { User } from 'firebase/auth'
 import type { AppState, Book, Quote, Word } from '../types'
 import { loadUserData, saveUserData } from '../firebase'
@@ -362,7 +363,7 @@ export function useData(user: User | null) {
             next.startedAt = new Date().toISOString()
           if (b.status !== 'done' && patch.status === 'done' && !patch.finishedAt) {
             if (b.readDates && b.readDates.length > 0) {
-              const todayStr = new Date().toISOString().slice(0, 10)
+              const todayStr = today()
               const readDates = b.readDates.includes(todayStr) ? b.readDates : [...b.readDates, todayStr].sort()
               next.readDates = readDates
               next.finishedAt = readDates[readDates.length - 1] + 'T12:00:00.000Z'
@@ -440,7 +441,7 @@ export function useData(user: User | null) {
   )
 
   const exportData = useCallback(() => {
-    const fmt = (iso?: string) => (iso ? iso.slice(0, 10) : '')
+    const fmt = (iso?: string) => (iso ? isoToDay(iso) : '')
     const lines: string[] = []
 
     const doneBooks = state.books.filter((b) => b.status === 'done')
@@ -486,7 +487,7 @@ export function useData(user: User | null) {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `reading-books-${new Date().toISOString().slice(0, 10)}.txt`
+    a.download = `reading-books-${today()}.txt`
     a.click()
     URL.revokeObjectURL(url)
   }, [state])
