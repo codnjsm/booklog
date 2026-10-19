@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
+import { usePush } from '../hooks/usePush'
+import { shouldAskAfterAccept, readAlreadyAsked, markAlreadyAsked } from '../lib/push'
 import type { User } from 'firebase/auth'
 import type { UserProfile, FriendRequest, BookStatus, FriendShelf, Post, Recommendation } from '../types'
 import BookCard from './BookCard'
@@ -233,9 +235,21 @@ export default function FriendsTab({
 
   // 수락·거절·친구 삭제는 모두 "서버에 쓰고, 성공하면 토스트" 형태가 같다.
   // 성공 여부를 기다려서 띄우므로 실패한 동작에 완료 문구가 뜨지 않는다.
+  // 친구가 생긴 순간이 알림을 켤 이유가 처음 생기는 때다. 딱 한 번만 묻는다 —
+  // 브라우저는 거절당하면 다시 묻지 못해서, 아직 마음이 없는 사람에게 반복하면 영영 못 켜게 된다.
+  const { state: pushState, enable: enablePushFlow } = usePush(user)
+  const askPushAfterAccept = () => {
+    if (!shouldAskAfterAccept(pushState, readAlreadyAsked())) return
+    markAlreadyAsked()
+    void enablePushFlow()
+  }
+
   const friendActionMutation = useMutation({
-    mutationFn: ({ run }: { run: () => void; done: string }) => Promise.resolve(run()),
-    onSuccess: (_data, { done }) => showToast(done, 'success'),
+    mutationFn: ({ run }: { run: () => void; done: string; afterSuccess?: () => void }) => Promise.resolve(run()),
+    onSuccess: (_data, { done, afterSuccess }) => {
+      showToast(done, 'success')
+      afterSuccess?.()
+    },
     onError: () => showToast('처리 중 오류가 발생했어요', 'error'),
   })
 
@@ -527,6 +541,7 @@ export default function FriendsTab({
                           friendActionMutation.mutate({
                             run: () => onAcceptRequest(req.id),
                             done: '친구 요청을 수락했어요',
+                            afterSuccess: askPushAfterAccept,
                           })
                         }
                       >

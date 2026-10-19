@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { User } from 'firebase/auth'
 import type { SyncStatus } from '../hooks/useData'
 import type { VerifyResult } from '../hooks/useAuth'
@@ -11,8 +11,7 @@ import {
   shouldOfferInstall,
   installHow,
 } from '../lib/install'
-import { pushUiState, permissionState, readSavedToken, isPushConfigured, type PushUiState } from '../lib/push'
-import { enablePush, disablePush, isPushSupported } from '../firebase'
+import { usePush } from '../hooks/usePush'
 import PageHeader from './layout/PageHeader'
 import AvatarCropModal from './modals/AvatarCropModal'
 import NameEditModal from './modals/NameEditModal'
@@ -87,45 +86,8 @@ export default function MoreTab({
 }: Props) {
   const { changeTab, theme, toggleTheme, openWelcome, openLogin, showToast } = useAppUI()
   const photoInputRef = useRef<HTMLInputElement>(null)
-  // 알림 줄. 지원 여부(isPushSupported)가 비동기라 처음엔 모름으로 두고 확인되면 갱신한다.
-  const [pushState, setPushState] = useState<PushUiState | null>(null)
-  const [pushBusy, setPushBusy] = useState(false)
-  const refreshPushState = useCallback(async () => {
-    setPushState(
-      pushUiState({
-        configured: isPushConfigured(),
-        supported: await isPushSupported(),
-        iosNeedsInstall: installHow() === 'ios' && !isStandalone(),
-        permission: permissionState(),
-        hasToken: !!readSavedToken(),
-      }),
-    )
-  }, [])
-  useEffect(() => {
-    if (user) void refreshPushState()
-    else setPushState(null)
-  }, [user, refreshPushState])
-
-  const togglePush = async () => {
-    if (!user || pushBusy) return
-    setPushBusy(true)
-    try {
-      if (pushState === 'on') {
-        await disablePush(user.uid)
-        showToast('알림을 껐어요', 'success')
-      } else {
-        const r = await enablePush(user.uid)
-        if (r === 'granted') showToast('알림을 켰어요', 'success')
-        else if (r === 'denied') showToast('브라우저에서 알림이 막혀 있어요', 'error')
-        else showToast('알림을 켜지 못했어요', 'error')
-      }
-    } catch {
-      showToast('알림을 바꾸지 못했어요', 'error')
-    } finally {
-      await refreshPushState()
-      setPushBusy(false)
-    }
-  }
+  const { state: pushState, busy: pushBusy, enable: enablePushFlow, disable: disablePushFlow } = usePush(user)
+  const togglePush = () => (pushState === 'on' ? disablePushFlow() : enablePushFlow())
 
   // 지금 창이 홈화면 앱인지만 알 수 있다. 설치 여부 자체는 브라우저가 알려주지 않는다.
   const [installDismissed, setInstallDismissed] = useState(() => readInstallDismissed())

@@ -108,3 +108,49 @@ export function pushUiState(args: {
   if (args.permission === 'granted' && args.hasToken) return 'on'
   return 'off'
 }
+
+/** 종 패널의 「폰으로도 받기」를 닫은 기록. */
+const PROMPT_DISMISSED_KEY = 'reading-notes-push-prompt-dismissed-v1'
+/** 친구 요청을 수락한 직후 한 번 물었다는 기록. 브라우저는 거절당하면 다시 못 묻는다. */
+const ASKED_KEY = 'reading-notes-push-asked-v1'
+
+function readFlag(key: string): boolean {
+  try {
+    return localStorage.getItem(key) === '1'
+  } catch {
+    return false
+  }
+}
+
+function writeFlag(key: string): void {
+  try {
+    localStorage.setItem(key, '1')
+  } catch {
+    /* 저장에 실패해도 이번 화면에서는 처리된 대로 동작한다 */
+  }
+}
+
+export const readPromptDismissed = () => readFlag(PROMPT_DISMISSED_KEY)
+export const markPromptDismissed = () => writeFlag(PROMPT_DISMISSED_KEY)
+export const readAlreadyAsked = () => readFlag(ASKED_KEY)
+export const markAlreadyAsked = () => writeFlag(ASKED_KEY)
+
+/**
+ * 알림함에서 「폰으로도 받기」를 보여줄지.
+ *
+ * **켤 수 있는 상태일 때만 보여준다.** 이미 켰거나, 브라우저가 막았거나,
+ * iOS인데 홈 화면에 없으면 보여줘봐야 눌러도 안 된다 — 거짓말이 된다.
+ */
+export function shouldOfferPush(state: PushUiState | null, dismissed: boolean): boolean {
+  return state === 'off' && !dismissed
+}
+
+/**
+ * 친구 요청을 수락한 직후에 권한을 물어볼지.
+ *
+ * 한 번만 묻는다. 브라우저는 거절당하면 다시 묻지 못하는데, 수락할 때마다 물으면
+ * 아직 마음이 없는 사람에게 반복해서 들이대다 영영 못 묻는 상태로 만든다.
+ */
+export function shouldAskAfterAccept(state: PushUiState | null, alreadyAsked: boolean): boolean {
+  return state === 'off' && !alreadyAsked
+}

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import type { User } from 'firebase/auth'
 import type { FriendRequest } from '../types'
 import { useAppUI } from '../contexts/AppUIContext'
 import { IconBell } from './layout/icons'
@@ -16,6 +17,8 @@ import {
 } from '../lib/notifications'
 import type { ServerNotification } from '../lib/notifications'
 import { subscribeNotifications, dismissNotifications } from '../firebase'
+import { usePush } from '../hooks/usePush'
+import { shouldOfferPush, readPromptDismissed, markPromptDismissed } from '../lib/push'
 
 /** 바깥 틀. 알림이 몇 건이든 이 안에 담기고, 항목끼리는 선으로 나눈다. */
 const PANEL = 'bg-surface border border-border rounded-xl shadow-card overflow-hidden'
@@ -26,15 +29,20 @@ interface Props {
   /** 받은 친구 요청. */
   incoming: FriendRequest[]
   uid: string
+  /** 푸시 상태를 보려면 로그인 정보가 필요하다. */
+  user: User | null
   /** 알림을 일으킨 사람 이름을 찾는 데 쓴다. 친구가 아니면 undefined. */
   nameOf: (uid: string) => string | undefined
 }
 
-export default function NotificationBell({ incoming, uid, nameOf }: Props) {
+export default function NotificationBell({ incoming, uid, user, nameOf }: Props) {
   const { changeTab } = useAppUI()
   const [open, setOpen] = useState(false)
   const [seenAt, setSeenAt] = useState<string | null>(() => readSeenAt())
   const [dismissed, setDismissed] = useState<string[]>(() => readDismissed())
+  const { state: pushState, busy: pushBusy, enable: enablePushFlow } = usePush(user)
+  const [promptDismissed, setPromptDismissed] = useState(() => readPromptDismissed())
+  const offerPush = shouldOfferPush(pushState, promptDismissed)
 
   const [fromServer, setFromServer] = useState<ServerNotification[]>([])
   useEffect(() => subscribeNotifications(uid, setFromServer), [uid])
@@ -119,6 +127,35 @@ export default function NotificationBell({ incoming, uid, nameOf }: Props) {
                   <span className="block font-mono text-[11px] text-dim mt-1">{relativeDay(n.at)}</span>
                 </button>
               ))
+            )}
+
+            {/* 알림함을 여는 사람은 이미 알림을 보러 온 사람이다. 더보기까지 찾아 들어가는 사람은 없다.
+                켤 수 있는 상태일 때만 보여준다 — 눌러도 안 되는 안내는 거짓말이다. */}
+            {offerPush && (
+              <div className={`${ROW} flex items-center gap-2`}>
+                <span className="text-dim flex-shrink-0">
+                  <IconBell size={15} />
+                </span>
+                <button
+                  type="button"
+                  onClick={() => void enablePushFlow()}
+                  disabled={pushBusy}
+                  className="flex-1 min-w-0 text-left bg-transparent border-none p-0 text-[13px] text-accent cursor-pointer disabled:opacity-50"
+                >
+                  {pushBusy ? '켜는 중…' : '폰으로도 받기'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    markPromptDismissed()
+                    setPromptDismissed(true)
+                  }}
+                  aria-label="이 안내 닫기"
+                  className="flex-shrink-0 bg-transparent border-none text-dim text-xs cursor-pointer px-1.5 py-1.5 -mr-1.5 -my-1.5 hover:text-ink"
+                >
+                  ✕
+                </button>
+              </div>
             )}
           </div>
         </>

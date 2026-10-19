@@ -1,5 +1,13 @@
 import { describe, it, expect } from 'vitest'
-import { tokenDocId, canAskPermission, isPushConfigured, VAPID_PUBLIC_KEY, pushUiState } from './push'
+import {
+  tokenDocId,
+  canAskPermission,
+  isPushConfigured,
+  VAPID_PUBLIC_KEY,
+  pushUiState,
+  shouldOfferPush,
+  shouldAskAfterAccept,
+} from './push'
 
 describe('tokenDocId — 토큰을 문서 id로', () => {
   it('같은 토큰이면 항상 같은 id — 기기를 다시 켜도 중복이 안 쌓인다', () => {
@@ -86,5 +94,57 @@ describe('pushUiState — 알림 줄이 어떤 모습일지', () => {
 
   it('인증서 키가 없으면 기능 자체가 꺼진 것으로 본다', () => {
     expect(pushUiState({ ...base, configured: false })).toBe('unsupported')
+  })
+})
+
+describe('shouldOfferPush — 알림함에 「폰으로도 받기」를 띄울지', () => {
+  it('켤 수 있는 상태면 띄운다', () => {
+    expect(shouldOfferPush('off', false)).toBe(true)
+  })
+
+  it('이미 켰으면 안 띄운다', () => {
+    expect(shouldOfferPush('on', false)).toBe(false)
+  })
+
+  it('브라우저가 막아뒀으면 안 띄운다 — 눌러도 안 되는 안내는 거짓말이다', () => {
+    expect(shouldOfferPush('denied', false)).toBe(false)
+  })
+
+  it('iOS인데 홈 화면에 없으면 안 띄운다', () => {
+    expect(shouldOfferPush('needsInstall', false)).toBe(false)
+  })
+
+  it('못 쓰는 브라우저면 안 띄운다', () => {
+    expect(shouldOfferPush('unsupported', false)).toBe(false)
+  })
+
+  it('아직 상태를 모르면 안 띄운다 — 깜빡이면 안 된다', () => {
+    expect(shouldOfferPush(null, false)).toBe(false)
+  })
+
+  it('한 번 닫았으면 다시 안 띄운다', () => {
+    expect(shouldOfferPush('off', true)).toBe(false)
+  })
+})
+
+describe('shouldAskAfterAccept — 친구 요청 수락 직후에 물을지', () => {
+  it('켤 수 있고 아직 안 물었으면 묻는다', () => {
+    expect(shouldAskAfterAccept('off', false)).toBe(true)
+  })
+
+  it('한 번 물었으면 다시 묻지 않는다 — 거절당하면 영영 못 묻는다', () => {
+    expect(shouldAskAfterAccept('off', true)).toBe(false)
+  })
+
+  it('이미 켰으면 묻지 않는다', () => {
+    expect(shouldAskAfterAccept('on', false)).toBe(false)
+  })
+
+  it('브라우저가 막아뒀으면 묻지 않는다', () => {
+    expect(shouldAskAfterAccept('denied', false)).toBe(false)
+  })
+
+  it('상태를 모르면 묻지 않는다', () => {
+    expect(shouldAskAfterAccept(null, false)).toBe(false)
   })
 })

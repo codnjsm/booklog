@@ -86,7 +86,7 @@ export default function AppLayout({
           >
             Booklog
           </button>
-          {user && <NotificationBell incoming={incoming} uid={user.uid} nameOf={friendNameOf} />}
+          {user && <NotificationBell incoming={incoming} uid={user.uid} user={user} nameOf={friendNameOf} />}
         </div>
 
         <nav className="flex flex-col gap-0.5">
@@ -202,7 +202,7 @@ export default function AppLayout({
         <div className="max-w-[1200px] mx-auto">
           <div className="sm:hidden mb-3 flex items-center justify-between gap-2">
             <span className="font-mono text-[15px] font-bold tracking-[-0.02em] text-[var(--logo)]">Booklog</span>
-            {user && <NotificationBell incoming={incoming} uid={user.uid} nameOf={friendNameOf} />}
+            {user && <NotificationBell incoming={incoming} uid={user.uid} user={user} nameOf={friendNameOf} />}
           </div>
           {children}
         </div>
