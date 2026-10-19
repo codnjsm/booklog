@@ -24,6 +24,11 @@ import { shouldOfferPush, readPromptDismissed, markPromptDismissed } from '../li
 const PANEL = 'bg-surface border border-border rounded-xl shadow-card overflow-hidden'
 /** border-none과 border-b를 같이 주면 style이 none이라 선이 안 그려진다. border-0으로 폭만 0으로 둔다. */
 const ROW = 'w-full px-4 py-3 text-left bg-transparent border-0 border-b border-border last:border-b-0'
+// 친구 요청의 수락·거절과 같은 규격. 연한 채움에 테두리 없음.
+const BTN_OK =
+  'bg-accentsoft text-accent border-none font-medium px-3 py-1.5 rounded-lg text-[13px] cursor-pointer transition-all duration-150 hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed'
+const BTN_NEUTRAL =
+  'bg-surface text-dim border-none font-medium px-3 py-1.5 rounded-lg text-[13px] cursor-pointer transition-all duration-150 hover:text-ink'
 
 interface Props {
   /** 받은 친구 요청. */
@@ -36,7 +41,7 @@ interface Props {
 }
 
 export default function NotificationBell({ incoming, uid, user, nameOf }: Props) {
-  const { changeTab } = useAppUI()
+  const { changeTab, tab } = useAppUI()
   const [open, setOpen] = useState(false)
   const [seenAt, setSeenAt] = useState<string | null>(() => readSeenAt())
   const [dismissed, setDismissed] = useState<string[]>(() => readDismissed())
@@ -52,6 +57,12 @@ export default function NotificationBell({ incoming, uid, user, nameOf }: Props)
   // 눌러서 본 알림은 치운다. 가서 처리할 것(친구 요청·받은 추천)은 그 탭에 그대로 남아 있다.
   const items = withoutDismissed(all, dismissed)
   const unread = countUnread(items, seenAt)
+
+  // 탭을 옮기면 닫는다. 사이드바(z-70)와 하단탭(z-80)이 바깥 클릭을 받는 막(z-40)보다 위에 있어서,
+  // 탭을 눌러도 막에 걸리지 않고 패널만 덩그러니 남는다.
+  useEffect(() => {
+    setOpen(false)
+  }, [tab])
 
   // 모달과 같은 규칙 — 열려 있는 동안 Escape로 닫힌다.
   useEffect(() => {
@@ -133,9 +144,11 @@ export default function NotificationBell({ incoming, uid, user, nameOf }: Props)
                 켤 수 있는 상태일 때만 보여준다 — 눌러도 안 되는 안내는 거짓말이다.
                 배경을 깔아 목록과 갈라낸다. 같은 줄 모양이면 또 하나의 알림처럼 보인다. */}
             {offerPush && (
-              <div className="px-4 py-3.5 bg-accentsoft flex flex-col gap-2">
+              <div className="px-4 py-3.5 bg-surface2 flex flex-col gap-2">
                 <span className="text-[13px] font-semibold text-ink">폰으로도 받아보세요</span>
                 <span className="text-xs text-dim leading-relaxed">앱을 열지 않아도 알림이 떠요</span>
+                {/* 친구 요청의 수락·거절과 같은 규격(px-3 py-1.5, 연한 채움).
+                    「나중에」는 거절이 아니라 미루기라 danger(빨강) 대신 중립으로 둔다. */}
                 <div className="flex gap-1.5 justify-end">
                   <button
                     type="button"
@@ -143,16 +156,11 @@ export default function NotificationBell({ incoming, uid, user, nameOf }: Props)
                       markPromptDismissed()
                       setPromptDismissed(true)
                     }}
-                    className="px-2.5 py-1 rounded-lg text-xs bg-transparent text-dim border-none cursor-pointer hover:text-ink"
+                    className={BTN_NEUTRAL}
                   >
                     나중에
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => void enablePushFlow()}
-                    disabled={pushBusy}
-                    className="px-3 py-1 rounded-lg text-xs bg-accentfill text-white border-none cursor-pointer hover:bg-accentfillhover disabled:opacity-50"
-                  >
+                  <button type="button" onClick={() => void enablePushFlow()} disabled={pushBusy} className={BTN_OK}>
                     {pushBusy ? '켜는 중…' : '켜기'}
                   </button>
                 </div>
