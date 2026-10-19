@@ -20,10 +20,13 @@ const FEATURES = [
 ]
 
 const TITLE_ID = 'welcome-modal-title'
-/** 항목이 다섯이라 세로가 짧은 기기(iPhone SE 553px)에서는 한 화면에 안 들어간다.
- *  다른 모달과 같이 높이를 제한하고 안에서 스크롤시킨다 — 안 그러면 「시작하기」가 화면 밖으로 나간다. */
+/**
+ * 항목이 다섯이라 세로가 짧은 기기(iPhone SE 553px)에서는 한 화면에 안 들어간다.
+ * 패널 전체를 스크롤시키면 인사말까지 같이 밀려 올라가므로, 세로 flex로 세워
+ * 가운데 목록만 스크롤시킨다 — 인사말과 「시작하기」는 늘 제자리에 있다.
+ */
 const PANEL =
-  'bg-surface border border-border rounded-2xl w-full max-w-[440px] sm:max-w-[500px] shadow-card max-h-full overflow-y-auto overscroll-contain touch-auto'
+  'bg-surface border border-border rounded-2xl w-full max-w-[440px] sm:max-w-[500px] shadow-card max-h-full flex flex-col overflow-hidden'
 const BTN =
   'w-full bg-accentfill text-white border-none font-medium py-3 rounded-lg text-sm sm:text-[15px] cursor-pointer hover:bg-accentfillhover'
 
@@ -35,7 +38,7 @@ export default function WelcomeModal({ onClose }: Props) {
   return (
     <Modal onClose={onClose} labelledBy={TITLE_ID}>
       <div className={PANEL}>
-        <div className="px-6 pt-8 pb-6 text-center border-b border-border">
+        <div className="flex-shrink-0 px-6 pt-8 pb-6 text-center border-b border-border">
           <div className="w-14 h-14 mx-auto mb-3 rounded-full bg-accentsoft flex items-center justify-center text-accent">
             <IconBooks size={28} />
           </div>
@@ -44,7 +47,8 @@ export default function WelcomeModal({ onClose }: Props) {
           </h2>
           <p className="text-dim text-sm leading-relaxed">읽은 책과 문장을 기록하고, 친구와 나눠보세요</p>
         </div>
-        <div className="px-6 py-5 flex flex-col gap-4">
+        {/* min-h-0이 없으면 flex 자식이 내용 높이 아래로 못 줄어들어 스크롤이 생기지 않는다. */}
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain touch-auto px-6 py-5 flex flex-col gap-4">
           {FEATURES.map(({ Icon, title, desc }) => (
             <div key={title} className="flex items-center gap-3">
               <span className="w-9 h-9 rounded-lg bg-surface2 flex items-center justify-center text-accent flex-shrink-0">
@@ -57,9 +61,8 @@ export default function WelcomeModal({ onClose }: Props) {
             </div>
           ))}
         </div>
-        {/* 스크롤이 생기는 화면에서도 시작하기가 늘 보이게 아래에 붙여둔다.
-            밑에서 내용이 비쳐 보이면 안 되므로 배경을 깐다. */}
-        <div className="sticky bottom-0 bg-surface px-6 pb-6 pt-3">
+        {/* 목록이 이 선에서 잘린다. 인사말 아래 선과 짝을 이뤄 잘린 자리가 경계로 읽히게 한다. */}
+        <div className="flex-shrink-0 border-0 border-t border-border px-6 pb-6 pt-4">
           <button className={BTN} onClick={onClose}>
             시작하기
           </button>
