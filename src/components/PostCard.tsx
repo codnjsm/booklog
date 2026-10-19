@@ -162,7 +162,6 @@ export default function PostCard({
         open={commentsOpen}
         comments={comments}
         myUid={myUid}
-        isOwnPost={isOwn}
         onToggle={onToggleComments}
         onAdd={onAddComment}
         onDelete={onDeleteComment}

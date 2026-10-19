@@ -92,13 +92,13 @@ describe('deleteComment — 권한', () => {
     assert.equal(await countOf(post), 0)
   })
 
-  it('글쓴이는 남의 댓글도 지운다 — 신고 체계가 없으니 유일한 수단이다', async () => {
+  it('글쓴이라도 남의 댓글은 못 지운다 — 지우는 건 쓴 사람 몫이다', async () => {
     const post = await makePost(YUN)
     const { id } = await addCommentHandler(DAN, { postId: post, text: '불쾌한 말' })
 
-    await deleteCommentHandler(YUN, { postId: post, commentId: id })
+    await assertCode(deleteCommentHandler(YUN, { postId: post, commentId: id }), 'permission-denied')
 
-    assert.equal((await commentsOf(post)).length, 0)
+    assert.equal((await commentsOf(post)).length, 1)
   })
 
   it('남의 글에 달린 남의 댓글은 못 지운다', async () => {

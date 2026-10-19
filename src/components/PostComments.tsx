@@ -30,10 +30,8 @@ interface Props {
   /** 펼쳐졌는지. 펼치기 전에는 목록을 부르지 않는다. */
   open: boolean
   comments: Comment[] | null
-  /** 내 uid. 지우기를 보여줄지 정한다. */
+  /** 내 uid. 지우기를 보여줄지 정한다 — 쓴 사람만 지울 수 있다. */
   myUid: string
-  /** 이 글이 내 글인지. 글쓴이는 남의 댓글도 지울 수 있다. */
-  isOwnPost: boolean
   onToggle: () => void
   onAdd: (text: string) => Promise<void>
   onDelete: (commentId: string) => void
@@ -46,17 +44,7 @@ interface Props {
  * **댓글이 없으면 수를 보여주지 않는다.** 「댓글 0」이 눈에 보이면 글쓴이가 위축된다.
  * 좋아요는 안 눌려도 티가 덜 나지만 이건 드러난다.
  */
-export default function PostComments({
-  count,
-  open,
-  comments,
-  myUid,
-  isOwnPost,
-  onToggle,
-  onAdd,
-  onDelete,
-  busy,
-}: Props) {
+export default function PostComments({ count, open, comments, myUid, onToggle, onAdd, onDelete, busy }: Props) {
   const [text, setText] = useState('')
   const valid = text.trim().length > 0 && text.trim().length <= 300
 
@@ -104,7 +92,7 @@ export default function PostComments({
                     {c.text}
                   </div>
                 </div>
-                {(c.authorUid === myUid || isOwnPost) && (
+                {c.authorUid === myUid && (
                   <button
                     type="button"
                     onClick={() => onDelete(c.id)}

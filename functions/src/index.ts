@@ -651,9 +651,8 @@ export async function deleteCommentHandler(
   if (!postSnap.exists || !snap.exists) {
     throw new HttpsError('not-found', '댓글을 찾을 수 없습니다')
   }
-  const mine = snap.data()?.authorUid === uid
-  const myPost = postSnap.data()?.authorUid === uid
-  if (!mine && !myPost) {
+  // 쓴 사람만 지운다. 글쓴이에게도 남의 말을 지우는 권한은 주지 않는다.
+  if (snap.data()?.authorUid !== uid) {
     throw new HttpsError('permission-denied', '지울 수 없는 댓글입니다')
   }
 
