@@ -122,6 +122,8 @@ export interface Post {
   likeCount: number
   /** 내가 눌렀는지. */
   likedByMe: boolean
+  /** 댓글 수. 목록은 펼칠 때 따로 불러온다 — 피드가 무거워지지 않게. */
+  commentCount?: number
 }
 
 /**
@@ -158,4 +160,14 @@ export interface Challenge {
   /** 기간이 끝났는지 (서울 기준) */
   ended: boolean
   members: ChallengeMember[]
+}
+
+/** 게시물에 달린 댓글 한 건. 서버가 쓴 사람 표시정보를 동봉해서 돌려준다. */
+export interface Comment {
+  id: string
+  authorUid: string
+  authorDisplayName: string
+  authorPhotoURL: string
+  text: string
+  createdAt: string
 }

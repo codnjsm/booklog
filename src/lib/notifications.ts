@@ -19,6 +19,7 @@ export interface NotificationItem {
     | 'challengeInvite'
     | 'challengeJoined'
     | 'challengeAchieved'
+    | 'comment'
   /** ISO 문자열. 정렬과 읽음 판정에 쓴다. */
   at: string
   /** 알림을 일으킨 사람 이름. 화면에서 굵게 보여준다. 사람이 없는 알림(완주 등)은 빈 문자열. */
@@ -63,8 +64,10 @@ export interface ServerNotification {
   kind?: string
   actorUid: string
   createdAt: string
-  /** 좋아요 알림에만 있다 — 어떤 글에 달렸는지. */
+  /** 좋아요·댓글 알림에 있다 — 어떤 글에 달렸는지. */
   postId?: string
+  /** 묶인 알림의 개수. 댓글처럼 한 글에 여러 번 일어나는 알림에만 있다. */
+  count?: number
 }
 
 /**
@@ -75,7 +78,10 @@ export interface ServerNotification {
  *
  * `solo`는 **일으킨 사람이 없는 알림**이다. 완주는 내가 해낸 일이라 「누가」가 없다.
  */
-const SERVER_KINDS: Record<string, { text: string; goTo: Tab; view?: 'feed'; solo?: true }> = {
+const SERVER_KINDS: Record<
+  string,
+  { text: string | ((count: number) => string); goTo: Tab; view?: 'feed'; solo?: true }
+> = {
   like: { text: '님이 회원님의 글을 좋아합니다', goTo: 'friends', view: 'feed' },
   recommend: { text: '님이 책을 권했어요', goTo: 'friends' },
   recommendAccepted: { text: '님이 권한 책을 담았어요', goTo: 'friends' },
@@ -83,6 +89,12 @@ const SERVER_KINDS: Record<string, { text: string; goTo: Tab; view?: 'feed'; sol
   challengeInvite: { text: '님이 챌린지에 초대했어요', goTo: 'records' },
   challengeJoined: { text: '님이 챌린지에 참여했어요', goTo: 'records' },
   challengeAchieved: { text: '챌린지를 완주했어요', goTo: 'records', solo: true },
+  // 한 글에 여러 명이 달면 하나로 묶인다.
+  comment: {
+    text: (n) => (n > 1 ? `님 외 ${n - 1}명이 댓글을 남겼어요` : '님이 댓글을 남겼어요'),
+    goTo: 'friends',
+    view: 'feed',
+  },
 }
 
 /**
@@ -110,11 +122,11 @@ export function serverNotifications(
         at: n.createdAt,
         // 일으킨 사람이 없는 알림은 이름을 비운다. 화면이 문구만 그린다.
         actor: spec.solo ? '' : nameOf(n.actorUid) || '내가 모르는 친구',
-        text: spec.text,
+        text: typeof spec.text === 'function' ? spec.text(n.count ?? 1) : spec.text,
         goTo: spec.goTo,
         ...(spec.view ? { view: spec.view } : {}),
-        // 좋아요는 어느 글에 달렸는지까지 안다. 피드에서 그 글로 데려간다.
-        ...(kind === 'like' && n.postId ? { focus: n.postId } : {}),
+        // 좋아요·댓글은 어느 글에 달렸는지까지 안다. 피드에서 그 글로 데려간다.
+        ...((kind === 'like' || kind === 'comment') && n.postId ? { focus: n.postId } : {}),
       },
     ]
   })

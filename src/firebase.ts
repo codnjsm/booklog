@@ -30,7 +30,16 @@ import {
   type Unsubscribe,
 } from 'firebase/firestore'
 import { getFunctions, httpsCallable } from 'firebase/functions'
-import type { AppState, UserProfile, FriendRequest, FriendShelf, Post, Recommendation, Challenge } from './types'
+import type {
+  AppState,
+  UserProfile,
+  FriendRequest,
+  FriendShelf,
+  Post,
+  Recommendation,
+  Challenge,
+  Comment,
+} from './types'
 import type { ServerNotification } from './lib/notifications'
 // getToken은 App Check 쪽과 이름이 겹쳐서 별칭을 준다.
 import { getMessaging, getToken as getMessagingToken, deleteToken, isSupported } from 'firebase/messaging'
@@ -395,6 +404,27 @@ export const getRecommendations = async (): Promise<Recommendation[]> => {
 export const respondRecommendation = async (id: string, accept: boolean): Promise<void> => {
   const call = httpsCallable<{ id: string; accept: boolean }, { ok: true }>(functions, 'respondRecommendation')
   await call({ id, accept })
+}
+
+/* ─────────────── 댓글 ─────────────── */
+
+/** 댓글을 단다. 게시물이 서버 전용이라 콜러블을 거친다. */
+export const addComment = async (postId: string, text: string): Promise<void> => {
+  await httpsCallable<{ postId: string; text: string }, { id: string }>(functions, 'addComment')({ postId, text })
+}
+
+/** 쓴 사람과 글쓴이가 지울 수 있다. 권한 판단은 서버가 한다. */
+export const deleteComment = async (postId: string, commentId: string): Promise<void> => {
+  await httpsCallable<{ postId: string; commentId: string }, { ok: true }>(
+    functions,
+    'deleteComment',
+  )({ postId, commentId })
+}
+
+/** 펼쳤을 때만 부른다. 피드 응답에는 댓글 수만 들어 있다. */
+export const getComments = async (postId: string): Promise<Comment[]> => {
+  const call = httpsCallable<{ postId: string }, Comment[]>(functions, 'getComments')
+  return (await call({ postId })).data ?? []
 }
 
 /* ─────────────── 독서 챌린지 ─────────────── */

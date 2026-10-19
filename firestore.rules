@@ -114,6 +114,12 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    match /posts/{postId}/comments/{commentId} {
+      // 하위 컬렉션은 상위 규칙을 물려받지 않으므로 따로 막는다.
+      // 직접 쓰면 작성자를 위조할 수 있고, 직접 읽으면 친구가 아닌 글의 댓글도 보인다.
+      allow read, write: if false;
+    }
+
     match /posts/{postId} {
       // 발행(게시물)은 createPost/getFriendFeed/deletePost 콜러블을 통해서만 만들고 읽고 지운다.
       // 클라이언트가 직접 쓰면 스냅샷에 화이트리스트 밖 필드를 넣어 친구에게 그대로 노출시킬

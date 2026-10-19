@@ -2,6 +2,7 @@ import type { Post } from '../types'
 import { relativeDay } from '../lib/insights'
 import HighlightedText from './HighlightedText'
 import PostLikes from './PostLikes'
+import PostComments from './PostComments'
 
 const STATUS_BADGE = {
   wishlist: { label: '읽고싶음', cls: 'border border-border text-dim' },
@@ -42,6 +43,14 @@ interface Props {
   onOpenAuthor?: () => void
   /** 알림에서 찾아온 글. 어느 글인지 잠깐 표시한다. */
   highlighted?: boolean
+  /** 댓글. 펼치기 전에는 목록을 부르지 않으므로 comments가 null이다. */
+  commentsOpen: boolean
+  comments: import('../types').Comment[] | null
+  myUid: string
+  onToggleComments: () => void
+  onAddComment: (text: string) => Promise<void>
+  onDeleteComment: (commentId: string) => void
+  commentBusy?: boolean
 }
 
 export default function PostCard({
@@ -53,6 +62,13 @@ export default function PostCard({
   likeBusy,
   onOpenAuthor,
   highlighted,
+  commentsOpen,
+  comments,
+  myUid,
+  onToggleComments,
+  onAddComment,
+  onDeleteComment,
+  commentBusy,
 }: Props) {
   const { attachment } = post
 
@@ -139,6 +155,18 @@ export default function PostCard({
         onToggle={onToggleLike}
         onOpenList={onOpenLikes}
         busy={likeBusy}
+      />
+
+      <PostComments
+        count={post.commentCount ?? 0}
+        open={commentsOpen}
+        comments={comments}
+        myUid={myUid}
+        isOwnPost={isOwn}
+        onToggle={onToggleComments}
+        onAdd={onAddComment}
+        onDelete={onDeleteComment}
+        busy={commentBusy}
       />
 
       {isOwn && (

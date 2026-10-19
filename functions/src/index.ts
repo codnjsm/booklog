@@ -15,6 +15,9 @@ export function getDb() {
   return getFirestore()
 }
 
+/** 콜러블 공통 설정. 지역을 바꾸면 클라이언트도 같이 바꿔야 한다. */
+const callable = { region: 'asia-northeast3', enforceAppCheck: true } as const
+
 const kakaoRestApiKey = defineSecret('KAKAO_REST_API_KEY')
 const opendictApiKey = defineSecret('OPENDICT_API_KEY')
 
@@ -483,8 +486,22 @@ export async function deletePostHandler(uid: string, postId: string): Promise<{ 
   if (snap.data()?.authorUid !== uid) {
     throw new HttpsError('permission-denied', '본인 게시물만 삭제할 수 있습니다')
   }
+  // 하위 컬렉션은 문서를 지워도 같이 지워지지 않는다. 남겨두면 주인 없는 댓글이 쌓인다.
+  await deleteComments(ref)
   await ref.delete()
   return { ok: true }
+}
+
+/** 한 게시물의 댓글을 전부 지운다. */
+async function deleteComments(postRef: FirebaseFirestore.DocumentReference): Promise<void> {
+  const snap = await postRef.collection('comments').get()
+  if (snap.empty) return
+  const db = getDb()
+  for (let i = 0; i < snap.docs.length; i += 400) {
+    const batch = db.batch()
+    snap.docs.slice(i, i + 400).forEach((d) => batch.delete(d.ref))
+    await batch.commit()
+  }
 }
 
 export const deletePost = onCall({ region: 'asia-northeast3', enforceAppCheck: true }, async (req) => {
@@ -543,6 +560,174 @@ export const dismissNotifications = onCall({ region: 'asia-northeast3', enforceA
     throw new HttpsError('unauthenticated', '로그인이 필요합니다')
   }
   return dismissNotificationsHandler(req.auth.uid, req.data?.ids)
+})
+
+/* ─────────────── 댓글 ─────────────── */
+
+/**
+ * 댓글 알림. **한 글에 하나로 묶는다.**
+ *
+ * 묶지 않으면 한 글에 댓글 10개가 달릴 때 알림이 10번 온다. 대화는 연쇄되므로 흔한 일이다.
+ * 문서 id를 게시물로 고정하고 수를 세어, 문구가 「OO님 외 N명」으로 바뀐다.
+ * 이름은 **가장 최근에 쓴 사람**으로 둔다 — 방금 일어난 일을 알리는 것이기 때문이다.
+ */
+async function notifyComment(postId: string, authorUid: string, actorUid: string): Promise<void> {
+  if (authorUid === actorUid) return // 내 글에 내가 쓴 건 알리지 않는다
+  const ref = getDb().doc(`notifications/${authorUid}/items/comment_${postId}`)
+  const prev = (await ref.get()).data()
+  // 이미 읽었으면 수를 다시 센다 — 읽은 뒤에 온 것만 「새 알림」이다.
+  const count = typeof prev?.count === 'number' ? prev.count + 1 : 1
+  await ref.set({
+    kind: 'comment',
+    actorUid,
+    postId,
+    count,
+    createdAt: new Date().toISOString(),
+  })
+  await sendPush(authorUid, 'comment', actorUid, `/friends?view=feed&post=${postId}`)
+}
+
+/** 댓글 한 건의 길이 상한. 발행 한마디와 같은 기준. */
+const COMMENT_MAX = 300
+
+/**
+ * 댓글을 단다.
+ *
+ * 게시물이 서버 전용이라 여기를 거친다 — 클라이언트가 직접 쓰면 작성자를 위조할 수 있다.
+ * 수는 게시물 문서에 원소 단위로 더한다. 동시에 달려도 어긋나지 않는다.
+ */
+export async function addCommentHandler(
+  uid: string,
+  data: { postId?: unknown; text?: unknown },
+): Promise<{ id: string }> {
+  const postId = String(data?.postId ?? '').trim()
+  if (!postId) {
+    throw new HttpsError('invalid-argument', '게시물을 찾을 수 없습니다')
+  }
+  const text = String(data?.text ?? '').trim()
+  if (!text || text.length > COMMENT_MAX) {
+    throw new HttpsError('invalid-argument', `댓글은 1~${COMMENT_MAX}자여야 합니다`)
+  }
+
+  const db = getDb()
+  const postRef = db.collection('posts').doc(postId)
+  const snap = await postRef.get()
+  if (!snap.exists) {
+    throw new HttpsError('not-found', '게시물을 찾을 수 없습니다')
+  }
+  const authorUid = snap.data()?.authorUid as string
+  // 내 글이거나 친구의 글에만 쓸 수 있다. 피드에 안 뜨는 글에 다는 경로를 막는다.
+  if (!(await areFriends(uid, authorUid))) {
+    throw new HttpsError('permission-denied', '친구의 게시물에만 댓글을 쓸 수 있습니다')
+  }
+
+  const ref = postRef.collection('comments').doc()
+  await ref.set({ authorUid: uid, text, createdAt: new Date().toISOString() })
+  await postRef.update({ commentCount: FieldValue.increment(1) })
+  await notifyComment(postId, authorUid, uid)
+  return { id: ref.id }
+}
+
+/**
+ * 댓글을 지운다.
+ *
+ * 쓴 사람과 **글쓴이**가 지울 수 있다. 글쓴이에게 권한을 안 주면
+ * 불쾌한 댓글을 본인이 치울 수 없다 — 신고 체계가 없으므로 이게 유일한 수단이다.
+ */
+export async function deleteCommentHandler(
+  uid: string,
+  data: { postId?: unknown; commentId?: unknown },
+): Promise<{ ok: true }> {
+  const postId = String(data?.postId ?? '').trim()
+  const commentId = String(data?.commentId ?? '').trim()
+  if (!postId || !commentId) {
+    throw new HttpsError('invalid-argument', '댓글을 찾을 수 없습니다')
+  }
+
+  const db = getDb()
+  const postRef = db.collection('posts').doc(postId)
+  const ref = postRef.collection('comments').doc(commentId)
+  const [postSnap, snap] = await Promise.all([postRef.get(), ref.get()])
+  if (!postSnap.exists || !snap.exists) {
+    throw new HttpsError('not-found', '댓글을 찾을 수 없습니다')
+  }
+  const mine = snap.data()?.authorUid === uid
+  const myPost = postSnap.data()?.authorUid === uid
+  if (!mine && !myPost) {
+    throw new HttpsError('permission-denied', '지울 수 없는 댓글입니다')
+  }
+
+  await ref.delete()
+  await postRef.update({ commentCount: FieldValue.increment(-1) })
+  return { ok: true }
+}
+
+/** 댓글 한 건. 쓴 사람 표시정보를 동봉해 클라이언트가 추가 조회 없이 그린다. */
+export interface CommentView {
+  id: string
+  authorUid: string
+  authorDisplayName: string
+  authorPhotoURL: string
+  text: string
+  createdAt: string
+}
+
+/**
+ * 댓글 목록. 펼쳤을 때만 부른다 — 피드 응답에는 싣지 않는다.
+ * 대화 순서대로 보이도록 **오래된 순**이다.
+ */
+export async function getCommentsHandler(uid: string, data: { postId?: unknown }): Promise<CommentView[]> {
+  const postId = String(data?.postId ?? '').trim()
+  if (!postId) {
+    throw new HttpsError('invalid-argument', '게시물을 찾을 수 없습니다')
+  }
+  const db = getDb()
+  const postSnap = await db.collection('posts').doc(postId).get()
+  if (!postSnap.exists) {
+    throw new HttpsError('not-found', '게시물을 찾을 수 없습니다')
+  }
+  // 내가 볼 수 없는 글의 댓글도 볼 수 없다.
+  if (!(await areFriends(uid, postSnap.data()?.authorUid as string))) {
+    throw new HttpsError('permission-denied', '볼 수 없는 게시물입니다')
+  }
+
+  const snap = await db.collection(`posts/${postId}/comments`).orderBy('createdAt', 'asc').get()
+  if (snap.empty) return []
+
+  const authorUids = [...new Set(snap.docs.map((d) => d.data().authorUid as string))]
+  const profiles = new Map(
+    (await Promise.all(authorUids.map((u) => db.collection('users').doc(u).get()))).map((d) => [d.id, d.data()]),
+  )
+  return (
+    snap.docs
+      // 탈퇴한 사람의 댓글은 뺀다. 이름 없는 줄로 남는다.
+      .filter((d) => profiles.get(d.data().authorUid as string))
+      .map((d) => {
+        const c = d.data()
+        const p = profiles.get(c.authorUid as string)
+        return {
+          id: d.id,
+          authorUid: c.authorUid as string,
+          authorDisplayName: (p?.displayName as string) || '',
+          authorPhotoURL: (p?.photoURL as string) || '',
+          text: (c.text as string) ?? '',
+          createdAt: (c.createdAt as string) ?? '',
+        }
+      })
+  )
+}
+
+export const addComment = onCall(callable, async (req) => {
+  if (!req.auth) throw new HttpsError('unauthenticated', '로그인이 필요합니다')
+  return addCommentHandler(req.auth.uid, req.data ?? {})
+})
+export const deleteComment = onCall(callable, async (req) => {
+  if (!req.auth) throw new HttpsError('unauthenticated', '로그인이 필요합니다')
+  return deleteCommentHandler(req.auth.uid, req.data ?? {})
+})
+export const getComments = onCall(callable, async (req) => {
+  if (!req.auth) throw new HttpsError('unauthenticated', '로그인이 필요합니다')
+  return getCommentsHandler(req.auth.uid, req.data ?? {})
 })
 
 /* ─────────────── 독서 챌린지 ─────────────── */
@@ -905,8 +1090,6 @@ export async function listChallengesHandler(
   }
 }
 
-const callable = { region: 'asia-northeast3', enforceAppCheck: true } as const
-
 export const createChallenge = onCall(callable, async (req) => {
   if (!req.auth) throw new HttpsError('unauthenticated', '로그인이 필요합니다')
   return createChallengeHandler(req.auth.uid, req.data ?? {})
@@ -949,6 +1132,7 @@ const PUSH_BODY: Record<string, (actor: string) => string> = {
   challengeJoined: (a) => `${a}님이 챌린지에 참여했어요`,
   // 일으킨 사람이 없는 알림. 이름을 넣지 않는다.
   challengeAchieved: () => '챌린지를 완주했어요',
+  comment: (a) => `${a}님이 댓글을 남겼어요`,
   like: (a) => `${a}님이 회원님의 글을 좋아합니다`,
   recommend: (a) => `${a}님이 책을 권했어요`,
   recommendAccepted: (a) => `${a}님이 권한 책을 담았어요`,
@@ -1313,6 +1497,11 @@ export async function deleteUserDataHandler(uid: string) {
     db.collection(`users/${uid}/fcmTokens`).get(),
   ])
 
+  // 남의 글에 쓴 내 댓글. 하위 컬렉션이라 컬렉션 그룹으로 찾는다.
+  const myComments = await db.collectionGroup('comments').where('authorUid', '==', uid).get()
+  // 내 글에 달린 댓글은 글과 함께 지운다.
+  await Promise.all(posts.docs.map((d) => deleteComments(d.ref)))
+
   // 내가 일으켜서 남의 알림함에 들어간 것들. 문서 id가 정해진 규칙이라 조회 없이 바로 짚을 수 있다.
   // 이미 없는 문서를 지우는 건 아무 일도 하지 않으므로, 처리된 권유까지 한꺼번에 넣어도 된다.
   const notificationsILeft = [
@@ -1336,6 +1525,7 @@ export async function deleteUserDataHandler(uid: string) {
     ...recsFrom.docs.map((d) => d.ref),
     ...recsTo.docs.map((d) => d.ref),
     ...notificationsILeft,
+    ...myComments.docs.map((d) => d.ref),
     db.collection('reading-notes').doc(uid),
     db.collection('users').doc(uid),
   ]
@@ -1345,6 +1535,19 @@ export async function deleteUserDataHandler(uid: string) {
     const batch = db.batch()
     docs.slice(i, i + 400).forEach((ref) => batch.delete(ref))
     await batch.commit()
+  }
+
+  // 내 댓글이 빠진 만큼 그 글의 댓글 수를 줄인다. 안 그러면 없는 댓글이 센 수로 남는다.
+  // 내 글은 통째로 지웠으므로 거기 달렸던 건 셀 필요가 없다.
+  const deletedPostPaths = new Set(posts.docs.map((d) => d.ref.path))
+  const countByPost = new Map<string, number>()
+  for (const c of myComments.docs) {
+    const postRef = c.ref.parent.parent
+    if (!postRef || deletedPostPaths.has(postRef.path)) continue
+    countByPost.set(postRef.path, (countByPost.get(postRef.path) ?? 0) + 1)
+  }
+  for (const [path, n] of countByPost) {
+    await db.doc(path).update({ commentCount: FieldValue.increment(-n) })
   }
 
   // 남의 글에 눌러둔 좋아요를 거둔다. 안 그러면 없는 사람이 센 수가 그대로 남는다.
@@ -1361,6 +1564,7 @@ export async function deleteUserDataHandler(uid: string) {
     friendRequests: outgoing.size + incoming.size,
     notifications: myNotifications.size + notificationsILeft.length,
     fcmTokens: fcmTokens.size,
+    comments: myComments.size,
     recommendations: recsFrom.size + recsTo.size,
     likes: othersILiked.length,
   }

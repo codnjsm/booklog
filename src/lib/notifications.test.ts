@@ -271,6 +271,33 @@ describe('serverNotifications — 서버가 남긴 알림', () => {
     expect(n.view).toBeUndefined()
   })
 
+  it('댓글 하나면 「님이 댓글을 남겼어요」', () => {
+    const [n] = serverNotifications(
+      [{ id: 'n1', kind: 'comment', actorUid: 'u-bob', createdAt: '2026-10-19T00:00:00.000Z', postId: 'p1', count: 1 }],
+      nameOf,
+    )
+    expect(n.actor).toBe('밥')
+    expect(n.text).toBe('님이 댓글을 남겼어요')
+    expect(n.view).toBe('feed')
+    expect(n.focus).toBe('p1')
+  })
+
+  it('여러 개면 「님 외 N명이」로 묶인다', () => {
+    const [n] = serverNotifications(
+      [{ id: 'n1', kind: 'comment', actorUid: 'u-bob', createdAt: '2026-10-19T00:00:00.000Z', postId: 'p1', count: 3 }],
+      nameOf,
+    )
+    expect(n.text).toBe('님 외 2명이 댓글을 남겼어요')
+  })
+
+  it('수가 없는 옛 알림은 하나로 본다', () => {
+    const [n] = serverNotifications(
+      [{ id: 'n1', kind: 'comment', actorUid: 'u-bob', createdAt: '2026-10-19T00:00:00.000Z', postId: 'p1' }],
+      nameOf,
+    )
+    expect(n.text).toBe('님이 댓글을 남겼어요')
+  })
+
   it('챌린지 초대·참여는 기록 탭으로 보낸다', () => {
     const [a] = serverNotifications([raw('n1', 'u-bob', '2026-10-19T00:00:00.000Z', 'challengeInvite')], nameOf)
     expect(a.text).toBe('님이 챌린지에 초대했어요')

@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom'
 import { usePush } from '../hooks/usePush'
 import { shouldAskAfterAccept, readAlreadyAsked, markAlreadyAsked } from '../lib/push'
 import type { User } from 'firebase/auth'
-import type { UserProfile, FriendRequest, BookStatus, FriendShelf, Post, Recommendation } from '../types'
+import type { UserProfile, FriendRequest, BookStatus, FriendShelf, Post, Recommendation, Comment } from '../types'
 import BookCard from './BookCard'
 import PageHeader from './layout/PageHeader'
 import { IconSearch, IconBooks, IconFriends } from './layout/icons'
@@ -12,7 +12,7 @@ import { useAppUI } from '../contexts/AppUIContext'
 import PostCard from './PostCard'
 import { relativeDay } from '../lib/insights'
 import PostLikesModal, { type Liker } from './modals/PostLikesModal'
-import { toggleLike, getPostLikes } from '../firebase'
+import { toggleLike, getPostLikes, addComment, deleteComment, getComments } from '../firebase'
 
 type StatusFilter = BookStatus | 'all'
 const STATUS_LABELS: { id: StatusFilter; label: string }[] = [
@@ -207,6 +207,54 @@ export default function FriendsTab({
       showToast('좋아요를 저장하지 못했어요', 'error')
     } finally {
       setLikeBusy(null)
+    }
+  }
+
+  // 댓글도 펼칠 때만 불러온다. 피드에는 수만 들어 있다.
+  const [openComments, setOpenComments] = useState<string | null>(null)
+  const [comments, setComments] = useState<Comment[] | null>(null)
+  const [commentBusy, setCommentBusy] = useState(false)
+
+  const patchPost = (postId: string, fn: (p: Post) => Post) =>
+    queryClient.setQueryData<Post[]>(['friendFeed'], (old) => old?.map((p) => (p.id === postId ? fn(p) : p)))
+
+  const toggleComments = async (postId: string) => {
+    if (openComments === postId) {
+      setOpenComments(null)
+      return
+    }
+    setOpenComments(postId)
+    setComments(null)
+    try {
+      setComments(await getComments(postId))
+    } catch {
+      setComments([])
+      showToast('댓글을 불러오지 못했어요', 'error')
+    }
+  }
+
+  const handleAddComment = async (postId: string, text: string) => {
+    setCommentBusy(true)
+    try {
+      await addComment(postId, text)
+      setComments(await getComments(postId))
+      patchPost(postId, (p) => ({ ...p, commentCount: (p.commentCount ?? 0) + 1 }))
+    } catch {
+      showToast('댓글을 남기지 못했어요', 'error')
+      throw new Error('failed') // 쓰던 글을 돌려주려고 던진다
+    } finally {
+      setCommentBusy(false)
+    }
+  }
+
+  const handleDeleteComment = async (postId: string, commentId: string) => {
+    if (!confirm('이 댓글을 지울까요?')) return
+    try {
+      await deleteComment(postId, commentId)
+      setComments((cs) => cs?.filter((c) => c.id !== commentId) ?? null)
+      patchPost(postId, (p) => ({ ...p, commentCount: Math.max(0, (p.commentCount ?? 1) - 1) }))
+    } catch {
+      showToast('댓글을 지우지 못했어요', 'error')
     }
   }
 
@@ -458,6 +506,13 @@ export default function FriendsTab({
                   onOpenLikes={() => openLikes(post.id)}
                   likeBusy={likeBusy === post.id}
                   highlighted={highlightPostId === post.id}
+                  commentsOpen={openComments === post.id}
+                  comments={openComments === post.id ? comments : null}
+                  myUid={user.uid}
+                  onToggleComments={() => void toggleComments(post.id)}
+                  onAddComment={(text) => handleAddComment(post.id, text)}
+                  onDeleteComment={(commentId) => void handleDeleteComment(post.id, commentId)}
+                  commentBusy={commentBusy}
                 />
               </div>
             ))}

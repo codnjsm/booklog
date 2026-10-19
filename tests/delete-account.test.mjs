@@ -58,6 +58,31 @@ describe('deleteUserData — 내 데이터', () => {
     assert.equal((await db.collection('posts').where('authorUid', '==', GONE).get()).size, 0)
   })
 
+  it('내가 남의 글에 쓴 댓글이 사라지고 그 글의 댓글 수가 줄어든다', async () => {
+    const post = await db.collection('posts').add({ authorUid: FRIEND, createdAt: '2026-10-19', commentCount: 2 })
+    await post.collection('comments').add({ authorUid: GONE, text: '사라질 댓글' })
+    await post.collection('comments').add({ authorUid: FRIEND, text: '남을 댓글' })
+
+    await deleteUserDataHandler(GONE)
+
+    const left = await post.collection('comments').get()
+    assert.deepEqual(
+      left.docs.map((d) => d.data().text),
+      ['남을 댓글'],
+    )
+    assert.equal((await post.get()).data().commentCount, 1)
+  })
+
+  it('내 글이 지워지면 거기 달린 남의 댓글도 사라진다', async () => {
+    const post = await db.collection('posts').add({ authorUid: GONE, createdAt: '2026-10-19', commentCount: 1 })
+    const c = await post.collection('comments').add({ authorUid: FRIEND, text: '남의 댓글' })
+
+    await deleteUserDataHandler(GONE)
+
+    assert.equal((await post.get()).exists, false)
+    assert.equal((await c.get()).exists, false)
+  })
+
   it('푸시 기기 토큰이 같이 지워진다 — 남겨두면 없는 사람 기기로 알림을 보내려 든다', async () => {
     await db.doc(`users/${GONE}/fcmTokens/t1`).set({ token: 't1' })
     await db.doc(`users/${GONE}/fcmTokens/t2`).set({ token: 't2' })
@@ -182,6 +207,14 @@ describe('deleteUserData — 남의 알림함에 내가 남긴 것', () => {
 describe('deleteUserData — 아무것도 없을 때', () => {
   it('데이터가 하나도 없어도 터지지 않는다', async () => {
     const r = await deleteUserDataHandler(GONE)
-    assert.deepEqual(r, { posts: 0, friendRequests: 0, notifications: 0, recommendations: 0, likes: 0, fcmTokens: 0 })
+    assert.deepEqual(r, {
+      posts: 0,
+      friendRequests: 0,
+      notifications: 0,
+      recommendations: 0,
+      likes: 0,
+      fcmTokens: 0,
+      comments: 0,
+    })
   })
 })

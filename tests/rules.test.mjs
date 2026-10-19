@@ -138,6 +138,26 @@ describe('badges 접근 제어', () => {
   })
 })
 
+describe('댓글 직접 접근 차단', () => {
+  before(async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      const db = ctx.firestore()
+      await setDoc(doc(db, 'posts', 'pc1'), { authorUid: ALICE, createdAt: '2026-10-19' })
+      await setDoc(doc(db, 'posts', 'pc1', 'comments', 'c1'), { authorUid: BOB, text: '안녕' })
+    })
+  })
+
+  it('글쓴이도 직접 읽지 못한다 — 콜러블로만 본다', async () => {
+    const db = testEnv.authenticatedContext(ALICE).firestore()
+    await assertFails(getDocs(collection(db, 'posts', 'pc1', 'comments')))
+  })
+
+  it('직접 쓰지 못한다 — 작성자를 위조할 수 있다', async () => {
+    const db = testEnv.authenticatedContext(BOB).firestore()
+    await assertFails(setDoc(doc(db, 'posts', 'pc1', 'comments', 'evil'), { authorUid: ALICE, text: '위조' }))
+  })
+})
+
 describe('challenges 직접 접근 차단', () => {
   before(async () => {
     await testEnv.withSecurityRulesDisabled(async (ctx) => {
