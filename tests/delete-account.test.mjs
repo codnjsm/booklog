@@ -116,6 +116,19 @@ describe('deleteUserData — 남의 알림함에 내가 남긴 것', () => {
     assert.equal(await exists(`notifications/${FRIEND}/items/recaccepted_${id}`), false)
   })
 
+  it('내가 수락해서 상대에게 남긴 친구 알림이 사라진다', async () => {
+    const reqId = `${FRIEND}_${GONE}`
+    await db.doc(`friendRequests/${reqId}`).set({ fromUid: FRIEND, toUid: GONE, status: 'accepted' })
+    await db.doc(`notifications/${FRIEND}/items/friendAccepted_${reqId}`).set({
+      kind: 'friendAccepted',
+      actorUid: GONE,
+    })
+
+    await deleteUserDataHandler(GONE)
+
+    assert.equal(await exists(`notifications/${FRIEND}/items/friendAccepted_${reqId}`), false)
+  })
+
   it('내가 누른 좋아요가 거둬지고 그 알림도 사라진다', async () => {
     const ref = await db.collection('posts').add({
       authorUid: FRIEND,

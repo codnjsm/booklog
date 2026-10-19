@@ -9,6 +9,7 @@ import {
   toggleLikeHandler,
   recommendBookHandler,
   respondRecommendationHandler,
+  notifyFriendAccepted,
   getDb,
 } from '../functions/lib/index.js'
 import { before, beforeEach, describe, it } from 'node:test'
@@ -47,6 +48,7 @@ describe('pushBodyFor — 푸시 문구', () => {
     assert.equal(pushBodyFor('recommend', '안나'), '안나님이 책을 권했어요')
     assert.equal(pushBodyFor('recommendAccepted', '안나'), '안나님이 권한 책을 담았어요')
     assert.equal(pushBodyFor('friendRequest', '안나'), '안나님이 친구 요청을 보냈어요')
+    assert.equal(pushBodyFor('friendAccepted', '안나'), '안나님이 친구 요청을 수락했어요')
   })
 
   it('모르는 종류는 보내지 않는다', () => {
@@ -109,5 +111,36 @@ describe('푸시가 실패해도 본래 기능은 돈다', () => {
     const notis = await db.collection(`notifications/${ANNA}/items`).get()
     assert.equal(notis.size, 1)
     assert.equal(notis.docs[0].data().kind, 'recommendAccepted')
+  })
+})
+
+describe('notifyFriendAccepted — 요청이 수락되면 보낸 사람에게', () => {
+  it('보낸 사람 알림함에 남는다', async () => {
+    await notifyFriendAccepted(`${ANNA}_${BORA}`, ANNA, BORA)
+
+    const notis = await db.collection(`notifications/${ANNA}/items`).get()
+    assert.equal(notis.size, 1)
+    const d = notis.docs[0]
+    assert.equal(d.id, `friendAccepted_${ANNA}_${BORA}`)
+    assert.equal(d.data().kind, 'friendAccepted')
+    // 수락한 사람이 누구인지 — 보낸 사람이 아니라 받은 사람이다
+    assert.equal(d.data().actorUid, BORA)
+  })
+
+  it('수락한 사람 알림함에는 남기지 않는다 — 자기가 한 일이다', async () => {
+    await notifyFriendAccepted(`${ANNA}_${BORA}`, ANNA, BORA)
+    assert.equal((await db.collection(`notifications/${BORA}/items`).get()).size, 0)
+  })
+
+  it('같은 요청이 두 번 처리돼도 알림이 쌓이지 않는다', async () => {
+    await notifyFriendAccepted(`${ANNA}_${BORA}`, ANNA, BORA)
+    await notifyFriendAccepted(`${ANNA}_${BORA}`, ANNA, BORA)
+    assert.equal((await db.collection(`notifications/${ANNA}/items`).get()).size, 1)
+  })
+
+  it('푸시가 실패해도 알림은 남는다', async () => {
+    await db.doc(`users/${ANNA}/fcmTokens/t1`).set({ token: '가짜토큰' })
+    await notifyFriendAccepted(`${ANNA}_${BORA}`, ANNA, BORA)
+    assert.equal((await db.collection(`notifications/${ANNA}/items`).get()).size, 1)
   })
 })

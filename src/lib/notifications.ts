@@ -10,7 +10,7 @@ import type { Tab } from '../contexts/AppUIContext'
 export interface NotificationItem {
   /** 같은 알림을 두 번 그리지 않기 위한 키. 소스의 문서 id를 그대로 쓴다. */
   id: string
-  kind: 'friendRequest' | 'like' | 'recommend' | 'recommendAccepted'
+  kind: 'friendRequest' | 'like' | 'recommend' | 'recommendAccepted' | 'friendAccepted'
   /** ISO 문자열. 정렬과 읽음 판정에 쓴다. */
   at: string
   /** 알림을 일으킨 사람 이름. 화면에서 굵게 보여준다. */
@@ -67,6 +67,7 @@ const SERVER_KINDS: Record<string, { text: string; view?: 'feed' }> = {
   like: { text: '님이 회원님의 글을 좋아합니다', view: 'feed' },
   recommend: { text: '님이 책을 권했어요' },
   recommendAccepted: { text: '님이 권한 책을 담았어요' },
+  friendAccepted: { text: '님이 친구 요청을 수락했어요' },
 }
 
 /**

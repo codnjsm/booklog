@@ -5,7 +5,7 @@ import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 import { getAppCheck } from 'firebase-admin/app-check'
 import { getAuth } from 'firebase-admin/auth'
 import { getMessaging } from 'firebase-admin/messaging'
-import { onDocumentCreated } from 'firebase-functions/v2/firestore'
+import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore'
 import type { Request, Response } from 'express'
 
 initializeApp()
@@ -553,6 +553,7 @@ export const dismissNotifications = onCall({ region: 'asia-northeast3', enforceA
  */
 const PUSH_BODY: Record<string, (actor: string) => string> = {
   friendRequest: (a) => `${a}님이 친구 요청을 보냈어요`,
+  friendAccepted: (a) => `${a}님이 친구 요청을 수락했어요`,
   like: (a) => `${a}님이 회원님의 글을 좋아합니다`,
   recommend: (a) => `${a}님이 책을 권했어요`,
   recommendAccepted: (a) => `${a}님이 권한 책을 담았어요`,
@@ -606,6 +607,37 @@ export async function sendPush(toUid: string, kind: string, actorUid: string, li
     return 0
   }
 }
+
+/**
+ * 친구 요청이 수락되면 **보낸 사람에게** 알린다.
+ *
+ * 이 알림이 없으면 요청을 보낸 사람은 받아들여졌는지조차 모른다 —
+ * 앱을 열어 친구 탭까지 들어가야 알 수 있었다.
+ */
+export async function notifyFriendAccepted(requestId: string, fromUid: string, toUid: string): Promise<void> {
+  const db = getDb()
+  await db.doc(`notifications/${fromUid}/items/friendAccepted_${requestId}`).set({
+    kind: 'friendAccepted',
+    actorUid: toUid,
+    createdAt: new Date().toISOString(),
+  })
+  await sendPush(fromUid, 'friendAccepted', toUid, '/friends')
+}
+
+/**
+ * 수락은 받는 쪽 클라이언트가 문서를 고쳐서 한다 — 콜러블을 안 거치므로 문서 변화를 지켜본다.
+ * 거절당한 뒤 다시 요청해서 수락되는 경우도 있으므로, **수락으로 바뀌는 순간**만 본다.
+ */
+export const onFriendRequestAccepted = onDocumentUpdated(
+  { document: 'friendRequests/{requestId}', region: 'asia-northeast3' },
+  async (event) => {
+    const before = event.data?.before.data()
+    const after = event.data?.after.data()
+    if (!before || !after) return
+    if (before.status === 'accepted' || after.status !== 'accepted') return
+    await notifyFriendAccepted(event.params.requestId, after.fromUid as string, after.toUid as string)
+  },
+)
 
 /**
  * 친구 요청이 들어오면 푸시를 보낸다.
@@ -894,6 +926,10 @@ export async function deleteUserDataHandler(uid: string) {
     ...likedPosts.docs
       .filter((d) => d.data().authorUid !== uid)
       .map((d) => db.doc(`notifications/${d.data().authorUid}/items/like_${d.id}_${uid}`)),
+    // 내가 수락해서 상대 알림함에 남긴 것
+    ...incoming.docs
+      .filter((d) => d.data().status === 'accepted')
+      .map((d) => db.doc(`notifications/${d.data().fromUid}/items/friendAccepted_${d.id}`)),
   ]
 
   const docs = [

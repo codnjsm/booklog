@@ -228,6 +228,12 @@ describe('serverNotifications — 서버가 남긴 알림', () => {
     expect(n.text).toBe('님이 책을 권했어요')
   })
 
+  it('친구 요청이 수락되면 보낸 사람에게 알림이 된다', () => {
+    const [n] = serverNotifications([raw('n1', 'u-bob', '2026-10-19T00:00:00.000Z', 'friendAccepted')], nameOf)
+    expect(n.text).toBe('님이 친구 요청을 수락했어요')
+    expect(n.goTo).toBe('friends')
+  })
+
   it('권한 책을 담으면 권한 사람에게 알림이 된다', () => {
     const [n] = serverNotifications([raw('n1', 'u-bob', '2026-10-15T00:00:00.000Z', 'recommendAccepted')], nameOf)
     expect(n.text).toBe('님이 권한 책을 담았어요')
