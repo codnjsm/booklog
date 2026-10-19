@@ -86,6 +86,7 @@ export default function MoreTab({
     signedIn: !!user,
     standalone: isStandalone(),
     dismissed: installDismissed,
+    how: installHow(),
   })
 
   const [photoSaving, setPhotoSaving] = useState(false)

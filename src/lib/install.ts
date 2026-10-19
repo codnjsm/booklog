@@ -40,9 +40,18 @@ export function markInstallDismissed(): void {
  *
  * 비로그인 사용자에게는 권하지 않는다 — iOS에서 홈화면 앱은 사파리와 저장소가 분리돼서,
  * 게스트가 설치하면 **기록이 빈 화면으로 보인다.** 로그인이 먼저다.
+ *
+ * 데스크톱에도 권하지 않는다 — PC는 설치 없이 탭에서 그대로 알림을 받으므로 권할 이유가 없고,
+ * 설치 경로도 브라우저마다 달라서(사파리는 Dock에 추가, 파이어폭스는 아예 없음) 틀린 안내가 된다.
  */
-export function shouldOfferInstall(args: { signedIn: boolean; standalone: boolean; dismissed: boolean }): boolean {
+export function shouldOfferInstall(args: {
+  signedIn: boolean
+  standalone: boolean
+  dismissed: boolean
+  how: InstallHow
+}): boolean {
   if (!args.signedIn) return false
+  if (args.how === 'desktop') return false
   if (args.standalone) return false
   return !args.dismissed
 }

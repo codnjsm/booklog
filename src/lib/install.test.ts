@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach, vi } from 'vitest'
 import { shouldOfferInstall, installHow, isStandalone } from './install'
 
 describe('shouldOfferInstall — 홈화면 안내를 띄울지', () => {
-  const base = { signedIn: true, standalone: false, dismissed: false }
+  const base = { signedIn: true, standalone: false, dismissed: false, how: 'ios' as const }
 
   it('로그인했고 아직 설치 안 했으면 권한다', () => {
     expect(shouldOfferInstall(base)).toBe(true)
@@ -21,7 +21,15 @@ describe('shouldOfferInstall — 홈화면 안내를 띄울지', () => {
   })
 
   it('비로그인이면 다른 조건과 무관하게 권하지 않는다', () => {
-    expect(shouldOfferInstall({ signedIn: false, standalone: false, dismissed: false })).toBe(false)
+    expect(shouldOfferInstall({ signedIn: false, standalone: false, dismissed: false, how: 'ios' })).toBe(false)
+  })
+
+  it('데스크톱에는 권하지 않는다 — PC는 설치 없이도 알림을 받는다', () => {
+    expect(shouldOfferInstall({ ...base, how: 'desktop' })).toBe(false)
+  })
+
+  it('안드로이드에는 권한다', () => {
+    expect(shouldOfferInstall({ ...base, how: 'android' })).toBe(true)
   })
 })
 
