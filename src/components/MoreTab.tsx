@@ -10,6 +10,7 @@ import {
   markInstallDismissed,
   shouldOfferInstall,
   installHow,
+  INSTALL_HOW,
 } from '../lib/install'
 import { usePush } from '../hooks/usePush'
 import PageHeader from './layout/PageHeader'
@@ -56,16 +57,6 @@ interface Props {
 
 const ROW =
   'w-full flex items-center gap-3 px-4 py-3.5 bg-surface border border-border rounded-xl text-left cursor-pointer'
-
-/**
- * 기기별 「어떻게 추가하나」. iOS는 설치 버튼을 띄울 수 없어 경로를 글로 알려줘야 한다.
- * 조사를 따로 두는 이유 — 「추가」 뒤에는 를, 「아이콘」 뒤에는 을이 붙는다.
- */
-const INSTALL_HOW: Record<ReturnType<typeof installHow>, { path: string; josa: string }> = {
-  ios: { path: '아래 공유 버튼에서 「홈 화면에 추가」', josa: '를' },
-  android: { path: '메뉴(⋮)에서 「홈 화면에 추가」', josa: '를' },
-  desktop: { path: '주소창 오른쪽의 설치 아이콘', josa: '을' },
-}
 
 export default function MoreTab({
   user,

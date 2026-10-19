@@ -138,11 +138,14 @@ export const markAlreadyAsked = () => writeFlag(ASKED_KEY)
 /**
  * 알림함에서 「폰으로도 받기」를 보여줄지.
  *
- * **켤 수 있는 상태일 때만 보여준다.** 이미 켰거나, 브라우저가 막았거나,
- * iOS인데 홈 화면에 없으면 보여줘봐야 눌러도 안 된다 — 거짓말이 된다.
+ * 켤 수 있거나(off), 켤 길을 알려줄 수 있을 때(needsInstall) 보여준다.
+ * 이미 켰거나 브라우저가 막았으면 보여줘봐야 눌러도 안 된다 — 거짓말이 된다.
  */
 export function shouldOfferPush(state: PushUiState | null, dismissed: boolean): boolean {
-  return state === 'off' && !dismissed
+  if (dismissed) return false
+  // needsInstall도 보여준다. 켜지는 않지만 **다음에 할 일**을 알려줄 수 있다 —
+  // 숨겨버리면 iOS 사파리 사용자는 알림이 있다는 것조차 모른다.
+  return state === 'off' || state === 'needsInstall'
 }
 
 /**

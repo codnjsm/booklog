@@ -110,8 +110,8 @@ describe('shouldOfferPush — 알림함에 「폰으로도 받기」를 띄울�
     expect(shouldOfferPush('denied', false)).toBe(false)
   })
 
-  it('iOS인데 홈 화면에 없으면 안 띄운다', () => {
-    expect(shouldOfferPush('needsInstall', false)).toBe(false)
+  it('iOS인데 홈 화면에 없어도 띄운다 — 켜지는 못해도 켤 길은 알려준다', () => {
+    expect(shouldOfferPush('needsInstall', false)).toBe(true)
   })
 
   it('못 쓰는 브라우저면 안 띄운다', () => {
