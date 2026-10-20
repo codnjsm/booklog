@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>개인정보처리방침 — Booklog</title>
+    <meta name="robots" content="index, follow" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" />
+    <style>
+      /* 앱의 Ink & Paper 토큰과 같은 값. 이 페이지는 앱 번들 밖이라 CSS를 따로 담는다. */
+      :root {
+        --bg: #fafafa;
+        --surface: #ffffff;
+        --border: #e4e4e7;
+        --ink: #18181b;
+        --dim: #6b6b75;
+        --accent: #4f65c4;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #101012;
+          --surface: #17171a;
+          --border: #2e2e33;
+          --ink: #ededf0;
+          --dim: #a0a0aa;
+          --accent: #7787d5;
+        }
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: var(--bg);
+        color: var(--ink);
+        font-family:
+          'Noto Sans KR',
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        line-height: 1.7;
+        font-size: 15px;
+        padding: 0 20px 80px;
+      }
+      .wrap {
+        max-width: 720px;
+        margin: 0 auto;
+      }
+      header {
+        padding: 40px 0 28px;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 32px;
+      }
+      h1 {
+        font-size: 26px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+      .meta {
+        color: var(--dim);
+        font-size: 13px;
+        margin-top: 10px;
+      }
+      h2 {
+        font-size: 18px;
+        font-weight: 700;
+        margin: 36px 0 12px;
+        letter-spacing: -0.01em;
+      }
+      p {
+        margin-bottom: 12px;
+      }
+      ul {
+        margin: 0 0 12px 18px;
+      }
+      li {
+        margin-bottom: 6px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 16px;
+        font-size: 14px;
+      }
+      th,
+      td {
+        border: 1px solid var(--border);
+        padding: 9px 11px;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        background: var(--surface);
+        font-weight: 500;
+        white-space: nowrap;
+      }
+      a {
+        color: var(--accent);
+      }
+      strong {
+        font-weight: 700;
+      }
+      .back {
+        display: inline-block;
+        margin-top: 44px;
+        padding: 11px 18px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--surface);
+        color: var(--ink);
+        text-decoration: none;
+        font-size: 14px;
+      }
+      .note {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px 16px;
+        margin-bottom: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1>개인정보처리방침</h1>
+        <div class="meta">Booklog · 시행일 2026년 10월 20일</div>
+      </header>
+
+      <p>
+        Booklog(이하 "서비스")는 개인이 만들어 무료로 운영하는 독서 기록 서비스입니다. 이 방침은 서비스가 어떤 정보를
+        받아 어디에 두고 언제 지우는지를 있는 그대로 적은 것입니다.
+      </p>
+
+      <h2>1. 수집하는 정보</h2>
+
+      <table>
+        <tr>
+          <th>구분</th>
+          <th>항목</th>
+          <th>받는 때</th>
+        </tr>
+        <tr>
+          <td>계정</td>
+          <td>이메일 주소, 표시 이름, 프로필 사진</td>
+          <td>회원가입·로그인 시</td>
+        </tr>
+        <tr>
+          <td>독서 기록</td>
+          <td>책 정보와 읽은 상태·별점·독후감, 인용구, 단어, 독서 목표, 읽은 날짜</td>
+          <td>이용자가 직접 입력할 때</td>
+        </tr>
+        <tr>
+          <td>친구 활동</td>
+          <td>친구 관계, 공유한 게시물, 댓글, 좋아요, 주고받은 책 추천, 챌린지 참여와 완주 뱃지, 알림</td>
+          <td>해당 기능을 쓸 때</td>
+        </tr>
+        <tr>
+          <td>알림</td>
+          <td>기기 알림 주소(FCM 토큰)</td>
+          <td>알림을 켠 경우에만</td>
+        </tr>
+        <tr>
+          <td>접속 분석</td>
+          <td>유입 경로, 접속 기기·브라우저 종류 등 Google Analytics 기본 정보</td>
+          <td>서비스 접속 시</td>
+        </tr>
+      </table>
+
+      <p>
+        비밀번호는 Google의 인증 서비스(Firebase Authentication)가 직접 보관하며,
+        <strong>서비스 운영자는 비밀번호를 볼 수 없습니다.</strong>
+      </p>
+
+      <h2>2. 수집하지 않는 정보</h2>
+      <ul>
+        <li>
+          <strong>책 페이지 사진</strong> — 문장 인식(OCR) 기능에 올린 사진은 글자를 읽어내는 데만 쓰이고
+          <strong>저장하지 않습니다.</strong> 인식된 글자만 돌려받습니다.
+        </li>
+        <li><strong>결제 정보</strong> — 서비스는 무료이며 결제 수단을 받지 않습니다.</li>
+        <li>주민등록번호 등 고유식별정보, 연락처, 위치 정보</li>
+      </ul>
+
+      <h2>3. 이용 목적</h2>
+      <ul>
+        <li>계정 식별과 로그인, 기기 간 기록 동기화</li>
+        <li>독서 기록의 저장과 통계 제공</li>
+        <li>친구 찾기, 공유, 알림 발송</li>
+        <li>어느 경로로 서비스를 알게 되었는지 파악(접속 분석)</li>
+      </ul>
+      <p>수집한 정보를 광고에 쓰거나 다른 목적으로 가공하지 않습니다.</p>
+
+      <h2>4. 보관 장소</h2>
+      <p>
+        정보는 Google Cloud Platform(Firebase)의 <strong>서울 리전(asia-northeast3)</strong>에 저장됩니다. 접속 분석
+        정보는 Google Analytics의 정책에 따릅니다.
+      </p>
+      <div class="note">
+        로그인하지 않고 쓰는 경우, 기록은 <strong>이용자의 브라우저에만</strong> 저장되고 서버로 보내지지 않습니다. 이
+        경우 브라우저 저장소를 지우면 기록도 함께 사라집니다.
+      </div>
+
+      <h2>5. 보관 기간과 파기</h2>
+      <p>정보는 회원 탈퇴 시까지 보관하며, 탈퇴하면 다음이 즉시 삭제됩니다.</p>
+      <ul>
+        <li>계정 정보(이메일, 이름, 프로필 사진)와 로그인 계정</li>
+        <li>독서 기록 전체(책·인용구·단어·목표)</li>
+        <li>작성한 게시물과 댓글, 누른 좋아요</li>
+        <li>친구 관계, 주고받은 책 추천, 알림(남에게 남긴 알림 포함)</li>
+        <li>완주 뱃지, 직접 만든 챌린지. 남이 만든 챌린지에서는 참여자 목록에서 제외됩니다</li>
+        <li>알림을 받기 위해 등록된 기기 주소</li>
+      </ul>
+      <p>
+        알림함에 쌓인 알림은 탈퇴 전에도 <strong>90일이 지나거나 100건을 넘으면</strong> 오래된 것부터 자동으로
+        정리됩니다.
+      </p>
+      <div class="note">
+        <strong>남는 것이 하나 있습니다.</strong> 친구가 내 글에 단 댓글은 그 친구의 기록이므로, 내가 쓴 글을 지우면
+        함께 사라지지만 내가 탈퇴한다고 해서 친구의 다른 글에 남긴 그 친구 자신의 기록까지 지우지는 않습니다.
+      </div>
+
+      <h2>6. 제3자 제공과 처리 위탁</h2>
+      <p>개인정보를 제3자에게 판매하거나 제공하지 않습니다. 다만 서비스 운영을 위해 아래에 처리를 맡기고 있습니다.</p>
+      <table>
+        <tr>
+          <th>위탁받는 곳</th>
+          <th>맡기는 일</th>
+        </tr>
+        <tr>
+          <td>Google (Firebase)</td>
+          <td>인증, 데이터 저장, 서버 실행, 알림 발송, 접속 분석</td>
+        </tr>
+        <tr>
+          <td>카카오</td>
+          <td>책 검색. <strong>검색어만 전달</strong>하며 이용자 정보는 보내지 않습니다</td>
+        </tr>
+        <tr>
+          <td>국립국어원 (우리말샘)</td>
+          <td>단어 뜻 검색. <strong>검색어만 전달</strong>합니다</td>
+        </tr>
+        <tr>
+          <td>Google Cloud Vision</td>
+          <td>사진 속 글자 인식. 인식 후 사진은 저장되지 않습니다</td>
+        </tr>
+      </table>
+
+      <h2>7. 이용자의 권리</h2>
+      <ul>
+        <li><strong>열람·수정</strong> — 앱 안에서 언제든 기록을 보고 고칠 수 있습니다.</li>
+        <li><strong>삭제</strong> — 개별 기록은 앱에서, 전체는 더보기의 회원 탈퇴로 지울 수 있습니다.</li>
+        <li><strong>내보내기</strong> — 더보기의 「기록 내보내기」로 전체 기록을 텍스트 파일로 받을 수 있습니다.</li>
+        <li><strong>알림 거부</strong> — 더보기에서 알림을 끄면 기기 주소가 삭제됩니다.</li>
+      </ul>
+
+      <h2>8. 쿠키와 접속 분석</h2>
+      <p>
+        서비스는 어느 경로로 들어왔는지 파악하기 위해 Google Analytics를 사용하며, 이 과정에서 브라우저에 쿠키가
+        저장됩니다. <strong>어떤 책을 읽었는지, 어떤 문장을 담았는지는 분석 도구로 보내지 않습니다.</strong> 브라우저
+        설정에서 쿠키를 차단하면 수집을 거부할 수 있고, 차단해도 서비스 이용에는 지장이 없습니다.
+      </p>
+
+      <h2>9. 안전 조치</h2>
+      <ul>
+        <li>모든 통신은 HTTPS로 암호화됩니다.</li>
+        <li>
+          데이터베이스 보안 규칙으로 <strong>본인의 기록은 본인만</strong> 읽고 쓸 수 있습니다. 친구에게 보여줄 범위는
+          서버가 직접 골라 내보내며, 비공개로 설정한 책은 어떤 경우에도 친구에게 전달되지 않습니다.
+        </li>
+        <li>서버로 들어오는 요청은 App Check로 검증합니다.</li>
+      </ul>
+
+      <h2>10. 방침 변경</h2>
+      <p>이 방침이 바뀌면 이 페이지에 바뀐 내용과 시행일을 올립니다.</p>
+
+      <h2>11. 문의</h2>
+      <p>
+        개인정보 처리에 관한 문의는 <a href="mailto:codnjsm@gmail.com">codnjsm@gmail.com</a> 으로 보내주세요. 개인이
+        운영하는 서비스라 답변까지 며칠 걸릴 수 있습니다.
+      </p>
+
+      <a class="back" href="/">← Booklog로 돌아가기</a>
+    </div>
+  </body>
+</html>

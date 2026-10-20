@@ -21,6 +21,8 @@ import DeleteAccountModal from './modals/DeleteAccountModal'
 import {
   IconFriends,
   IconExport,
+  IconMail,
+  IconDocument,
   IconSun,
   IconMoon,
   IconBell,
@@ -30,6 +32,7 @@ import {
   IconCamera,
   IconPencil,
   IconTrash,
+  IconLock,
 } from './layout/icons'
 
 interface Props {
@@ -467,6 +470,42 @@ export default function MoreTab({
             <span className="flex-1" />
             <span className="font-mono text-[10px] text-dim">.txt</span>
           </button>
+
+          {/* 문의와 정책. 버튼이 아니라 링크인 건 앱 밖으로 나가기 때문이다 —
+              정책은 고정 주소의 정적 페이지라 메일이나 스토어에서도 열 수 있어야 한다.
+              홈 화면 앱으로 열었을 때 돌아올 길이 필요해서, 각 페이지에 돌아가기를 뒀다. */}
+          <a className={ROW} href="mailto:codnjsm@gmail.com?subject=Booklog%20문의">
+            <span className="text-dim">
+              <IconMail size={19} />
+            </span>
+            <span className="text-sm text-ink">문의하기</span>
+            <span className="flex-1" />
+            <span className="text-dim">
+              <IconChevronRight />
+            </span>
+          </a>
+
+          <a className={ROW} href="/privacy.html">
+            <span className="text-dim">
+              <IconLock size={19} />
+            </span>
+            <span className="text-sm text-ink">개인정보처리방침</span>
+            <span className="flex-1" />
+            <span className="text-dim">
+              <IconChevronRight />
+            </span>
+          </a>
+
+          <a className={ROW} href="/terms.html">
+            <span className="text-dim">
+              <IconDocument size={19} />
+            </span>
+            <span className="text-sm text-ink">이용약관</span>
+            <span className="flex-1" />
+            <span className="text-dim">
+              <IconChevronRight />
+            </span>
+          </a>
 
           {user && (
             <button className={ROW} onClick={onSignOut}>

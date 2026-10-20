@@ -212,3 +212,18 @@ export const IconStar = ({ size = 14, filled = false }: Props & { filled?: boole
     </svg>
   )
 }
+
+export const IconMail = ({ size = 18 }: Props) => (
+  <svg {...base(size)}>
+    <rect x="3" y="5" width="18" height="14" rx="2" />
+    <path d="m3.5 7 8.5 6 8.5-6" />
+  </svg>
+)
+
+export const IconDocument = ({ size = 18 }: Props) => (
+  <svg {...base(size)}>
+    <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+    <path d="M14 3v5h5" />
+    <path d="M9 13h6M9 17h4" />
+  </svg>
+)
