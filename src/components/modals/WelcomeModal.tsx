@@ -9,7 +9,7 @@ const FEATURES = [
   {
     Icon: IconRecords,
     title: '기록',
-    desc: '독서 목표를 세우고, 친구와 챌린지도 해보세요',
+    desc: '독서 목표를 세우고, 친구와 기간을 정해 함께 기록하는 챌린지도 열어보세요',
   },
   {
     Icon: IconFriends,
