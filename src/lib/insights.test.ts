@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { recordedDays, recordedDaysThisWeek } from './insights'
+import { recordedDays, recordedDaysThisWeek, relativeDay } from './insights'
 import type { AppState, Book } from '../types'
 
 const book = (over: Partial<Book> = {}): Book => ({
@@ -79,5 +79,34 @@ describe('recordedDaysThisWeek — 이번 주만', () => {
   it('이번 주에 고른 읽은 날도 센다', () => {
     const s = state({ books: [book({ createdAt: '2026-09-01T00:00:00.000Z', readDates: ['2026-10-20'] })] })
     expect(recordedDaysThisWeek(s, now)).toBe(1)
+  })
+})
+
+describe('relativeDay — 오늘·어제·N일 전', () => {
+  // 시각은 기기 시간으로 만든다 — ISO 문자열을 직접 적으면 시간대에 따라 날이 갈린다.
+  const at = (y: number, m: number, d: number, h = 0, min = 0) => new Date(y, m - 1, d, h, min).toISOString()
+
+  it('어제 저녁에 쓴 글은 오늘 아침에 보면 어제다 — 24시간이 안 지나도 날이 바뀌었다', () => {
+    expect(relativeDay(at(2026, 10, 19, 20, 0), new Date(2026, 9, 20, 9, 0))).toBe('어제')
+  })
+
+  it('자정 1분 전에 쓴 글은 1분 뒤에 보면 어제다', () => {
+    expect(relativeDay(at(2026, 10, 19, 23, 59), new Date(2026, 9, 20, 0, 0))).toBe('어제')
+  })
+
+  it('오늘 새벽에 쓴 글은 오늘 밤에 봐도 오늘이다', () => {
+    expect(relativeDay(at(2026, 10, 20, 1, 0), new Date(2026, 9, 20, 23, 0))).toBe('오늘')
+  })
+
+  it('이틀 전', () => {
+    expect(relativeDay(at(2026, 10, 18, 20, 0), new Date(2026, 9, 20, 9, 0))).toBe('2일 전')
+  })
+
+  it('일주일 전부터는 주로 센다', () => {
+    expect(relativeDay(at(2026, 10, 13), new Date(2026, 9, 20))).toBe('1주 전')
+  })
+
+  it('4주가 넘으면 날짜로 보여준다', () => {
+    expect(relativeDay(at(2026, 9, 1), new Date(2026, 9, 20))).toBe('2026.09.01')
   })
 })

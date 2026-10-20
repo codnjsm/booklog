@@ -147,9 +147,20 @@ export function recentActivity(state: AppState, limit = 5): ActivityItem[] {
   return items.sort((a, b) => b.at.localeCompare(a.at)).slice(0, limit)
 }
 
+/** 그 기기에서 본 그날 자정. 날짜끼리만 빼려고 시각을 떨군다. */
+function midnight(d: Date): number {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+}
+
+/**
+ * 「오늘·어제·N일 전」.
+ *
+ * **지난 시간이 아니라 달력 날짜로 센다.** 경과 시간으로 세면 어제 저녁 8시에 쓴 글이
+ * 오늘 아침에는 아직 24시간이 안 지났다는 이유로 「오늘」로 보인다.
+ */
 export function relativeDay(iso: string, now = new Date()): string {
   const d = new Date(iso)
-  const days = Math.floor((now.getTime() - d.getTime()) / 86400000)
+  const days = Math.round((midnight(now) - midnight(d)) / 86400000)
   if (days <= 0) return '오늘'
   if (days === 1) return '어제'
   if (days < 7) return `${days}일 전`
