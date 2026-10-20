@@ -49,6 +49,7 @@ src/
     insights.ts        # 홈 대시보드 파생 지표(목표 페이스, 이번 주 기록한 날, 최근 활동, relativeDay)
     day.ts             # 날짜 기준 — 저장은 UTC, 표시는 기기 지역시간 (아래 「날짜 다루기」)
     notifications.ts   # 알림 목록 구성, 읽음·지움 처리
+    analytics.ts       # 유입 경로(utm) 읽기. 보내는 건 경로뿐, 독서 내용은 아니다
     push.ts            # 웹 푸시 상태 판단 (VAPID 공개키, 기기 토큰)
     install.ts         # 홈 화면 추가 안내를 보여줄지 판단
     serviceWorker.ts   # 서비스워커 등록과 탈출구(?sw-off / ?sw-on)
@@ -60,6 +61,8 @@ src/
   App.tsx              # QueryClientProvider + BrowserRouter + AppUIProvider 조립, 모달 라우팅
   index.css            # CSS 변수(디자인 토큰) 정의. 실제 스타일은 컴포넌트의 Tailwind 클래스
   public/sw.js         # 푸시 수신 서비스워커. **캐시도 fetch 핸들러도 두지 않는다**
+  public/privacy.html  # 개인정보처리방침. 앱 번들 밖의 정적 페이지라 스타일을 자체적으로 담는다
+  public/terms.html    # 이용약관. 같은 이유로 스타일이 privacy.html과 중복된다
 functions/
   src/index.ts         # kakaoBookSearch, koreanDictSearch (onRequest 프록시)
                        # 친구: findUserByEmail, getFriendShelf
@@ -141,6 +144,8 @@ Firestore 컬렉션:
 - 책 검색: 카카오 책 검색 API → `/api/kakaoBookSearch` (Functions 프록시)
 - 사전 검색: 우리말샘 오픈 API → `/api/koreanDictSearch` (Functions 프록시)
 - 문장 인식(OCR): Google Cloud Vision(`documentTextDetection`) → `ocrBookPage` 콜러블. 인식된 텍스트만 반환하고 이미지는 저장하지 않음. 서비스 계정 권한으로 호출하므로 별도 API 키 불필요
+- 유입 측정: Google Analytics(`measurementId: G-KS192H73HW`). 주소의 `?utm_source=...`를 읽어 `visit` 이벤트로 보낸다.
+  **보내는 건 유입 경로뿐이다** — 무슨 책·문장을 담았는지는 보내지 않는다
 - API 키는 Firebase Secret Manager (`KAKAO_REST_API_KEY`, `OPENDICT_API_KEY`)
 - 로컬 개발 서버(`npm run dev`)만으로는 세 기능이 동작하지 않음 (배포 환경에서만 프록시/콜러블 경로가 살아있음)
 

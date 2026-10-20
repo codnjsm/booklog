@@ -16,6 +16,7 @@
 - 로그인 없이도 브라우저 로컬 저장으로 사용 가능. Google·이메일 로그인 시 기기 간 동기화
 - 이메일 인증·변경, 회원 탈퇴(남긴 글·댓글·알림까지 정리)
 - 다크/라이트 테마, 데스크톱 사이드바 / 모바일 하단 탭 네비게이션
+- 더보기에서 문의하기, 개인정보처리방침·이용약관 열람
 
 ## 기술 스택
 
@@ -72,6 +73,7 @@ src/
     insights.ts        # 홈 대시보드용 파생 지표(목표 페이스, 최근 활동 등)
     day.ts             # 날짜 기준 — 저장은 UTC, 표시는 기기 지역시간
     notifications.ts   # 알림 목록 구성과 읽음·지움 처리
+    analytics.ts       # 유입 경로(utm) 측정
     push.ts            # 웹 푸시 설정 상태 판단
     install.ts         # 홈 화면 추가 안내 판단
     serviceWorker.ts   # 서비스워커 등록과 탈출구
@@ -80,6 +82,10 @@ src/
     image.ts           # 사진 리사이즈
   firebase.ts          # Firebase 초기화 + Firestore 접근 함수
   types.ts             # Book, Quote, Word, AppState, Post, Challenge 등 타입
+public/
+  sw.js                # 푸시 수신 서비스워커
+  privacy.html         # 개인정보처리방침 (앱 번들 밖의 정적 페이지)
+  terms.html           # 이용약관
 functions/
   src/index.ts         # 책 검색·사전 프록시, 친구/피드/좋아요/댓글, 책 권하기,
                        # 독서 챌린지, 알림·푸시 발송, 문장 인식(OCR), 회원 탈퇴
@@ -96,3 +102,5 @@ tests/                  # 에뮬레이터로 도는 서버 핸들러·보안 규
 | [BOOKLOG_CHECKLIST.md](BOOKLOG_CHECKLIST.md) | 실사용 점검 항목 |
 | [docs/GLOSSARY.md](docs/GLOSSARY.md) | 용어 정의 |
 | [docs/decisions/](docs/decisions/) | 되돌리기 어려운 결정의 배경 |
+
+이용자용 문서는 서비스에서 바로 열립니다 — [개인정보처리방침](https://reading-notes-6935e.web.app/privacy.html) · [이용약관](https://reading-notes-6935e.web.app/terms.html)
