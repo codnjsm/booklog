@@ -173,7 +173,7 @@ export const saveUserData = async (userId: string, data: AppState): Promise<void
 /**
  * 친구 책장. 보안 규칙은 남의 reading-notes 문서를 직접 못 읽게 막아두었고,
  * 공개해도 되는 범위만 서버가 골라서 돌려준다.
- * 배경: .forge/adr/260907-132332-friend-data-behind-callable.md
+ * 배경: docs/decisions/260907-132332-friend-data-behind-callable.md
  */
 export const getFriendShelf = async (uid: string): Promise<FriendShelf> => {
   const call = httpsCallable<{ uid: string }, FriendShelf>(functions, 'getFriendShelf')

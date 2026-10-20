@@ -146,7 +146,7 @@ export const findUserByEmail = onCall({ region: 'asia-northeast3', enforceAppChe
  * 보안 규칙은 문서 단위로만 읽기를 제어할 수 있어서, reading-notes 문서를 친구에게
  * 열어주면 비공개 책과 인용구·독후감까지 함께 나간다. 그래서 규칙에서는 본인만 읽게
  * 막아두고, 공개해도 되는 범위를 여기서 서버가 골라 반환한다.
- * 배경: .forge/adr/260907-132332-friend-data-behind-callable.md
+ * 배경: docs/decisions/260907-132332-friend-data-behind-callable.md
  *
  * 공개 범위: 공개 책(isPrivate이 아닌 책)의 id·title·author·cover·status·rating·
  * startedAt·finishedAt, 그리고 readingGoal. 독후감(review)과 인용구·단어는 내보내지 않는다.
@@ -204,7 +204,7 @@ export const getFriendShelf = onCall({ region: 'asia-northeast3', enforceAppChec
  * 에뮬레이터에 연결해 이 함수를 직접 테스트할 수 있다.
  *
  * 클라이언트는 {kind, refId, caption}만 보낸다 — 스냅샷에 정확히 뭐가 들어가는지는
- * 여기서 서버가 정한다. 배경: .forge/adr/260907-144119-post-snapshot-server-only-write.md
+ * 여기서 서버가 정한다. 배경: docs/decisions/260907-144119-post-snapshot-server-only-write.md
  */
 export async function createPostHandler(
   uid: string,
