@@ -9,9 +9,13 @@ const FEATURES = [
   {
     Icon: IconRecords,
     title: '기록',
-    desc: '독서 목표를 세우고 달력·통계로 습관을 확인하고, 친구와 챌린지도 해보세요',
+    desc: '독서 목표를 세우고, 친구와 챌린지도 해보세요',
   },
-  { Icon: IconFriends, title: '친구', desc: '책장을 공유하고, 문장에 좋아요·댓글을 남기고, 읽은 책을 권해보세요' },
+  {
+    Icon: IconFriends,
+    title: '친구',
+    desc: '책장을 공유하고, 피드에서 마음에 남은 것들을 나누고, 좋아하는 책을 권해보세요',
+  },
   {
     Icon: IconBell,
     title: '알림',
