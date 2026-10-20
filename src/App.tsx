@@ -18,6 +18,7 @@ import {
   deleteAccount,
   disablePush,
   reconcilePush,
+  startAnalytics,
 } from './firebase'
 import type { Post, Recommendation } from './types'
 import { normalizeTitle } from './lib/recommend'
@@ -162,6 +163,11 @@ function AppShell() {
     if (localStorage.getItem(WELCOME_SEEN_KEY)) return
     openWelcome()
   }, [loading, openWelcome])
+
+  // 어디서 들어왔는지만 한 번 센다. 탭을 옮겨도 다시 보내지 않는다.
+  useEffect(() => {
+    void startAnalytics(window.location.search)
+  }, [])
 
   // 탈퇴 후 새로 뜬 화면에서 결과를 알려준다. 한 번 띄우고 표시를 지운다.
   useEffect(() => {

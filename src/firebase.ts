@@ -44,6 +44,7 @@ import type { ServerNotification } from './lib/notifications'
 // getToken은 App Check 쪽과 이름이 겹쳐서 별칭을 준다.
 import { getMessaging, getToken as getMessagingToken, deleteToken, isSupported } from 'firebase/messaging'
 import { tokenDocId, VAPID_PUBLIC_KEY, isPushConfigured, readSavedToken, writeSavedToken } from './lib/push'
+import { readVisit, alreadySent, markSent } from './lib/analytics'
 
 const firebaseConfig = {
   apiKey: 'AIzaSyAZtjU5A1ay8ZlWf63spiwEzHjxvZCqSUk',
@@ -52,6 +53,8 @@ const firebaseConfig = {
   storageBucket: 'reading-notes-6935e.firebasestorage.app',
   messagingSenderId: '459987300237',
   appId: '1:459987300237:web:f0576b0978cca90b9457c4',
+  // Google Analytics. 유입 경로를 세는 데만 쓴다 (lib/analytics.ts)
+  measurementId: 'G-KS192H73HW',
 }
 
 // reCAPTCHA Enterprise 사이트 키. Firebase Console > App Check 에 등록된 키와 같아야 한다.
@@ -579,4 +582,26 @@ export async function fetchWithAppCheck(url: string): Promise<Response> {
     }
   }
   return fetch(url, { headers })
+}
+
+/**
+ * 유입 측정을 시작한다. 한 방문에 한 번만 보낸다.
+ *
+ * 실패해도 앱은 그대로 돈다 — 광고 차단기나 인앱 브라우저에서 막히는 일이 흔하고,
+ * 그건 통계가 조금 비는 문제지 사용자가 겪을 문제가 아니다.
+ */
+export const startAnalytics = async (search: string): Promise<void> => {
+  try {
+    if (alreadySent()) return
+    const { getAnalytics, isSupported: analyticsSupported, logEvent } = await import('firebase/analytics')
+    if (!(await analyticsSupported())) return
+
+    const visit = readVisit(search)
+    // GA4가 자동으로 세는 page_view와 별개로, 우리가 붙인 꼬리표를 그대로 남긴다.
+    // 자동 집계는 하루쯤 걸리지만 이 이벤트는 실시간 보고서에서 바로 보인다.
+    logEvent(getAnalytics(app), 'visit', visit)
+    markSent()
+  } catch {
+    /* 측정이 안 되는 건 앱이 안 되는 것과 다르다 */
+  }
 }
