@@ -20,9 +20,11 @@ async function wipe() {
   for (const u of MINE) {
     for (const d of (await db.collection(`notifications/${u}/items`).get()).docs) await d.ref.delete()
     for (const d of (await db.collection(`users/${u}/fcmTokens`).get()).docs) await d.ref.delete()
+    for (const d of (await db.collection(`users/${u}/badges`).get()).docs) await d.ref.delete()
     await db.doc(`reading-notes/${u}`).delete()
     await db.doc(`users/${u}`).delete()
   }
+  for (const d of (await db.collection('challenges').where('ownerUid', 'in', MINE).get()).docs) await d.ref.delete()
   for (const coll of ['posts', 'recommendations']) {
     const byFrom = await db
       .collection(coll)
@@ -215,6 +217,72 @@ describe('deleteUserData — 아무것도 없을 때', () => {
       likes: 0,
       fcmTokens: 0,
       comments: 0,
+      badges: 0,
+      challenges: 0,
+      challengesLeft: 0,
     })
+  })
+})
+
+describe('탈퇴 — 챌린지와 뱃지', () => {
+  it('내 뱃지가 사라진다 — 하위 컬렉션이라 users 문서만 지우면 남는다', async () => {
+    await db.doc(`users/${GONE}/badges/c1`).set({ at: '2026-10-20', goalDays: 10 })
+
+    const r = await deleteUserDataHandler(GONE)
+
+    assert.equal(r.badges, 1)
+    assert.equal((await db.collection(`users/${GONE}/badges`).get()).size, 0)
+  })
+
+  it('내가 만든 챌린지는 통째로 사라진다', async () => {
+    const ref = await db.collection('challenges').add({
+      ownerUid: GONE,
+      from: '2026-10-01',
+      to: '2026-10-10',
+      goalDays: 5,
+      members: [GONE, FRIEND],
+      invited: [],
+      createdAt: '2026-10-01',
+    })
+
+    const r = await deleteUserDataHandler(GONE)
+
+    assert.equal(r.challenges, 1)
+    assert.equal((await ref.get()).exists, false)
+  })
+
+  it('남이 만든 챌린지에서는 내 이름만 빠지고 남의 기록은 남는다', async () => {
+    const ref = await db.collection('challenges').add({
+      ownerUid: FRIEND,
+      from: '2026-10-01',
+      to: '2026-10-10',
+      goalDays: 5,
+      members: [FRIEND, GONE],
+      invited: [],
+      createdAt: '2026-10-01',
+    })
+
+    const r = await deleteUserDataHandler(GONE)
+
+    assert.equal(r.challengesLeft, 1)
+    const after = await ref.get()
+    assert.equal(after.exists, true)
+    assert.deepEqual(after.data().members, [FRIEND])
+  })
+
+  it('초대만 받아둔 챌린지에서도 빠진다', async () => {
+    const ref = await db.collection('challenges').add({
+      ownerUid: FRIEND,
+      from: '2026-10-01',
+      to: '2026-10-10',
+      goalDays: 5,
+      members: [FRIEND],
+      invited: [GONE],
+      createdAt: '2026-10-01',
+    })
+
+    await deleteUserDataHandler(GONE)
+
+    assert.deepEqual((await ref.get()).data().invited, [])
   })
 })

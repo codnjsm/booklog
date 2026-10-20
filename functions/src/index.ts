@@ -1485,7 +1485,20 @@ export const ocrBookPage = onCall(
 export async function deleteUserDataHandler(uid: string) {
   const db = getDb()
 
-  const [posts, outgoing, incoming, myNotifications, recsFrom, recsTo, likedPosts, fcmTokens] = await Promise.all([
+  const [
+    posts,
+    outgoing,
+    incoming,
+    myNotifications,
+    recsFrom,
+    recsTo,
+    likedPosts,
+    fcmTokens,
+    badges,
+    myChallenges,
+    joinedChallenges,
+    invitedChallenges,
+  ] = await Promise.all([
     db.collection('posts').where('authorUid', '==', uid).get(),
     db.collection('friendRequests').where('fromUid', '==', uid).get(),
     db.collection('friendRequests').where('toUid', '==', uid).get(),
@@ -1494,6 +1507,11 @@ export async function deleteUserDataHandler(uid: string) {
     db.collection('recommendations').where('toUid', '==', uid).get(),
     db.collection('posts').where('likes', 'array-contains', uid).get(),
     db.collection(`users/${uid}/fcmTokens`).get(),
+    // 뱃지도 하위 컬렉션이다. users/{uid} 문서를 지워도 같이 안 지워진다.
+    db.collection(`users/${uid}/badges`).get(),
+    db.collection('challenges').where('ownerUid', '==', uid).get(),
+    db.collection('challenges').where('members', 'array-contains', uid).get(),
+    db.collection('challenges').where('invited', 'array-contains', uid).get(),
   ])
 
   // 남의 글에 쓴 내 댓글. 하위 컬렉션이라 컬렉션 그룹으로 찾는다.
@@ -1525,6 +1543,11 @@ export async function deleteUserDataHandler(uid: string) {
     ...recsTo.docs.map((d) => d.ref),
     ...notificationsILeft,
     ...myComments.docs.map((d) => d.ref),
+    ...badges.docs.map((d) => d.ref),
+    // 내가 만든 챌린지는 통째로 지운다. 만든 사람이 없는 챌린지를 남겨두면
+    // 아무도 지울 수 없는 문서가 되고(지우기는 만든 사람만 가능), 참여자 목록에
+    // 탈퇴한 사람이 계속 남는다. 만든 사람이 지우는 것과 같은 결과다.
+    ...myChallenges.docs.map((d) => d.ref),
     db.collection('reading-notes').doc(uid),
     db.collection('users').doc(uid),
   ]
@@ -1549,6 +1572,22 @@ export async function deleteUserDataHandler(uid: string) {
     await db.doc(path).update({ commentCount: FieldValue.increment(-n) })
   }
 
+  // 남이 만든 챌린지에서는 내 이름만 뺀다. 남의 기록까지 지울 수는 없다.
+  const deletedChallengePaths = new Set(myChallenges.docs.map((d) => d.ref.path))
+  const leaveChallenges = [...joinedChallenges.docs, ...invitedChallenges.docs].filter(
+    (d) => !deletedChallengePaths.has(d.ref.path),
+  )
+  for (let i = 0; i < leaveChallenges.length; i += 400) {
+    const batch = db.batch()
+    leaveChallenges.slice(i, i + 400).forEach((d) =>
+      batch.update(d.ref, {
+        members: FieldValue.arrayRemove(uid),
+        invited: FieldValue.arrayRemove(uid),
+      }),
+    )
+    await batch.commit()
+  }
+
   // 남의 글에 눌러둔 좋아요를 거둔다. 안 그러면 없는 사람이 센 수가 그대로 남는다.
   // 내 글은 위에서 통째로 지웠으므로 건드리지 않는다.
   const othersILiked = likedPosts.docs.filter((d) => d.data().authorUid !== uid)
@@ -1566,6 +1605,9 @@ export async function deleteUserDataHandler(uid: string) {
     comments: myComments.size,
     recommendations: recsFrom.size + recsTo.size,
     likes: othersILiked.length,
+    badges: badges.size,
+    challenges: myChallenges.size,
+    challengesLeft: leaveChallenges.length,
   }
 }
 
