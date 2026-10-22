@@ -33,3 +33,18 @@ export function isoToDay(value: string): string {
 export function today(now: Date = new Date()): string {
   return toDayString(now)
 }
+
+/**
+ * 오늘로부터 n일 뒤. `new Date(y, m, d + n)`은 달·해 경계를 알아서 넘긴다.
+ *
+ * 양끝을 포함한 N일짜리 기간의 마지막 날은 `dayAfter(N - 1)`이다 —
+ * 오늘 하루짜리면 오늘이 마지막 날이다.
+ */
+export function dayAfter(n: number, now: Date = new Date()): string {
+  return toDayString(new Date(now.getFullYear(), now.getMonth(), now.getDate() + n))
+}
+
+/** 이번 달 말일. 다음 달 0일이 이번 달 마지막 날이다. */
+export function endOfMonth(now: Date = new Date()): string {
+  return toDayString(new Date(now.getFullYear(), now.getMonth() + 1, 0))
+}

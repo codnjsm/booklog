@@ -4,7 +4,7 @@ import Modal from './Modal'
 import type { UserProfile } from '../../types'
 import { createChallenge, friendlyErrorMessage } from '../../firebase'
 import { useAppUI } from '../../contexts/AppUIContext'
-import { today } from '../../lib/day'
+import { today, dayAfter, endOfMonth } from '../../lib/day'
 
 const MODAL_PANEL =
   'bg-surface border border-border rounded-2xl w-full max-w-full sm:max-w-[480px] max-h-[92%] sm:max-h-[90%] overflow-y-auto overscroll-contain touch-auto shadow-card'
@@ -26,11 +26,18 @@ function friendName(f: UserProfile): string {
   return f.displayName?.trim() || f.email?.split('@')[0] || '이름 없는 친구'
 }
 
-/** 이번 달의 남은 기간. 달 중간에 시작하면 오늘부터 말일까지다. */
-function thisMonth(now = new Date()) {
-  const last = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return { from: today(now), to: `${last.getFullYear()}-${pad(last.getMonth() + 1)}-${pad(last.getDate())}` }
+/**
+ * 고를 수 있는 기간. 서버가 31일까지만 받으므로 그 안에서만 둔다.
+ * 「이번 달」은 달 중간에 시작하면 오늘부터 말일까지라 길이가 그때그때 다르다.
+ */
+const SPANS = [7, 14, 30, 'month'] as const
+type Span = (typeof SPANS)[number]
+
+/** 고른 기간의 시작일과 종료일. 시작은 언제나 오늘이다 — 지난 날짜로는 서버가 안 받는다. */
+function periodOf(span: Span, now = new Date()): { from: string; to: string } {
+  const from = today(now)
+  // 양끝을 포함하므로 7일짜리의 마지막 날은 오늘로부터 6일 뒤다.
+  return { from, to: span === 'month' ? endOfMonth(now) : dayAfter(span - 1, now) }
 }
 
 /** 양끝을 포함한 날 수. */
@@ -46,14 +53,17 @@ interface Props {
 
 export default function CreateChallengeModal({ friends, onClose, onCreated }: Props) {
   const { showToast } = useAppUI()
-  const { from, to } = thisMonth()
+  const [picked, setPicked] = useState<Span>('month')
+  const { from, to } = periodOf(picked)
   const span = spanDays(from, to)
-  // 기본값은 기간의 절반. 처음부터 높게 잡으면 시작도 전에 포기한다.
-  const [goalDays, setGoalDays] = useState(() => Math.max(1, Math.round(span / 2)))
+  // 목표는 비워둔 채 시작한다. 숫자를 미리 넣어두면 그게 권장값처럼 읽혀서,
+  // 정작 본인이 할 수 있는 만큼을 생각하지 않고 그대로 만든다.
+  const [goalDays, setGoalDays] = useState('')
   const [invite, setInvite] = useState<string[]>([])
+  const goal = Number(goalDays)
 
   const create = useMutation({
-    mutationFn: () => createChallenge({ from, to, goalDays, invite }),
+    mutationFn: () => createChallenge({ from, to, goalDays: goal, invite }),
     onSuccess: () => {
       showToast('챌린지를 만들었어요', 'success')
       onCreated()
@@ -62,7 +72,8 @@ export default function CreateChallengeModal({ friends, onClose, onCreated }: Pr
   })
 
   const toggle = (uid: string) => setInvite((v) => (v.includes(uid) ? v.filter((x) => x !== uid) : [...v, uid]))
-  const valid = goalDays >= 1 && goalDays <= span
+  // 기간을 바꿨을 때 적어둔 목표를 지우지는 않는다 — 대신 범위를 벗어나면 아래에 이유를 보여준다.
+  const valid = goalDays !== '' && Number.isInteger(goal) && goal >= 1 && goal <= span
 
   return (
     <Modal onClose={onClose} labelledBy={TITLE_ID}>
@@ -76,11 +87,32 @@ export default function CreateChallengeModal({ friends, onClose, onCreated }: Pr
           </button>
         </div>
         <div className={MODAL_BODY}>
-          <div className="px-4 py-3 bg-surface2 rounded-lg mb-3.5">
+          <div className={FORM_LABEL}>며칠 동안 겨룰까요</div>
+          <div className="flex gap-1.5 flex-wrap">
+            {SPANS.map((v) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setPicked(v)}
+                aria-pressed={picked === v}
+                className={`px-3 py-2 rounded-lg text-[13px] cursor-pointer border ${
+                  picked === v
+                    ? 'bg-accentsoft text-accent border-accent font-medium'
+                    : 'bg-surface text-dim border-border hover:border-accent'
+                }`}
+              >
+                {v === 'month' ? '이번 달' : `${v}일`}
+              </button>
+            ))}
+          </div>
+
+          <div className="px-4 py-3 bg-surface2 rounded-lg mt-2.5 mb-3.5">
             <div className="text-[13px] text-ink">
               {from.slice(5).replace('-', '.')} ~ {to.slice(5).replace('-', '.')}
             </div>
-            <div className="text-xs text-dim mt-1">이번 달 남은 {span}일 동안 겨뤄요</div>
+            <div className="text-xs text-dim mt-1">
+              {picked === 'month' ? `이번 달 남은 ${span}일` : `오늘부터 ${span}일`} 동안 겨뤄요
+            </div>
           </div>
 
           <label className={FORM_LABEL} htmlFor="challenge-goal">
@@ -93,10 +125,14 @@ export default function CreateChallengeModal({ friends, onClose, onCreated }: Pr
             min={1}
             max={span}
             value={goalDays}
-            onChange={(e) => setGoalDays(Number(e.target.value))}
-            className={FORM_INPUT}
+            placeholder={`1 ~ ${span} 사이`}
+            onChange={(e) => setGoalDays(e.target.value)}
+            className={`${FORM_INPUT} placeholder:text-dim placeholder:opacity-50`}
           />
-          {!valid && <p className="text-xs text-danger mt-1.5">1일에서 {span}일 사이로 정해주세요</p>}
+          {/* 비어 있을 때는 아직 안 적은 것뿐이라 빨간 글씨를 띄우지 않는다. 만들기 버튼이 잠겨 있다. */}
+          {goalDays !== '' && !valid && (
+            <p className="text-xs text-danger mt-1.5">1일에서 {span}일 사이로 정해주세요</p>
+          )}
 
           <div className={`${FORM_LABEL} mt-3.5`}>누구와 함께할까요</div>
           {friends.length === 0 ? (
