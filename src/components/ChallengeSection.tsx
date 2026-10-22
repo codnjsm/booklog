@@ -46,15 +46,33 @@ function Avatar({ url, name }: { url?: string; name: string }) {
  * 등수가 아니라 **내 목표 대비 얼마**를 맨 위에 크게 둔다.
  * 「3등」이라고 쓰면 3등은 그만둔다.
  */
-function MyProgress({ c, me }: { c: Challenge; me?: ChallengeMember }) {
+function MyProgress({ c, me, onDelete }: { c: Challenge; me?: ChallengeMember; onDelete?: () => void }) {
   const days = me?.days ?? 0
   const pct = Math.min(100, Math.round((days / c.goalDays) * 100))
   const left = c.goalDays - days
   return (
     <div className={CARD}>
-      <div className={LABEL}>
-        {short(c.from)} ~ {short(c.to)}
-        {c.ended ? ' · 끝남' : ''}
+      {/* 지우기는 만든 사람에게만 보인다. 댓글 삭제와 같은 × 모양이되,
+          결과가 더 크므로(참여자 모두에게서 사라진다) confirm을 거치고 올리면 빨갛게 된다.
+          음수 마진으로 카드가 ×만큼 높아지지 않게 하고, 터치 영역은 24×24를 지킨다. */}
+      <div className="flex items-center gap-2">
+        <span className={LABEL}>
+          {short(c.from)} ~ {short(c.to)}
+          {c.ended ? ' · 끝남' : ''}
+        </span>
+        {onDelete && (
+          <>
+            <span className="flex-1" />
+            <button
+              type="button"
+              onClick={onDelete}
+              aria-label="챌린지 지우기"
+              className="flex-shrink-0 w-6 h-6 -my-1 -mr-1.5 flex items-center justify-center bg-transparent border-none text-dim text-sm cursor-pointer hover:text-danger"
+            >
+              ×
+            </button>
+          </>
+        )}
       </div>
       <div className="flex items-baseline gap-1.5 mt-2.5">
         <span className="text-[28px] sm:text-[34px] font-bold text-accent leading-none">{days}</span>
@@ -137,7 +155,8 @@ export default function ChallengeSection({ user, friends }: Props) {
   if (!user) return null
 
   return (
-    <div className="flex flex-col gap-3">
+    // id는 친구 탭의 진입점이 찾아오는 자리다. 기록 탭에서는 아래쪽이라 스크롤이 필요하다.
+    <div id="challenges" className="flex flex-col gap-3 scroll-mt-4">
       <div className={LABEL}>독서 챌린지</div>
 
       {/* 받은 초대. 배경을 중립으로 둬서 연한 채움 버튼 둘이 또렷하게 보인다. */}
@@ -171,20 +190,18 @@ export default function ChallengeSection({ user, friends }: Props) {
 
       {joined.map((c) => (
         <div key={c.id} className="flex flex-col gap-3">
-          <MyProgress c={c} me={c.members.find((m) => m.uid === user.uid)} />
+          <MyProgress
+            c={c}
+            me={c.members.find((m) => m.uid === user.uid)}
+            onDelete={
+              c.ownerUid === user.uid
+                ? () => {
+                    if (confirm('이 챌린지를 지울까요?\n참여한 사람들에게서도 사라져요.')) remove.mutate(c.id)
+                  }
+                : undefined
+            }
+          />
           <Members members={c.members} myUid={user.uid} />
-          {c.ownerUid === user.uid && (
-            <div className="flex justify-end">
-              <button
-                onClick={() => {
-                  if (confirm('이 챌린지를 지울까요?\n참여한 사람들에게서도 사라져요.')) remove.mutate(c.id)
-                }}
-                className="bg-transparent text-dim border-none text-xs cursor-pointer px-2 py-1.5 -mr-2 hover:text-danger"
-              >
-                챌린지 지우기
-              </button>
-            </div>
-          )}
         </div>
       ))}
 

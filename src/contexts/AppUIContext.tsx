@@ -34,7 +34,7 @@ interface ToastState {
 interface AppUIValue {
   tab: Tab
   /** view는 탭 안의 화면, focus는 그 화면에서 찾아갈 대상(피드의 게시물 id). */
-  changeTab: (t: Tab, opts?: { view?: 'feed'; focus?: string }) => void
+  changeTab: (t: Tab, opts?: { view?: 'feed' | 'challenges'; focus?: string }) => void
 
   modal: Modal
   openAddBook: () => void
@@ -114,7 +114,7 @@ export function AppUIProvider({ children }: { children: ReactNode }) {
   )
 
   const changeTab = useCallback(
-    (t: Tab, opts?: { view?: 'feed'; focus?: string }) => {
+    (t: Tab, opts?: { view?: 'feed' | 'challenges'; focus?: string }) => {
       const params = new URLSearchParams()
       if (opts?.view) params.set('view', opts.view)
       if (opts?.focus) params.set('post', opts.focus)

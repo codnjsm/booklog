@@ -7,12 +7,59 @@ import type { User } from 'firebase/auth'
 import type { UserProfile, FriendRequest, BookStatus, FriendShelf, Post, Recommendation, Comment } from '../types'
 import BookCard from './BookCard'
 import PageHeader from './layout/PageHeader'
-import { IconSearch, IconBooks, IconFriends } from './layout/icons'
+import { IconSearch, IconBooks, IconFriends, IconChevronRight } from './layout/icons'
 import { useAppUI } from '../contexts/AppUIContext'
 import PostCard from './PostCard'
 import { relativeDay } from '../lib/insights'
 import PostLikesModal, { type Liker } from './modals/PostLikesModal'
-import { toggleLike, getPostLikes, addComment, deleteComment, getComments } from '../firebase'
+import { toggleLike, getPostLikes, addComment, deleteComment, getComments, listChallenges } from '../firebase'
+
+/**
+ * 친구 탭의 챌린지 진입점.
+ *
+ * 챌린지 본체는 기록 탭에 있다 — 세는 지표(기록한 날)가 거기 있고, 진행 중에는 매일 보는 게
+ * 내 달성률이기 때문이다. 다만 **시작하려면 친구가 필요한데 친구 탭에 아무 흔적이 없으면
+ * 이런 기능이 있는지 알 수가 없다.** 그래서 여기엔 한 줄만 두고 누르면 기록 탭으로 보낸다.
+ *
+ * 조회는 기록 탭의 챌린지와 같은 queryKey를 쓴다. 캐시를 공유하므로 요청이 두 번 나가지 않는다.
+ */
+function ChallengeEntry({ user }: { user: User | null }) {
+  const { changeTab } = useAppUI()
+  const { data } = useQuery({
+    queryKey: ['challenges'],
+    queryFn: listChallenges,
+    enabled: !!user,
+    staleTime: 30_000,
+  })
+  if (!user) return null
+
+  const invited = data?.invited ?? []
+  const running = (data?.joined ?? []).filter((c) => !c.ended)
+  const mine = running[0]?.members.find((m) => m.uid === user.uid)
+
+  // 초대가 왔으면 그게 가장 급하다. 다음이 진행 중인 것, 아무것도 없으면 시작을 권한다.
+  const text = invited.length
+    ? `받은 초대 ${invited.length}건`
+    : running.length && mine
+      ? `${mine.days}일 기록 · 목표 ${running[0].goalDays}일`
+      : '친구와 기간을 정해 함께 기록해보세요'
+
+  return (
+    <button
+      onClick={() => changeTab('records', { view: 'challenges' })}
+      className="w-full flex items-center gap-3 px-4 py-3 mb-5 bg-surface border border-border rounded-[10px] text-left cursor-pointer hover:bg-surface2"
+    >
+      <span className="flex-1 min-w-0">
+        <span className="block text-[13px] sm:text-sm font-medium text-ink">독서 챌린지</span>
+        <span className="block text-xs sm:text-[13px] text-dim mt-0.5 truncate">{text}</span>
+      </span>
+      {invited.length > 0 && <span className="flex-shrink-0 w-2 h-2 rounded-full bg-accent" />}
+      <span className="flex-shrink-0 text-dim">
+        <IconChevronRight />
+      </span>
+    </button>
+  )
+}
 
 type StatusFilter = BookStatus | 'all'
 const STATUS_LABELS: { id: StatusFilter; label: string }[] = [
@@ -142,10 +189,12 @@ export default function FriendsTab({
   // 피드/친구 전환을 URL에 둔다 — 알림함에서 "회원님의 글을 좋아합니다"를 누르면
   // 친구 탭이 아니라 피드로 바로 들어와야 하는데, 지역 상태면 바깥에서 지정할 길이 없다.
   const [searchParams, setSearchParams] = useSearchParams()
-  const view: MainView = searchParams.get('view') === 'feed' ? 'feed' : 'friends'
+  // 기본은 피드다 — 친구 탭에 들어오는 이유는 대개 새 글을 보려는 것이고, 친구 목록은 가끔 쓴다.
+  // 알림함이 넘겨주는 ?view=feed 는 이 기본값과 같은 곳으로 떨어지므로 그대로 동작한다.
+  const view: MainView = searchParams.get('view') === 'friends' ? 'friends' : 'feed'
   const setView = (next: MainView) => {
     const params = new URLSearchParams(searchParams)
-    if (next === 'feed') params.set('view', 'feed')
+    if (next === 'friends') params.set('view', 'friends')
     else params.delete('view')
     // replace로 둔다 — 탭 안의 전환까지 뒤로가기 기록에 쌓일 일은 아니다.
     setSearchParams(params, { replace: true })
@@ -468,10 +517,17 @@ export default function FriendsTab({
         )}
       </PageHeader>
 
-      <div className="flex gap-0.5 p-0.5 mb-5 rounded-[9px] bg-surface2 border border-border sm:w-fit">
-        {seg('friends', view, () => setView('friends'), '친구')}
+      {/* 챌린지 진입점이 뒤따르는 피드에서만 여백을 줄인다. 친구 목록에서는 세그먼트가
+          바로 본문과 붙으므로 원래 여백을 그대로 쓴다. */}
+      <div
+        className={`flex gap-0.5 p-0.5 ${view === 'feed' ? 'mb-3' : 'mb-5'} rounded-[9px] bg-surface2 border border-border sm:w-fit`}
+      >
         {seg('feed', view, () => setView('feed'), '피드')}
+        {seg('friends', view, () => setView('friends'), '친구 목록')}
       </div>
+
+      {/* 친구 목록은 사람을 찾거나 관리하러 오는 자리라 챌린지는 끼우지 않는다. */}
+      {view === 'feed' && <ChallengeEntry user={user} />}
 
       {view === 'feed' &&
         (feedQuery.isPending ? (
