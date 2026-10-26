@@ -17,3 +17,6 @@ firebase-debug.log
 .agents/
 .claude/skills/
 skills-lock.json
+
+# 시연 대본 (일회성. 시연 끝나면 지운다)
+BOOKLOG_DEMO.md
