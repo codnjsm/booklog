@@ -28,8 +28,8 @@ export interface NotificationItem {
   text: string
   /** 눌렀을 때 갈 탭. */
   goTo: Tab
-  /** 탭 안에서 더 들어가야 하는 화면. 지금은 친구 탭의 피드뿐이다. */
-  view?: 'feed'
+  /** 탭 안에서 더 들어가야 하는 화면. 친구 탭의 피드, 기록 탭의 챌린지. */
+  view?: 'feed' | 'challenges'
   /** 그 화면에서 찾아가 보여줄 대상. 지금은 피드의 게시물 id뿐이다. */
   focus?: string
 }
@@ -80,15 +80,16 @@ export interface ServerNotification {
  */
 const SERVER_KINDS: Record<
   string,
-  { text: string | ((count: number) => string); goTo: Tab; view?: 'feed'; solo?: true }
+  { text: string | ((count: number) => string); goTo: Tab; view?: 'feed' | 'challenges'; solo?: true }
 > = {
   like: { text: '님이 회원님의 글을 좋아합니다', goTo: 'friends', view: 'feed' },
   recommend: { text: '님이 책을 권했어요', goTo: 'friends' },
   recommendAccepted: { text: '님이 권한 책을 담았어요', goTo: 'friends' },
   friendAccepted: { text: '님이 친구 요청을 수락했어요', goTo: 'friends' },
-  challengeInvite: { text: '님이 챌린지에 초대했어요', goTo: 'records' },
-  challengeJoined: { text: '님이 챌린지에 참여했어요', goTo: 'records' },
-  challengeAchieved: { text: '챌린지를 완주했어요', goTo: 'records', solo: true },
+  // 기록 탭은 달력이 세로로 길어서 챌린지가 스크롤 아래에 있다. 그 자리까지 내려준다.
+  challengeInvite: { text: '님이 챌린지에 초대했어요', goTo: 'records', view: 'challenges' },
+  challengeJoined: { text: '님이 챌린지에 참여했어요', goTo: 'records', view: 'challenges' },
+  challengeAchieved: { text: '챌린지를 완주했어요', goTo: 'records', view: 'challenges', solo: true },
   // 한 글에 여러 명이 달면 하나로 묶인다.
   comment: {
     text: (n) => (n > 1 ? `님 외 ${n - 1}명이 댓글을 남겼어요` : '님이 댓글을 남겼어요'),

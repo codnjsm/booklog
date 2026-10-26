@@ -203,6 +203,26 @@ describe('serverNotifications — 서버가 남긴 알림', () => {
     expect(n.goTo).toBe('friends')
   })
 
+  it('좋아요·댓글은 친구 탭의 피드로 간다 — 친구 목록이 아니다', () => {
+    for (const kind of ['like', 'comment']) {
+      const [n] = serverNotifications([raw('n1', 'u-bob', '2026-10-13T00:00:00.000Z', kind)], nameOf)
+      expect(n.view).toBe('feed')
+    }
+  })
+
+  it('챌린지 알림은 기록 탭의 챌린지 자리로 간다 — 달력 아래라 그냥 가면 안 보인다', () => {
+    for (const kind of ['challengeInvite', 'challengeJoined', 'challengeAchieved']) {
+      const [n] = serverNotifications([raw('n1', 'u-bob', '2026-10-13T00:00:00.000Z', kind)], nameOf)
+      expect(n.goTo).toBe('records')
+      expect(n.view).toBe('challenges')
+    }
+  })
+
+  it('받은 추천은 친구 탭의 기본 화면으로 간다 — 들어갈 하위 화면이 없다', () => {
+    const [n] = serverNotifications([raw('n1', 'u-bob', '2026-10-13T00:00:00.000Z', 'recommend')], nameOf)
+    expect(n.view).toBeUndefined()
+  })
+
   it('알림이 없으면 빈 목록', () => {
     expect(serverNotifications([], nameOf)).toEqual([])
   })
