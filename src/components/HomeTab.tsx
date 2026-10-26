@@ -80,6 +80,17 @@ function pickGreeting(name: string | undefined) {
 const CARD = 'bg-surface border border-border rounded-xl'
 const LABEL = 'font-mono text-[10px] sm:text-[12px] tracking-[0.09em] text-dim'
 
+/** 글자 줄에 끼워 넣는 작은 아바타. 사진이 없으면 accent 원에 이름 첫 글자. */
+function MiniAvatar({ url, name }: { url?: string; name: string }) {
+  const box = 'w-[18px] h-[18px] rounded-full flex-shrink-0'
+  if (url) return <img loading="lazy" src={url} alt="" referrerPolicy="no-referrer" className={`${box} object-cover`} />
+  return (
+    <span className={`${box} flex items-center justify-center bg-accentfill text-white font-semibold text-[9px]`}>
+      {(name || '?')[0].toUpperCase()}
+    </span>
+  )
+}
+
 /** 2026-10-26 → 10.26. 챌린지 카드와 같은 표기다. */
 function shortDay(day: string): string {
   return day.slice(5).replace('-', '.')
@@ -125,14 +136,33 @@ function Challenges({ user }: { user: User | null }) {
         const days = c.members.find((m) => m.uid === user.uid)?.days ?? 0
         const pct = Math.min(100, Math.round((days / c.goalDays) * 100))
         // 여럿이면 숫자만으로는 어느 챌린지인지 구별되지 않는다. 만든 사람으로 가른다.
-        const owner = c.members.find((m) => m.uid === c.ownerUid)?.displayName
-        const whose = c.ownerUid === user.uid ? '내가 만든 챌린지' : `${owner || '친구'}님이 만든 챌린지`
+        // 남이 만든 것만 이름을 세운다 — 누구 건지 알아야 하는 쪽이라서다.
+        // 내 챌린지는 「내가」를 키워봐야 알려주는 게 없으므로 한 덩어리로 흐리게 둔다.
+        const ownerInfo = c.members.find((m) => m.uid === c.ownerUid)
+        const owner = ownerInfo?.displayName
+        const ownerPhoto = ownerInfo?.photoURL
+        const mine = c.ownerUid === user.uid
+        // 한 문장 안에서는 크기를 섞지 않는다 — 글자 높이가 어긋나 줄이 들쭉날쭉해진다.
+        // 알림함과 같이 크기는 맞추고 굵기·색으로만 이름을 세운다.
+        const QUIET = 'text-[13px] sm:text-sm text-dim'
         return (
           <button key={c.id} onClick={go} className="bg-transparent border-none p-0 text-left cursor-pointer">
             {/* 만든 사람이 이 챌린지의 제목 노릇을 한다. 회색 작은 글씨로 두면
                 숫자만 눈에 띄고 어느 챌린지인지가 읽히지 않는다. */}
-            <div className="flex items-baseline gap-2 mb-2">
-              <span className="text-[13px] sm:text-sm font-medium text-ink truncate">{whose}</span>
+            {/* 사진은 글자보다 빨리 구별된다. 내 챌린지는 아바타를 두지 않아
+                「아바타 있음 = 남이 만든 것」으로도 갈린다. */}
+            <div className="flex items-center gap-1.5 mb-2">
+              {!mine && <MiniAvatar url={ownerPhoto} name={owner || '친구'} />}
+              <span className="min-w-0 truncate">
+                {mine ? (
+                  <span className={QUIET}>내가 만든 챌린지</span>
+                ) : (
+                  <>
+                    <span className="text-[13px] sm:text-sm font-semibold text-ink">{owner || '친구'}</span>
+                    <span className={QUIET}>님이 만든 챌린지</span>
+                  </>
+                )}
+              </span>
               <span className="flex-1" />
               <span className="font-mono text-[11px] text-dim flex-shrink-0">
                 {shortDay(c.from)} ~ {shortDay(c.to)}
