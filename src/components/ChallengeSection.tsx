@@ -118,8 +118,10 @@ function Members({ c, myUid, onInvite }: { c: Challenge; myUid: string; onInvite
   // 한 칸 들여써서 묶음을 드러낸다. 선도 같이 들어온다.
   const ROW = 'flex items-center gap-2.5 mx-[21px] sm:mx-[25px] py-3 border-0 border-t border-border'
   return (
-    // 같은 카드 안에서 달성률 아래에 이어 붙는다.
-    <>
+    // 같은 카드 안에서 달성률 아래에 이어 붙는다. 줄의 아래 여백(12px)만으로는
+    // 카드 위쪽(14px, 데스크톱 18px)보다 좁아 보여서 바닥을 그만큼 채운다.
+    // flex-col이라야 안의 버튼이 줄과 같은 폭으로 늘어난다.
+    <div className="flex flex-col pb-0.5 sm:pb-1.5">
       {/* 여기엔 선을 긋지 않는다 — 달성률과는 여백으로 갈리고, 선은 사람 줄 사이에만 쓴다. */}
       <div className="mx-[21px] sm:mx-[25px] pt-3.5 pb-2 flex items-baseline gap-2">
         <span className={LABEL}>{others.length > 0 ? `함께하는 사람 ${others.length}` : '아직 혼자예요'}</span>
@@ -170,7 +172,7 @@ function Members({ c, myUid, onInvite }: { c: Challenge; myUid: string; onInvite
           + 친구 부르기
         </button>
       )}
-    </>
+    </div>
   )
 }
 
