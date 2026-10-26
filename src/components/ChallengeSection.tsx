@@ -4,19 +4,18 @@ import type { User } from 'firebase/auth'
 import type { Challenge, ChallengeMember, UserProfile } from '../types'
 import { listChallenges, joinChallenge, declineChallenge, deleteChallenge, leaveChallenge } from '../firebase'
 import { useAppUI } from '../contexts/AppUIContext'
-import CreateChallengeModal from './modals/CreateChallengeModal'
 import InviteToChallengeModal from './modals/InviteToChallengeModal'
 
 const LABEL = 'font-mono text-[10px] sm:text-[12px] tracking-[0.09em] text-dim'
-const CARD = 'bg-surface border border-border rounded-[10px] py-3.5 px-4 sm:py-[18px] sm:px-5'
+/** 카드 껍데기. 한 챌린지가 카드 하나이고 그 안에 달성률·참여자가 나뉘어 들어간다. */
+const CARD = 'bg-surface border border-border rounded-[10px] overflow-hidden flex flex-col'
+/** 카드 안쪽 여백. 줄 단위로 선을 그어야 해서 껍데기와 따로 둔다. */
+const PAD = 'py-3.5 px-4 sm:py-[18px] sm:px-5'
 // 친구 요청의 수락·거절과 같은 규격. 카드 배경이 중립(surface2)이라 연한 채움이 또렷하게 보인다.
 const BTN_OK =
   'bg-accentsoft text-accent border-none font-medium px-3 py-1.5 rounded-lg text-[13px] cursor-pointer transition-all duration-150 hover:opacity-80 disabled:opacity-50'
 const BTN_NO =
   'bg-dangersoft text-danger border-none font-medium px-3 py-1.5 rounded-lg text-[13px] cursor-pointer transition-all duration-150 hover:opacity-80 disabled:opacity-50'
-// 책 상세의 「+ 문장 저장」과 같은 규격 — 앱에서 「이걸 누르세요」를 뜻하는 모양.
-const BTN_PRIMARY =
-  'text-[13px] sm:text-sm font-medium px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-accentfill text-white border-none cursor-pointer hover:bg-accentfillhover'
 
 /** 2026-10-01 → 10.01 */
 function short(day: string): string {
@@ -62,7 +61,7 @@ function MyProgress({
   const pct = Math.min(100, Math.round((days / c.goalDays) * 100))
   const left = c.goalDays - days
   return (
-    <div className={CARD}>
+    <div className={PAD}>
       {/* 지우기는 만든 사람에게만 보인다. 댓글 삭제와 같은 × 모양이되,
           결과가 더 크므로(참여자 모두에게서 사라진다) confirm을 거치고 올리면 빨갛게 된다.
           음수 마진으로 카드가 ×만큼 높아지지 않게 하고, 터치 영역은 24×24를 지킨다. */}
@@ -113,11 +112,16 @@ function Members({ c, myUid, onInvite }: { c: Challenge; myUid: string; onInvite
   // 부를 수 있는 사람이 없고 아무도 없으면 카드를 아예 두지 않는다.
   if (others.length === 0 && waiting.length === 0 && !onInvite) return null
 
-  const ROW = 'flex items-center gap-2.5 px-4 py-3 border-0 border-t border-border'
+  // 선을 카드 끝까지 긋지 않고 글자 선에 맞춘다. 그래서 좌우 여백을 안쪽 패딩이 아니라
+  // 바깥 마진으로 준다 — 패딩으로 주면 테두리가 카드 폭 전체를 가로지른다.
+  // 달성률 영역(px-4/sm:px-5)보다 5px 더 들어온다. 참여자는 그 아래 딸린 부분이라
+  // 한 칸 들여써서 묶음을 드러낸다. 선도 같이 들어온다.
+  const ROW = 'flex items-center gap-2.5 mx-[21px] sm:mx-[25px] py-3 border-0 border-t border-border'
   return (
-    <div className="bg-surface border border-border rounded-[10px]">
-      {/* 내가 만든 챌린지면 그렇다고 적는다 — 부르기·지우기 버튼이 나에게만 보이는 이유다. */}
-      <div className="px-4 pt-3.5 pb-2 flex items-baseline gap-2">
+    // 같은 카드 안에서 달성률 아래에 이어 붙는다.
+    <>
+      {/* 여기엔 선을 긋지 않는다 — 달성률과는 여백으로 갈리고, 선은 사람 줄 사이에만 쓴다. */}
+      <div className="mx-[21px] sm:mx-[25px] pt-3.5 pb-2 flex items-baseline gap-2">
         <span className={LABEL}>{others.length > 0 ? `함께하는 사람 ${others.length}` : '아직 혼자예요'}</span>
         {c.ownerUid === myUid && (
           <>
@@ -159,12 +163,14 @@ function Members({ c, myUid, onInvite }: { c: Challenge; myUid: string; onInvite
         <button
           type="button"
           onClick={onInvite}
-          className={`${ROW} w-full text-left bg-transparent cursor-pointer text-[13px] text-accent hover:bg-surface2`}
+          // w-full을 주면 좌우 마진만큼(16px) 카드 밖으로 넘쳐 구분선이 오른쪽 끝에 붙는다.
+          // 버튼은 div와 달리 저절로 안 늘어나므로, 카드를 세로 flex로 두어 늘린다.
+          className={`${ROW} text-left bg-transparent cursor-pointer text-[13px] text-accent hover:bg-surface2`}
         >
           + 친구 부르기
         </button>
       )}
-    </div>
+    </>
   )
 }
 
@@ -176,7 +182,6 @@ interface Props {
 export default function ChallengeSection({ user, friends }: Props) {
   const { showToast } = useAppUI()
   const queryClient = useQueryClient()
-  const [creating, setCreating] = useState(false)
   // 어느 챌린지에 부를지 담아둔다. null이면 모달이 닫힌 상태다.
   const [inviting, setInviting] = useState<Challenge | null>(null)
 
@@ -220,21 +225,7 @@ export default function ChallengeSection({ user, friends }: Props) {
   if (!user) return null
 
   return (
-    <div className="flex flex-col gap-3">
-      {/* 참여 중인 게 있어도 새로 만들 수 있다 — 서버는 원래 허용하는데 버튼이 빈 상태 카드 안에만
-          있어서 막혀 있었다. 기록 하나가 참여 중인 모든 챌린지에 함께 반영되므로 겹쳐도 부담이 없다.
-          빈 상태일 때는 카드 가운데 큰 버튼이 있으므로 여기 두 번 두지 않는다.
-          제목은 세그먼트의 「챌린지」가 이미 말하고 있어서 따로 적지 않는다.
-          좌우 8px은 아래 카드들과 눈으로 맞춘 값이다. */}
-      {joined.length > 0 && (
-        <div className="flex justify-end px-2">
-          <button type="button" onClick={() => setCreating(true)} className={BTN_OK}>
-            + 만들기
-          </button>
-        </div>
-      )}
-
-      {/* 받은 초대. 배경을 중립으로 둬서 연한 채움 버튼 둘이 또렷하게 보인다. */}
+    <div className="flex flex-col gap-4">
       {invited.map((c) => (
         <div key={c.id} className="px-4 py-3.5 bg-surface2 rounded-[10px] flex flex-col gap-2">
           <span className="text-[13px] text-ink">
@@ -263,8 +254,10 @@ export default function ChallengeSection({ user, friends }: Props) {
         </div>
       ))}
 
+      {/* 한 챌린지가 카드 하나다. 달성률과 참여자가 따로 떠 있으면 어디까지가 한 챌린지인지
+          읽히지 않아서, 카드 테두리가 그 경계를 맡는다. */}
       {joined.map((c) => (
-        <div key={c.id} className="flex flex-col gap-3">
+        <div key={c.id} className={CARD}>
           <MyProgress
             c={c}
             me={c.members.find((m) => m.uid === user.uid)}
@@ -293,13 +286,11 @@ export default function ChallengeSection({ user, friends }: Props) {
         </div>
       ))}
 
+      {/* 피드 빈 상태와 같은 모양 — 만들기 버튼은 제목줄에 있으므로 여기 두 번 두지 않는다. */}
       {joined.length === 0 && (
-        <div className="text-center py-10 px-5 text-dim bg-surface border border-dashed border-border rounded-[10px]">
+        <div className="text-center py-[60px] px-5 text-dim bg-surface border border-dashed border-border rounded-[10px]">
           <h3 className="font-sans text-ink mb-1.5 text-sm sm:text-[15px]">진행 중인 챌린지가 없어요</h3>
-          <p className="text-xs sm:text-[13px] mb-3.5">친구들과 한 달 동안 며칠 기록할지 정해보세요</p>
-          <button className={BTN_PRIMARY} onClick={() => setCreating(true)}>
-            + 챌린지 만들기
-          </button>
+          <p className="text-xs sm:text-[13px]">친구들과 기간을 정해 며칠 기록할지 겨뤄보세요</p>
         </div>
       )}
 
@@ -310,17 +301,6 @@ export default function ChallengeSection({ user, friends }: Props) {
           onClose={() => setInviting(null)}
           onInvited={() => {
             setInviting(null)
-            void queryClient.invalidateQueries({ queryKey: ['challenges'] })
-          }}
-        />
-      )}
-
-      {creating && (
-        <CreateChallengeModal
-          friends={friends}
-          onClose={() => setCreating(false)}
-          onCreated={() => {
-            setCreating(false)
             void queryClient.invalidateQueries({ queryKey: ['challenges'] })
           }}
         />

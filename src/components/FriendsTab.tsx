@@ -14,6 +14,7 @@ import { relativeDay } from '../lib/insights'
 import PostLikesModal, { type Liker } from './modals/PostLikesModal'
 import { toggleLike, getPostLikes, addComment, deleteComment, getComments } from '../firebase'
 import ChallengeSection from './ChallengeSection'
+import CreateChallengeModal from './modals/CreateChallengeModal'
 
 type StatusFilter = BookStatus | 'all'
 const STATUS_LABELS: { id: StatusFilter; label: string }[] = [
@@ -142,6 +143,8 @@ export default function FriendsTab({
   const queryClient = useQueryClient()
   // 피드/친구 전환을 URL에 둔다 — 알림함에서 "회원님의 글을 좋아합니다"를 누르면
   // 친구 탭이 아니라 피드로 바로 들어와야 하는데, 지역 상태면 바깥에서 지정할 길이 없다.
+  // 만들기는 PageHeader 버튼이 열고 아래 섹션이 결과를 보여주므로, 둘의 공통 부모인 여기서 쥔다.
+  const [creatingChallenge, setCreatingChallenge] = useState(false)
   const [searchParams, setSearchParams] = useSearchParams()
   // 기본은 피드다 — 친구 탭에 들어오는 이유는 대개 새 글을 보려는 것이고, 나머지는 가끔 쓴다.
   // 알림함이 넘겨주는 ?view=feed 는 이 기본값과 같은 곳으로 떨어지므로 그대로 동작한다.
@@ -470,7 +473,26 @@ export default function FriendsTab({
             + 친구 추가
           </button>
         )}
+        {view === 'challenges' && user && (
+          <button
+            onClick={() => setCreatingChallenge(true)}
+            className="text-[13px] sm:text-sm font-medium px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-accentfill text-white border-none cursor-pointer hover:bg-accentfillhover"
+          >
+            + 만들기
+          </button>
+        )}
       </PageHeader>
+
+      {creatingChallenge && (
+        <CreateChallengeModal
+          friends={friends}
+          onClose={() => setCreatingChallenge(false)}
+          onCreated={() => {
+            setCreatingChallenge(false)
+            void queryClient.invalidateQueries({ queryKey: ['challenges'] })
+          }}
+        />
+      )}
 
       <div className="flex gap-0.5 p-0.5 mb-5 rounded-[9px] bg-surface2 border border-border sm:w-fit">
         {seg('feed', view, () => setView('feed'), '피드')}
