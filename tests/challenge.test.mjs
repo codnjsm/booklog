@@ -90,6 +90,7 @@ import {
   joinChallengeHandler,
   declineChallengeHandler,
   deleteChallengeHandler,
+  leaveChallengeHandler,
   isDayString,
   daysInclusive,
   todayInSeoul,
@@ -366,6 +367,50 @@ describe('getChallenge — 현황', () => {
     assert.deepEqual(
       v.invited.map((m) => m.uid),
       [SEO],
+    )
+  })
+
+  it('참여자는 나갈 수 있다', async () => {
+    const { from, to } = period(10)
+    const { id } = await createChallengeHandler(HAN, { from, to, goalDays: 3, invite: [SEO] })
+    await joinChallengeHandler(SEO, { challengeId: id })
+
+    await leaveChallengeHandler(SEO, { challengeId: id })
+
+    const v = await getChallengeHandler(HAN, { challengeId: id })
+    assert.deepEqual(
+      v.members.map((m) => m.uid),
+      [HAN],
+    )
+    assert.deepEqual(v.invited, [])
+  })
+
+  it('만든 사람은 나갈 수 없다 — 나가면 아무도 못 지우는 챌린지가 된다', async () => {
+    const { from, to } = period(10)
+    const { id } = await createChallengeHandler(HAN, { from, to, goalDays: 3, invite: [SEO] })
+
+    await assertCode(leaveChallengeHandler(HAN, { challengeId: id }), 'failed-precondition')
+  })
+
+  it('참여하지 않았으면 나갈 수도 없다', async () => {
+    const { from, to } = period(10)
+    const { id } = await createChallengeHandler(HAN, { from, to, goalDays: 3 })
+
+    await assertCode(leaveChallengeHandler(SEO, { challengeId: id }), 'permission-denied')
+  })
+
+  it('나간 사람의 기록은 더 이상 세지 않는다', async () => {
+    const { from, to } = period(10)
+    const { id } = await createChallengeHandler(HAN, { from, to, goalDays: 3, invite: [SEO] })
+    await joinChallengeHandler(SEO, { challengeId: id })
+    await giveRecords(SEO, [from, to])
+
+    await leaveChallengeHandler(SEO, { challengeId: id })
+
+    const v = await getChallengeHandler(HAN, { challengeId: id })
+    assert.equal(
+      v.members.find((m) => m.uid === SEO),
+      undefined,
     )
   })
 

@@ -949,6 +949,28 @@ export async function declineChallengeHandler(uid: string, data: { challengeId?:
   return { ok: true }
 }
 
+/**
+ * 참여 중인 챌린지에서 나간다.
+ *
+ * **만든 사람은 나갈 수 없다.** 나가면 주인 없는 챌린지가 되는데, 지우기는 만든 사람만 할 수 있어서
+ * 아무도 치울 수 없는 문서로 남는다. 만든 사람에게는 지우기가 따로 있다.
+ *
+ * 끝난 챌린지에서도 나갈 수 있다 — 목록에서 치우려는 것이다. 이미 받은 완주 뱃지는
+ * 따로 보관되므로 나간다고 사라지지 않는다.
+ */
+export async function leaveChallengeHandler(uid: string, data: { challengeId?: unknown }): Promise<{ ok: true }> {
+  const { ref, data: c } = await getChallenge(data.challengeId)
+  if (c.ownerUid === uid) {
+    throw new HttpsError('failed-precondition', '만든 사람은 나갈 수 없어요. 지우기를 눌러주세요')
+  }
+  if (!c.members.includes(uid)) {
+    throw new HttpsError('permission-denied', '참여하지 않은 챌린지예요')
+  }
+  // 초대 목록에서도 뺀다. 안 그러면 나간 사람이 다시 「초대받음」으로 뜬다.
+  await ref.update({ members: FieldValue.arrayRemove(uid), invited: FieldValue.arrayRemove(uid) })
+  return { ok: true }
+}
+
 /** 챌린지를 지운다. 방장만 할 수 있다. */
 export async function deleteChallengeHandler(uid: string, data: { challengeId?: unknown }): Promise<{ ok: true }> {
   const { ref, data: c } = await getChallenge(data.challengeId)
@@ -1135,6 +1157,10 @@ export const getChallengeDetail = onCall(callable, async (req) => {
 export const listChallenges = onCall(callable, async (req) => {
   if (!req.auth) throw new HttpsError('unauthenticated', '로그인이 필요합니다')
   return listChallengesHandler(req.auth.uid)
+})
+export const leaveChallenge = onCall(callable, async (req) => {
+  if (!req.auth) throw new HttpsError('unauthenticated', '로그인이 필요합니다')
+  return leaveChallengeHandler(req.auth.uid, req.data ?? {})
 })
 export const deleteChallenge = onCall(callable, async (req) => {
   if (!req.auth) throw new HttpsError('unauthenticated', '로그인이 필요합니다')

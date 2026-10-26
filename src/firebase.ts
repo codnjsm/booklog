@@ -456,6 +456,11 @@ export const inviteToChallenge = async (challengeId: string, toUid: string): Pro
   )({ challengeId, toUid })
 }
 
+/** 참여 중인 챌린지에서 나간다. 만든 사람은 쓸 수 없다 — 그쪽은 지우기가 따로 있다. */
+export const leaveChallenge = async (challengeId: string): Promise<void> => {
+  await httpsCallable<{ challengeId: string }, { ok: true }>(functions, 'leaveChallenge')({ challengeId })
+}
+
 export const joinChallenge = async (challengeId: string): Promise<void> => {
   await httpsCallable<{ challengeId: string }, { ok: true }>(functions, 'joinChallenge')({ challengeId })
 }

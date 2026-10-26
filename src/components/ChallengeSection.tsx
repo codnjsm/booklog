@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { User } from 'firebase/auth'
 import type { Challenge, ChallengeMember, UserProfile } from '../types'
-import { listChallenges, joinChallenge, declineChallenge, deleteChallenge } from '../firebase'
+import { listChallenges, joinChallenge, declineChallenge, deleteChallenge, leaveChallenge } from '../firebase'
 import { useAppUI } from '../contexts/AppUIContext'
 import CreateChallengeModal from './modals/CreateChallengeModal'
 import InviteToChallengeModal from './modals/InviteToChallengeModal'
@@ -47,7 +47,17 @@ function Avatar({ url, name }: { url?: string; name: string }) {
  * 등수가 아니라 **내 목표 대비 얼마**를 맨 위에 크게 둔다.
  * 「3등」이라고 쓰면 3등은 그만둔다.
  */
-function MyProgress({ c, me, onDelete }: { c: Challenge; me?: ChallengeMember; onDelete?: () => void }) {
+function MyProgress({
+  c,
+  me,
+  onDelete,
+  onLeave,
+}: {
+  c: Challenge
+  me?: ChallengeMember
+  onDelete?: () => void
+  onLeave?: () => void
+}) {
   const days = me?.days ?? 0
   const pct = Math.min(100, Math.round((days / c.goalDays) * 100))
   const left = c.goalDays - days
@@ -61,18 +71,18 @@ function MyProgress({ c, me, onDelete }: { c: Challenge; me?: ChallengeMember; o
           {short(c.from)} ~ {short(c.to)}
           {c.ended ? ' · 끝남' : ''}
         </span>
+        {(onDelete || onLeave) && <span className="flex-1" />}
+        {/* 만든 사람은 지우고, 참여자는 나간다. 만든 사람이 나가면 아무도 못 지우는 문서가 되므로
+            둘이 같이 뜨는 일은 없다. 같은 자리에 하나만 오므로 모양도 같게 둔다. */}
+        {onLeave && (
+          <button type="button" onClick={onLeave} className={`${BTN_NO} flex-shrink-0 -my-1`}>
+            나가기
+          </button>
+        )}
         {onDelete && (
-          <>
-            <span className="flex-1" />
-            <button
-              type="button"
-              onClick={onDelete}
-              aria-label="챌린지 지우기"
-              className="flex-shrink-0 w-6 h-6 -my-1 -mr-1.5 flex items-center justify-center bg-transparent border-none text-dim text-sm cursor-pointer hover:text-danger"
-            >
-              ×
-            </button>
-          </>
+          <button type="button" onClick={onDelete} className={`${BTN_NO} flex-shrink-0 -my-1`}>
+            지우기
+          </button>
         )}
       </div>
       <div className="flex items-baseline gap-1.5 mt-2.5">
@@ -106,15 +116,29 @@ function Members({ c, myUid, onInvite }: { c: Challenge; myUid: string; onInvite
   const ROW = 'flex items-center gap-2.5 px-4 py-3 border-0 border-t border-border'
   return (
     <div className="bg-surface border border-border rounded-[10px]">
-      <div className="px-4 pt-3.5 pb-2">
+      {/* 내가 만든 챌린지면 그렇다고 적는다 — 부르기·지우기 버튼이 나에게만 보이는 이유다. */}
+      <div className="px-4 pt-3.5 pb-2 flex items-baseline gap-2">
         <span className={LABEL}>{others.length > 0 ? `함께하는 사람 ${others.length}` : '아직 혼자예요'}</span>
+        {c.ownerUid === myUid && (
+          <>
+            <span className="flex-1" />
+            <span className={LABEL}>내가 만든 챌린지</span>
+          </>
+        )}
       </div>
 
       {others.map((m) => (
         <div key={m.uid} className={ROW}>
           <Avatar url={m.photoURL} name={m.displayName} />
           <span className="flex-1 min-w-0 text-[13px] text-ink truncate">{m.displayName || '이름 없음'}</span>
-          {m.achieved && <span className="text-[11px] text-accent bg-accentsoft rounded px-1.5 py-0.5">완주</span>}
+          {/* 「만든 사람」은 역할 표시라 중립색으로 둔다. accent는 완주처럼 해낸 것에만 쓴다.
+              이게 없으면 참여자는 자기에게 왜 부르기 버튼이 없는지 알 수 없다. */}
+          {m.uid === c.ownerUid && (
+            <span className="text-[11px] text-dim bg-surface2 rounded px-1.5 py-0.5 flex-shrink-0">만든 사람</span>
+          )}
+          {m.achieved && (
+            <span className="text-[11px] text-accent bg-accentsoft rounded px-1.5 py-0.5 flex-shrink-0">완주</span>
+          )}
           <span className="font-mono text-[13px] text-dim flex-shrink-0">{m.days}일</span>
         </div>
       ))}
@@ -184,12 +208,34 @@ export default function ChallengeSection({ user, friends }: Props) {
     onError: () => showToast('지우지 못했어요', 'error'),
   })
 
+  const leave = useMutation({
+    mutationFn: (id: string) => leaveChallenge(id),
+    onSuccess: () => {
+      showToast('챌린지에서 나왔어요', 'success')
+      void queryClient.invalidateQueries({ queryKey: ['challenges'] })
+    },
+    onError: () => showToast('나오지 못했어요', 'error'),
+  })
+
   if (!user) return null
 
   return (
-    // id는 친구 탭의 진입점이 찾아오는 자리다. 기록 탭에서는 아래쪽이라 스크롤이 필요하다.
-    <div id="challenges" className="flex flex-col gap-3 scroll-mt-4">
-      <div className={LABEL}>독서 챌린지</div>
+    <div className="flex flex-col gap-3">
+      {/* 참여 중인 게 있어도 새로 만들 수 있다 — 서버는 원래 허용하는데 버튼이 빈 상태 카드 안에만
+          있어서 막혀 있었다. 기록 하나가 참여 중인 모든 챌린지에 함께 반영되므로 겹쳐도 부담이 없다.
+          빈 상태일 때는 카드 가운데 큰 버튼이 있으므로 여기 두 번 두지 않는다.
+          좌우 8px은 아래 카드들과 눈으로 맞춘 값이다. 라벨과 버튼이 같이 들어간다. */}
+      <div className="flex items-center gap-2 px-2">
+        <span className={LABEL}>독서 챌린지</span>
+        {joined.length > 0 && (
+          <>
+            <span className="flex-1" />
+            <button type="button" onClick={() => setCreating(true)} className={`${BTN_OK} flex-shrink-0 -my-1`}>
+              + 만들기
+            </button>
+          </>
+        )}
+      </div>
 
       {/* 받은 초대. 배경을 중립으로 둬서 연한 채움 버튼 둘이 또렷하게 보인다. */}
       {invited.map((c) => (
@@ -229,6 +275,14 @@ export default function ChallengeSection({ user, friends }: Props) {
               c.ownerUid === user.uid
                 ? () => {
                     if (confirm('이 챌린지를 지울까요?\n참여한 사람들에게서도 사라져요.')) remove.mutate(c.id)
+                  }
+                : undefined
+            }
+            onLeave={
+              c.ownerUid !== user.uid
+                ? () => {
+                    if (confirm('이 챌린지에서 나갈까요?\n다시 들어오려면 만든 사람이 다시 불러야 해요.'))
+                      leave.mutate(c.id)
                   }
                 : undefined
             }
