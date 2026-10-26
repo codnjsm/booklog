@@ -119,8 +119,12 @@ function Challenges({ user }: { user: User | null }) {
       {running.map((c) => {
         const days = c.members.find((m) => m.uid === user.uid)?.days ?? 0
         const pct = Math.min(100, Math.round((days / c.goalDays) * 100))
+        // 여럿이면 숫자만으로는 어느 챌린지인지 구별되지 않는다. 만든 사람으로 가른다.
+        const owner = c.members.find((m) => m.uid === c.ownerUid)?.displayName
+        const whose = c.ownerUid === user.uid ? '내가 만든 챌린지' : `${owner || '친구'}님의 챌린지`
         return (
           <button key={c.id} onClick={go} className="bg-transparent border-none p-0 text-left cursor-pointer">
+            <div className="text-xs sm:text-[13px] text-dim mb-1.5">{whose}</div>
             <div className="flex items-baseline gap-1.5">
               <span className="text-[22px] sm:text-[25px] font-semibold leading-none">{days}</span>
               <span className="text-[13px] text-dim">/ {c.goalDays}일</span>
