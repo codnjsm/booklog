@@ -80,6 +80,11 @@ function pickGreeting(name: string | undefined) {
 const CARD = 'bg-surface border border-border rounded-xl'
 const LABEL = 'font-mono text-[10px] sm:text-[12px] tracking-[0.09em] text-dim'
 
+/** 2026-10-26 → 10.26. 챌린지 카드와 같은 표기다. */
+function shortDay(day: string): string {
+  return day.slice(5).replace('-', '.')
+}
+
 /**
  * 진행 중인 챌린지 요약.
  *
@@ -103,7 +108,7 @@ function Challenges({ user }: { user: User | null }) {
 
   const go = () => changeTab('friends', { view: 'challenges' })
   return (
-    <div className={`${CARD} px-5 py-4 flex flex-col gap-3.5`}>
+    <div className={`${CARD} px-5 py-4 flex flex-col gap-5`}>
       <div className="flex items-center gap-2">
         <span className={LABEL}>READING CHALLENGE</span>
         <span className="flex-1" />
@@ -121,10 +126,18 @@ function Challenges({ user }: { user: User | null }) {
         const pct = Math.min(100, Math.round((days / c.goalDays) * 100))
         // 여럿이면 숫자만으로는 어느 챌린지인지 구별되지 않는다. 만든 사람으로 가른다.
         const owner = c.members.find((m) => m.uid === c.ownerUid)?.displayName
-        const whose = c.ownerUid === user.uid ? '내가 만든 챌린지' : `${owner || '친구'}님의 챌린지`
+        const whose = c.ownerUid === user.uid ? '내가 만든 챌린지' : `${owner || '친구'}님이 만든 챌린지`
         return (
           <button key={c.id} onClick={go} className="bg-transparent border-none p-0 text-left cursor-pointer">
-            <div className="text-xs sm:text-[13px] text-dim mb-1.5">{whose}</div>
+            {/* 만든 사람이 이 챌린지의 제목 노릇을 한다. 회색 작은 글씨로 두면
+                숫자만 눈에 띄고 어느 챌린지인지가 읽히지 않는다. */}
+            <div className="flex items-baseline gap-2 mb-2">
+              <span className="text-[13px] sm:text-sm font-medium text-ink truncate">{whose}</span>
+              <span className="flex-1" />
+              <span className="font-mono text-[11px] text-dim flex-shrink-0">
+                {shortDay(c.from)} ~ {shortDay(c.to)}
+              </span>
+            </div>
             <div className="flex items-baseline gap-1.5">
               <span className="text-[22px] sm:text-[25px] font-semibold leading-none">{days}</span>
               <span className="text-[13px] text-dim">/ {c.goalDays}일</span>
