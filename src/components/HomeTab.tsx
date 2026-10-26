@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import type { User } from 'firebase/auth'
 import type { Book, Quote, AppState } from '../types'
 import { useAppUI } from '../contexts/AppUIContext'
 import {
@@ -14,6 +16,7 @@ import { isStorageAtRiskBrowser } from '../lib/browser'
 import HighlightedText from './HighlightedText'
 import HomeFab from './HomeFab'
 import TodayRecommendation from './TodayRecommendation'
+import { listChallenges } from '../firebase'
 import Stars from './Stars'
 
 /** Safari·아이폰이 미접속 데이터를 지우기 시작하는 기준. App.tsx의 값과 같은 의미다. */
@@ -28,6 +31,8 @@ interface Props {
   /** 게스트로 기록을 남기기 시작한 뒤 지난 날수. 7일을 넘기면 문구를 강하게 바꾼다. */
   guestDays: number
   onSignIn: () => void
+  /** 챌린지는 로그인한 사람만 쓴다. */
+  user: User | null
 }
 
 /**
@@ -75,6 +80,75 @@ function pickGreeting(name: string | undefined) {
 const CARD = 'bg-surface border border-border rounded-xl'
 const LABEL = 'font-mono text-[10px] sm:text-[12px] tracking-[0.09em] text-dim'
 
+/**
+ * 진행 중인 챌린지 요약.
+ *
+ * 본체는 친구 탭에 있고 여기는 **지금 어떻게 돼 가는지만** 보여준다.
+ * 아무것도 없으면 그리지 않는다 — 홈은 쌓인 것을 보는 자리지 없는 기능을 권하는 자리가 아니다.
+ *
+ * 친구 탭의 챌린지와 같은 queryKey를 쓴다. 캐시를 공유하므로 요청이 두 번 나가지 않는다.
+ */
+function Challenges({ user }: { user: User | null }) {
+  const { changeTab } = useAppUI()
+  const { data } = useQuery({
+    queryKey: ['challenges'],
+    queryFn: listChallenges,
+    enabled: !!user,
+    staleTime: 30_000,
+  })
+
+  const running = (data?.joined ?? []).filter((c) => !c.ended)
+  const invited = data?.invited ?? []
+  if (!user || (running.length === 0 && invited.length === 0)) return null
+
+  const go = () => changeTab('friends', { view: 'challenges' })
+  return (
+    <div className={`${CARD} px-5 py-4 flex flex-col gap-3.5`}>
+      <div className="flex items-center gap-2">
+        <span className={LABEL}>READING CHALLENGE</span>
+        <span className="flex-1" />
+        <button
+          onClick={go}
+          className="bg-transparent border-none text-dim cursor-pointer p-0 -my-1 flex items-center hover:text-ink"
+          aria-label="챌린지 보기"
+        >
+          <IconChevronRight />
+        </button>
+      </div>
+
+      {running.map((c) => {
+        const days = c.members.find((m) => m.uid === user.uid)?.days ?? 0
+        const pct = Math.min(100, Math.round((days / c.goalDays) * 100))
+        return (
+          <button key={c.id} onClick={go} className="bg-transparent border-none p-0 text-left cursor-pointer">
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-[22px] sm:text-[25px] font-semibold leading-none">{days}</span>
+              <span className="text-[13px] text-dim">/ {c.goalDays}일</span>
+              <span className="flex-1" />
+              <span className="font-mono text-[13px] font-bold text-accent">{pct}%</span>
+            </div>
+            <div className="h-1.5 rounded-full bg-surface2 overflow-hidden mt-2.5">
+              <div
+                className="h-full rounded-full bg-accent transition-[width] duration-500"
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+          </button>
+        )
+      })}
+
+      {invited.length > 0 && (
+        <button
+          onClick={go}
+          className="bg-transparent border-none p-0 text-left cursor-pointer text-xs sm:text-[13px] text-accent"
+        >
+          받은 초대 {invited.length}건
+        </button>
+      )}
+    </div>
+  )
+}
+
 function Cover({ book, className = '' }: { book: Book; className?: string }) {
   const [err, setErr] = useState(false)
   if (book.cover && !err) {
@@ -95,7 +169,7 @@ function Cover({ book, className = '' }: { book: Book; className?: string }) {
   )
 }
 
-export default function HomeTab({ state, userName, onFinishBook, isGuest, guestDays, onSignIn }: Props) {
+export default function HomeTab({ state, userName, onFinishBook, isGuest, guestDays, onSignIn, user }: Props) {
   const { openBookDetail, openAddQuote, changeTab } = useAppUI()
   const { books, quotes, words, readingGoal } = state
 
@@ -233,6 +307,9 @@ export default function HomeTab({ state, userName, onFinishBook, isGuest, guestD
           </div>
         </div>
       </div>
+
+      {/* 올해 목표 바로 아래. 둘 다 「얼마나 했나」를 보는 카드라 나란히 두는 게 맞다. */}
+      <Challenges user={user} />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {/* 지금 읽는 중 */}

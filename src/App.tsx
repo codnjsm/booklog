@@ -395,6 +395,7 @@ function AppShell() {
           isGuest={!user}
           guestDays={guestDays}
           onSignIn={() => openLogin()}
+          user={user}
         />
       )}
       {tab === 'books' && <BooksTab books={state.books} quotes={state.quotes} />}
@@ -419,14 +420,7 @@ function AppShell() {
         />
       )}
       {tab === 'records' && (
-        <RecordsTab
-          books={state.books}
-          quotes={state.quotes}
-          goal={state.readingGoal}
-          onSetGoal={setGoal}
-          user={user}
-          friends={friends}
-        />
+        <RecordsTab books={state.books} quotes={state.quotes} goal={state.readingGoal} onSetGoal={setGoal} />
       )}
       {tab === 'friends' && (
         <FriendsTab

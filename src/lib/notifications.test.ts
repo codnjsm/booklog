@@ -210,10 +210,10 @@ describe('serverNotifications — 서버가 남긴 알림', () => {
     }
   })
 
-  it('챌린지 알림은 기록 탭의 챌린지 자리로 간다 — 달력 아래라 그냥 가면 안 보인다', () => {
+  it('챌린지 알림은 친구 탭의 챌린지 칸으로 간다', () => {
     for (const kind of ['challengeInvite', 'challengeJoined', 'challengeAchieved']) {
       const [n] = serverNotifications([raw('n1', 'u-bob', '2026-10-13T00:00:00.000Z', kind)], nameOf)
-      expect(n.goTo).toBe('records')
+      expect(n.goTo).toBe('friends')
       expect(n.view).toBe('challenges')
     }
   })
@@ -318,21 +318,21 @@ describe('serverNotifications — 서버가 남긴 알림', () => {
     expect(n.text).toBe('님이 댓글을 남겼어요')
   })
 
-  it('챌린지 초대·참여는 기록 탭으로 보낸다', () => {
+  it('챌린지 초대·참여는 친구 탭으로 보낸다', () => {
     const [a] = serverNotifications([raw('n1', 'u-bob', '2026-10-19T00:00:00.000Z', 'challengeInvite')], nameOf)
     expect(a.text).toBe('님이 챌린지에 초대했어요')
-    expect(a.goTo).toBe('records')
+    expect(a.goTo).toBe('friends')
 
     const [b] = serverNotifications([raw('n2', 'u-bob', '2026-10-19T00:00:00.000Z', 'challengeJoined')], nameOf)
     expect(b.text).toBe('님이 챌린지에 참여했어요')
-    expect(b.goTo).toBe('records')
+    expect(b.goTo).toBe('friends')
   })
 
   it('완주 알림은 보낸 사람이 없다 — 이름을 비워 문구만 그린다', () => {
     const [n] = serverNotifications([raw('n1', 'u-bob', '2026-10-19T00:00:00.000Z', 'challengeAchieved')], nameOf)
     expect(n.actor).toBe('')
     expect(n.text).toBe('챌린지를 완주했어요')
-    expect(n.goTo).toBe('records')
+    expect(n.goTo).toBe('friends')
   })
 
   it('kind가 없는 과거 알림은 좋아요로 본다', () => {
