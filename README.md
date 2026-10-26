@@ -99,7 +99,6 @@ tests/                  # 에뮬레이터로 도는 서버 핸들러·보안 규
 | --- | --- |
 | [CLAUDE.md](CLAUDE.md) | 아키텍처, 데이터 저장 구조, 날짜·색 규칙 등 작업할 때 먼저 볼 것 |
 | [BOOKLOG_PHASE2.md](BOOKLOG_PHASE2.md) | 친구 기능 단계별 설계와 Phase 2 결산 |
-| [BOOKLOG_CHECKLIST.md](BOOKLOG_CHECKLIST.md) | 실사용 점검 항목 |
 | [docs/GLOSSARY.md](docs/GLOSSARY.md) | 용어 정의 |
 | [docs/decisions/](docs/decisions/) | 되돌리기 어려운 결정의 배경 |
 
