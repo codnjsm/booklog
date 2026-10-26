@@ -14,7 +14,7 @@
 - **상태 관리**: React Context(전역 UI 상태) + `@tanstack/react-query`(서버 상태) + `react-router-dom`(URL 상태 — 탭 전환이 라우팅)
 - **Backend**: Firebase Hosting, Firestore, Google Auth
 - **Functions**: Firebase Functions v2 (Node 22, Cloud Run, asia-northeast3) — 외부 API 프록시 2개(`onRequest`) +
-  콜러블 23개. 친구·피드·좋아요·댓글·책 권하기·독서 챌린지·알림 발송·사진 문장 인식(OCR)·회원 탈퇴
+  콜러블 24개. 친구·피드·좋아요·댓글·책 권하기·독서 챌린지·알림 발송·사진 문장 인식(OCR)·회원 탈퇴
 - **테스트**: 프론트는 vitest(`npm test`), 서버 핸들러와 보안 규칙은 Firestore 에뮬레이터(`npm run test:rules`)
 
 ## Firebase 프로젝트
@@ -70,7 +70,7 @@ functions/
                        # 댓글: addComment, deleteComment, getComments
                        # 권하기: recommendBook, getRecommendations, respondRecommendation
                        # 챌린지: createChallenge, inviteToChallenge, joinChallenge, declineChallenge,
-                       #         getChallengeDetail, listChallenges, deleteChallenge
+                       #         leaveChallenge, getChallengeDetail, listChallenges, deleteChallenge
                        # 알림: dismissNotifications, onFriendRequestCreated, onFriendRequestAccepted
                        # 기타: ocrBookPage, deleteAccount
 firestore.rules         # Firestore 보안 규칙

@@ -224,18 +224,15 @@ export default function ChallengeSection({ user, friends }: Props) {
       {/* 참여 중인 게 있어도 새로 만들 수 있다 — 서버는 원래 허용하는데 버튼이 빈 상태 카드 안에만
           있어서 막혀 있었다. 기록 하나가 참여 중인 모든 챌린지에 함께 반영되므로 겹쳐도 부담이 없다.
           빈 상태일 때는 카드 가운데 큰 버튼이 있으므로 여기 두 번 두지 않는다.
-          좌우 8px은 아래 카드들과 눈으로 맞춘 값이다. 라벨과 버튼이 같이 들어간다. */}
-      <div className="flex items-center gap-2 px-2">
-        <span className={LABEL}>독서 챌린지</span>
-        {joined.length > 0 && (
-          <>
-            <span className="flex-1" />
-            <button type="button" onClick={() => setCreating(true)} className={`${BTN_OK} flex-shrink-0 -my-1`}>
-              + 만들기
-            </button>
-          </>
-        )}
-      </div>
+          제목은 세그먼트의 「챌린지」가 이미 말하고 있어서 따로 적지 않는다.
+          좌우 8px은 아래 카드들과 눈으로 맞춘 값이다. */}
+      {joined.length > 0 && (
+        <div className="flex justify-end px-2">
+          <button type="button" onClick={() => setCreating(true)} className={BTN_OK}>
+            + 만들기
+          </button>
+        </div>
+      )}
 
       {/* 받은 초대. 배경을 중립으로 둬서 연한 채움 버튼 둘이 또렷하게 보인다. */}
       {invited.map((c) => (

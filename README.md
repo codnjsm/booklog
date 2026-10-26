@@ -23,7 +23,7 @@
 - **Frontend**: React 18, TypeScript, Vite, Tailwind CSS
 - **상태 관리**: React Context(전역 UI 상태) + `@tanstack/react-query`(서버 상태) + `react-router-dom`(URL 상태)
 - **Backend**: Firebase Hosting, Firestore, Google·이메일 Auth, Cloud Messaging(웹 푸시)
-- **Functions**: Firebase Functions v2 (Node 22, asia-northeast3) — 외부 API 프록시 2개 + 콜러블 23개
+- **Functions**: Firebase Functions v2 (Node 22, asia-northeast3) — 외부 API 프록시 2개 + 콜러블 24개
 
 ## 시작하기
 
