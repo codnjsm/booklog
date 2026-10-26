@@ -9,8 +9,8 @@
 - **홈** — 오늘의 독서 목표 진행률, 지금 읽는 중인 책, 오늘의 문장, 최근 활동 피드
 - **서재** — 위시리스트 / 읽는중 / 완독 상태로 책 관리, 별점·독후감·비공개 설정(친구에게 숨기기)
 - **모음** — 책에서 발췌한 인용구(형광펜으로 부분 강조 가능) + 우리말샘 사전 검색·단어장을 한 화면에서, 책 페이지 사진으로 문장 인식(OCR)해 인용구로 가져오기
-- **기록** — 완독 달력, 최근 12개월 완독 추이, 연간 독서 목표, 친구와 기간을 정해 함께 기록하는 **독서 챌린지**
-- **친구** — 이메일로 친구 추가, 서로의 책장 열람(비공개 책 제외), 문장·책을 친구 피드에 공유, 피드 글에 **좋아요·댓글**, 친구에게 **책 권하기**
+- **기록** — 완독 달력, 최근 12개월 완독 추이, 연간 독서 목표
+- **친구** — 이메일로 친구 추가, 서로의 책장 열람(비공개 책 제외), 문장·책을 친구 피드에 공유, 피드 글에 **좋아요·댓글**, 친구에게 **책 권하기**, 기간을 정해 함께 기록하는 **독서 챌린지**
 - **알림** — 친구 요청·수락, 좋아요·댓글, 받은 추천, 챌린지 소식을 알림함에 모아서 확인
 - **웹 푸시** — 홈 화면에 추가하면 앱을 열지 않아도 알림 수신 (iOS는 홈 화면 추가가 필수, 안드로이드·PC는 브라우저에서 바로 가능)
 - 로그인 없이도 브라우저 로컬 저장으로 사용 가능. Google·이메일 로그인 시 기기 간 동기화
@@ -59,7 +59,7 @@ src/
                        # 책 권하기, 챌린지 만들기, 좋아요 목록, 로그인, 탈퇴, 환영 등
     HomeTab, BooksTab, CollectionTab, RecordsTab, FriendsTab, MoreTab
     QuotesTab, WordsTab, StatsTab, CalendarTab   # CollectionTab/RecordsTab 안에서 조합
-    ChallengeSection   # RecordsTab 안의 독서 챌린지 영역
+    ChallengeSection   # 친구 탭의 독서 챌린지 칸
     NotificationBell, PostCard, PostLikes, PostComments, BookCard, QuoteCard,
     HighlightedText, DatePicker, DateMultiPicker, Toast, TodayRecommendation
   contexts/

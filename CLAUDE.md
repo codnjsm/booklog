@@ -34,7 +34,7 @@ src/
                        # DeleteAccountModal, EmailChangeModal, NameEditModal, AvatarCropModal
     HomeTab, BooksTab, CollectionTab, RecordsTab, FriendsTab, MoreTab   # 탭(=라우트) 컴포넌트
     QuotesTab, WordsTab, StatsTab, CalendarTab   # CollectionTab(모음)·RecordsTab(기록) 내부에서 조합
-    ChallengeSection             # RecordsTab 안의 독서 챌린지 영역
+    ChallengeSection             # 친구 탭의 독서 챌린지 칸. 홈에는 요약만 둔다
     NotificationBell             # 알림함. 모바일 상단 서비스명 줄 / 데스크톱 사이드바 로고 줄
     PostCard, PostLikes, PostComments            # 피드 카드와 좋아요·댓글
     BookCard, QuoteCard, HighlightedText, DatePicker, DateMultiPicker, Toast, LoginOverlay
@@ -82,17 +82,19 @@ docs/
 
 ## 탭 구성
 
-홈 · 서재 · 모음(인용구+사전/단어장) · 기록(달력+통계+챌린지) · 친구(피드+친구 목록) · 더보기 (`AppUIContext.tsx`의 `Tab` 타입)
+홈 · 서재 · 모음(인용구+사전/단어장) · 기록(달력+통계) · 친구(피드+친구 목록+챌린지) · 더보기 (`AppUIContext.tsx`의 `Tab` 타입)
 
 - 탭은 URL과 동기화된다 (`/`, `/books`, `/collection`, `/records`, `/friends`, `/more`). 새로고침해도 탭이 유지됨.
 - 첫 화면은 항상 홈(`/`)으로 고정.
 - 데스크톱(`sm:` = 900px 이상)은 좌측 사이드바에 6개 전부, 모바일은 하단 탭 5개(친구는 더보기 안으로).
 - 모달 중 책 상세(`bookDetail`)는 `?book=` 쿼리파라미터로 열림/닫힘이 URL에 반영됨. 나머지 모달은 로컬 상태.
 - 탭 **안의** 화면도 `?view=`로 둔다 — 바깥(알림함·진입점)에서 지정할 수 있어야 하기 때문이다.
-  친구 탭은 기본이 피드고 `?view=friends`면 친구 목록, 기록 탭은 `?view=challenges`로 오면 챌린지 자리까지 내려준다.
+  친구 탭은 기본이 피드고 `?view=friends`·`?view=challenges`로 다른 칸을 연다.
   기록 탭의 달력/통계 전환은 바깥에서 부를 일이 없어 지역 상태로 둔다.
-- **챌린지 본체는 기록 탭에 있다.** 친구 탭 피드에 있는 건 한 줄짜리 진입점이고, 같은
-  `queryKey: ['challenges']`를 써서 캐시를 공유한다 — 탭을 오가도 서버를 다시 치지 않는다.
+- **챌린지 본체는 친구 탭에 있다.** 친구와 기간을 정해 함께 기록하는 것이라 거기 묶인다 —
+  기록 탭은 혼자 돌아보는 자리(달력·통계)라 분류가 어긋났다.
+  홈에 있는 건 진행 중인 것만 보여주는 요약이고, 같은 `queryKey: ['challenges']`를 써서
+  캐시를 공유한다 — 탭을 오가도 서버를 다시 치지 않는다.
 
 ## 데이터 저장
 
