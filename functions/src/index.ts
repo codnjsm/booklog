@@ -981,6 +981,13 @@ export interface ChallengeView {
   /** 기간이 끝났는지 (서울 기준) */
   ended: boolean
   members: { uid: string; displayName: string; photoURL: string; days: number; achieved: boolean }[]
+  /**
+   * 불렀는데 아직 수락하지 않은 사람.
+   *
+   * 기록한 날 수는 담지 않는다 — 아직 참여자가 아니라서 세는 의미가 없고,
+   * 들어오기 전 기록까지 보여줄 일도 아니다.
+   */
+  invited: { uid: string; displayName: string; photoURL: string }[]
 }
 
 /**
@@ -989,6 +996,22 @@ export interface ChallengeView {
  * 탈퇴한 사람은 뺀다 — 프로필이 없으면 화면에 이름 없는 줄로 남는다.
  * 비공개 책도 날짜에는 들어가지만 **무슨 책인지는 나가지 않는다.**
  */
+/** 초대만 받아둔 사람들의 표시정보. 프로필이 없는 uid는 뺀다 — 탈퇴한 사람이다. */
+async function invitedProfiles(c: Challenge): Promise<ChallengeView['invited']> {
+  const db = getDb()
+  const uids = c.invited.slice(0, CHALLENGE_MAX_MEMBERS)
+  if (uids.length === 0) return []
+  const snaps = await Promise.all(uids.map((u) => db.collection('users').doc(u).get()))
+  return uids
+    .map((uid, i) => ({ uid, profile: snaps[i] }))
+    .filter((m) => m.profile.exists)
+    .map((m) => ({
+      uid: m.uid,
+      displayName: (m.profile.data()?.displayName as string) || '',
+      photoURL: (m.profile.data()?.photoURL as string) || '',
+    }))
+}
+
 async function memberProgress(c: Challenge): Promise<ChallengeView['members']> {
   const db = getDb()
   const uids = c.members.slice(0, CHALLENGE_MAX_MEMBERS)
@@ -1060,11 +1083,11 @@ export async function getChallengeHandler(uid: string, data: { challengeId?: unk
   if (!c.members.includes(uid) && !c.invited.includes(uid)) {
     throw new HttpsError('permission-denied', '참여하지 않은 챌린지예요')
   }
-  const members = await memberProgress(c)
+  const [members, invited] = await Promise.all([memberProgress(c), invitedProfiles(c)])
   const ended = c.to < todayInSeoul()
   // 끝났는데 아직 정산 안 했으면 지금 한다.
   if (ended && !c.settledAt) await settleChallenge(ref, c, members)
-  return { id: ref.id, ownerUid: c.ownerUid, from: c.from, to: c.to, goalDays: c.goalDays, ended, members }
+  return { id: ref.id, ownerUid: c.ownerUid, from: c.from, to: c.to, goalDays: c.goalDays, ended, members, invited }
 }
 
 /** 내가 참여 중이거나 초대받은 챌린지 목록. */
@@ -1078,10 +1101,10 @@ export async function listChallengesHandler(
   ])
   const toView = async (d: FirebaseFirestore.QueryDocumentSnapshot): Promise<ChallengeView> => {
     const c = d.data() as Challenge
-    const members = await memberProgress(c)
+    const [members, invited] = await Promise.all([memberProgress(c), invitedProfiles(c)])
     const ended = c.to < todayInSeoul()
     if (ended && !c.settledAt) await settleChallenge(d.ref, c, members)
-    return { id: d.id, ownerUid: c.ownerUid, from: c.from, to: c.to, goalDays: c.goalDays, ended, members }
+    return { id: d.id, ownerUid: c.ownerUid, from: c.from, to: c.to, goalDays: c.goalDays, ended, members, invited }
   }
   return {
     joined: await Promise.all(mine.docs.map(toView)),

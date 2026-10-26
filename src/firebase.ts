@@ -448,6 +448,14 @@ export const createChallenge = async (data: {
   return (await call(data)).data.id
 }
 
+/** 만든 뒤에도 친구를 더 부를 수 있다. 방장만 가능하고, 서버가 친구 관계와 인원 한도를 본다. */
+export const inviteToChallenge = async (challengeId: string, toUid: string): Promise<void> => {
+  await httpsCallable<{ challengeId: string; toUid: string }, { ok: true }>(
+    functions,
+    'inviteToChallenge',
+  )({ challengeId, toUid })
+}
+
 export const joinChallenge = async (challengeId: string): Promise<void> => {
   await httpsCallable<{ challengeId: string }, { ok: true }>(functions, 'joinChallenge')({ challengeId })
 }

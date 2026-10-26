@@ -160,6 +160,12 @@ export interface Challenge {
   /** 기간이 끝났는지 (서울 기준) */
   ended: boolean
   members: ChallengeMember[]
+  /**
+   * 불렀는데 아직 수락하지 않은 사람. 기록한 날 수는 없다 — 아직 참여자가 아니다.
+   *
+   * 선택이다 — 화면이 먼저 배포되고 서버가 나중일 수 있어서, 없을 때도 터지지 않아야 한다.
+   */
+  invited?: { uid: string; displayName: string; photoURL: string }[]
 }
 
 /** 게시물에 달린 댓글 한 건. 서버가 쓴 사람 표시정보를 동봉해서 돌려준다. */

@@ -5,6 +5,7 @@ import type { Challenge, ChallengeMember, UserProfile } from '../types'
 import { listChallenges, joinChallenge, declineChallenge, deleteChallenge } from '../firebase'
 import { useAppUI } from '../contexts/AppUIContext'
 import CreateChallengeModal from './modals/CreateChallengeModal'
+import InviteToChallengeModal from './modals/InviteToChallengeModal'
 
 const LABEL = 'font-mono text-[10px] sm:text-[12px] tracking-[0.09em] text-dim'
 const CARD = 'bg-surface border border-border rounded-[10px] py-3.5 px-4 sm:py-[18px] sm:px-5'
@@ -94,22 +95,51 @@ function MyProgress({ c, me, onDelete }: { c: Challenge; me?: ChallengeMember; o
  * 함께하는 사람 — 보조 지표.
  * **정렬하지 않는다.** 날짜 수로 줄을 세우면 그게 곧 등수다.
  */
-function Members({ members, myUid }: { members: ChallengeMember[]; myUid: string }) {
-  const others = members.filter((m) => m.uid !== myUid)
-  if (others.length === 0) return null
+function Members({ c, myUid, onInvite }: { c: Challenge; myUid: string; onInvite?: () => void }) {
+  const others = c.members.filter((m) => m.uid !== myUid)
+  // 서버가 이 필드를 내려주기 전 버전이면 없다. 없으면 빈 목록으로 둔다 —
+  // 여기서 터지면 기록 탭 전체가 흰 화면이 된다.
+  const waiting = c.invited ?? []
+  // 부를 수 있는 사람이 없고 아무도 없으면 카드를 아예 두지 않는다.
+  if (others.length === 0 && waiting.length === 0 && !onInvite) return null
+
+  const ROW = 'flex items-center gap-2.5 px-4 py-3 border-0 border-t border-border'
   return (
     <div className="bg-surface border border-border rounded-[10px]">
       <div className="px-4 pt-3.5 pb-2">
-        <span className={LABEL}>함께하는 사람 {others.length}</span>
+        <span className={LABEL}>{others.length > 0 ? `함께하는 사람 ${others.length}` : '아직 혼자예요'}</span>
       </div>
+
       {others.map((m) => (
-        <div key={m.uid} className="flex items-center gap-2.5 px-4 py-3 border-0 border-t border-border">
+        <div key={m.uid} className={ROW}>
           <Avatar url={m.photoURL} name={m.displayName} />
           <span className="flex-1 min-w-0 text-[13px] text-ink truncate">{m.displayName || '이름 없음'}</span>
           {m.achieved && <span className="text-[11px] text-accent bg-accentsoft rounded px-1.5 py-0.5">완주</span>}
           <span className="font-mono text-[13px] text-dim flex-shrink-0">{m.days}일</span>
         </div>
       ))}
+
+      {/* 불렀는데 아직 안 들어온 사람. 이게 없으면 초대를 보냈는지조차 확인할 길이 없다.
+          아바타를 흐리게 둬서 참여자 줄과 한눈에 갈린다. */}
+      {waiting.map((m) => (
+        <div key={m.uid} className={ROW}>
+          <span className="opacity-45">
+            <Avatar url={m.photoURL} name={m.displayName} />
+          </span>
+          <span className="flex-1 min-w-0 text-[13px] text-dim truncate">{m.displayName || '이름 없음'}</span>
+          <span className="text-[11px] text-dim bg-surface2 rounded px-1.5 py-0.5 flex-shrink-0">수락 기다리는 중</span>
+        </div>
+      ))}
+
+      {onInvite && (
+        <button
+          type="button"
+          onClick={onInvite}
+          className={`${ROW} w-full text-left bg-transparent cursor-pointer text-[13px] text-accent hover:bg-surface2`}
+        >
+          + 친구 부르기
+        </button>
+      )}
     </div>
   )
 }
@@ -123,6 +153,8 @@ export default function ChallengeSection({ user, friends }: Props) {
   const { showToast } = useAppUI()
   const queryClient = useQueryClient()
   const [creating, setCreating] = useState(false)
+  // 어느 챌린지에 부를지 담아둔다. null이면 모달이 닫힌 상태다.
+  const [inviting, setInviting] = useState<Challenge | null>(null)
 
   const query = useQuery({
     queryKey: ['challenges'],
@@ -201,7 +233,12 @@ export default function ChallengeSection({ user, friends }: Props) {
                 : undefined
             }
           />
-          <Members members={c.members} myUid={user.uid} />
+          {/* 부르기는 방장만, 끝나지 않은 챌린지에만. 서버도 같은 조건으로 막는다. */}
+          <Members
+            c={c}
+            myUid={user.uid}
+            onInvite={c.ownerUid === user.uid && !c.ended ? () => setInviting(c) : undefined}
+          />
         </div>
       ))}
 
@@ -213,6 +250,18 @@ export default function ChallengeSection({ user, friends }: Props) {
             + 챌린지 만들기
           </button>
         </div>
+      )}
+
+      {inviting && (
+        <InviteToChallengeModal
+          challenge={inviting}
+          friends={friends}
+          onClose={() => setInviting(null)}
+          onInvited={() => {
+            setInviting(null)
+            void queryClient.invalidateQueries({ queryKey: ['challenges'] })
+          }}
+        />
       )}
 
       {creating && (

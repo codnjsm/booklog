@@ -318,6 +318,57 @@ describe('getChallenge — 현황', () => {
     assert.equal(byUid[SEO], 2)
   })
 
+  it('수락 전인 사람은 invited로 따로 나온다 — 부른 쪽이 보냈는지 확인할 수 있어야 한다', async () => {
+    const { from, to } = period(10)
+    const { id } = await createChallengeHandler(HAN, { from, to, goalDays: 3, invite: [SEO] })
+
+    const v = await getChallengeHandler(HAN, { challengeId: id })
+
+    assert.deepEqual(
+      v.members.map((m) => m.uid),
+      [HAN],
+    )
+    assert.deepEqual(
+      v.invited.map((m) => m.uid),
+      [SEO],
+    )
+  })
+
+  it('수락하면 invited에서 빠지고 members로 옮겨간다', async () => {
+    const { from, to } = period(10)
+    const { id } = await createChallengeHandler(HAN, { from, to, goalDays: 3, invite: [SEO] })
+    await joinChallengeHandler(SEO, { challengeId: id })
+
+    const v = await getChallengeHandler(HAN, { challengeId: id })
+
+    assert.deepEqual(v.invited, [])
+    assert.equal(v.members.length, 2)
+  })
+
+  it('invited에는 기록한 날 수를 담지 않는다 — 아직 참여자가 아니다', async () => {
+    const { from, to } = period(10)
+    const { id } = await createChallengeHandler(HAN, { from, to, goalDays: 3, invite: [SEO] })
+    await giveRecords(SEO, [from, to])
+
+    const v = await getChallengeHandler(HAN, { challengeId: id })
+
+    assert.equal(v.invited.length, 1)
+    assert.equal(v.invited[0].days, undefined)
+  })
+
+  it('만든 뒤에 부른 사람도 invited에 들어간다', async () => {
+    const { from, to } = period(10)
+    const { id } = await createChallengeHandler(HAN, { from, to, goalDays: 3 })
+
+    await inviteToChallengeHandler(HAN, { challengeId: id, toUid: SEO })
+
+    const v = await getChallengeHandler(HAN, { challengeId: id })
+    assert.deepEqual(
+      v.invited.map((m) => m.uid),
+      [SEO],
+    )
+  })
+
   it('참여하지 않은 사람의 기록은 세지 않는다', async () => {
     const { from, to } = period()
     const { id } = await createChallengeHandler(HAN, { from, to, goalDays: 3 })
