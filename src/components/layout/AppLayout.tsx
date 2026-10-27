@@ -198,7 +198,10 @@ export default function AppLayout({
         </div>
       </aside>
 
-      <main className="flex-1 min-w-0 sm:ml-[var(--sidebar-w)] px-5 pt-4 pb-[calc(76px+env(safe-area-inset-bottom))] sm:pt-20 sm:pb-10">
+      {/* 위쪽도 안전영역을 더한다 — viewport-fit=cover라 홈 화면 앱에서는 화면이 상태바 아래까지
+          펼쳐진다. 아래(하단 탭)만 챙기고 위를 안 챙기면 기기에 따라 로고가 상태바에 붙는다.
+          데스크톱은 노치가 없어 env()가 0이므로 sm: 값은 그대로 둔다. */}
+      <main className="flex-1 min-w-0 sm:ml-[var(--sidebar-w)] px-5 pt-[calc(16px+env(safe-area-inset-top))] pb-[calc(76px+env(safe-area-inset-bottom))] sm:pt-20 sm:pb-10">
         <div className="max-w-[1200px] mx-auto">
           <div className="sm:hidden mb-3 flex items-center justify-between gap-2">
             <span className="font-mono text-[15px] font-bold tracking-[-0.02em] text-[var(--logo)]">Booklog</span>
