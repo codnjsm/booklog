@@ -30,8 +30,9 @@ src/
     layout/           # AppLayout(데스크톱 사이드바 / 모바일 하단탭), PageHeader, icons
     modals/            # AddBookModal, ManualBookModal, BookDetailModal, AddQuoteModal, AddWordModal,
                        # AddFriendModal, PublishPostModal, WelcomeModal, Modal,
-                       # RecommendBookModal, CreateChallengeModal, PostLikesModal, LoginModal,
-                       # DeleteAccountModal, EmailChangeModal, NameEditModal, AvatarCropModal
+                       # RecommendBookModal, CreateChallengeModal, InviteToChallengeModal,
+                       # PostLikesModal, LoginModal, DeleteAccountModal, EmailChangeModal,
+                       # NameEditModal, AvatarCropModal
     HomeTab, BooksTab, CollectionTab, RecordsTab, FriendsTab, MoreTab   # 탭(=라우트) 컴포넌트
     QuotesTab, WordsTab, StatsTab, CalendarTab   # CollectionTab(모음)·RecordsTab(기록) 내부에서 조합
     ChallengeSection             # 친구 탭의 독서 챌린지 칸. 홈에는 요약만 둔다
@@ -177,6 +178,20 @@ Firestore 컬렉션:
 
 - Tailwind `sm:` 브레이크포인트를 900px로 커스텀 (`tailwind.config.js`). 기본값 640px가 아님에 유의.
 - 본문 최대 너비 1200px, `mx-auto`로 가운데 정렬 (`AppLayout.tsx`)
+
+### 안전영역과 홈 화면 앱
+
+`index.html`에 `viewport-fit=cover`가 켜져 있어, 홈 화면 앱에서는 화면이 **상태바·홈 인디케이터 아래까지**
+펼쳐진다. 그래서 `AppLayout.tsx`의 본문 여백이 복잡하다. 단순하게 되돌리면 노치 기기에서 가려진다.
+
+- 위: `calc(16px + env(safe-area-inset-top))`
+- 아래: `calc(76px + env(safe-area-inset-bottom))` — 하단 탭 높이까지 포함
+- 하단 탭: `pb-[max(14px, env(safe-area-inset-bottom))]`
+- **홈 화면 앱에서만** 위를 12px 더 준다 (`[@media(display-mode:standalone)]`) —
+  iOS가 상태바 아래로 지나가는 내용을 흐리게 깔아 보여주는데, 그 띠가 로고 윗부분을 덮는다.
+  브라우저에는 그 띠가 없으므로 밀지 않는다.
+
+`env()`는 브라우저·데스크톱에서 0이라 그쪽 화면은 영향을 받지 않는다.
 
 ## 빌드 & 배포
 
