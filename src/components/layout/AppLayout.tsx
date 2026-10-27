@@ -200,8 +200,11 @@ export default function AppLayout({
 
       {/* 위쪽도 안전영역을 더한다 — viewport-fit=cover라 홈 화면 앱에서는 화면이 상태바 아래까지
           펼쳐진다. 아래(하단 탭)만 챙기고 위를 안 챙기면 기기에 따라 로고가 상태바에 붙는다.
-          데스크톱은 노치가 없어 env()가 0이므로 sm: 값은 그대로 둔다. */}
-      <main className="flex-1 min-w-0 sm:ml-[var(--sidebar-w)] px-5 pt-[calc(16px+env(safe-area-inset-top))] pb-[calc(76px+env(safe-area-inset-bottom))] sm:pt-20 sm:pb-10">
+          데스크톱은 노치가 없어 env()가 0이므로 sm: 값은 그대로 둔다.
+
+          홈 화면 앱에서만 12px을 더 준다 — iOS가 상태바 아래로 지나가는 내용을 흐리게 깔아
+          보여주는데, 그 띠가 로고 윗부분을 덮는다. 브라우저에는 그 띠가 없으므로 밀지 않는다. */}
+      <main className="flex-1 min-w-0 sm:ml-[var(--sidebar-w)] px-5 pt-[calc(16px+env(safe-area-inset-top))] [@media(display-mode:standalone)]:pt-[calc(28px+env(safe-area-inset-top))] pb-[calc(76px+env(safe-area-inset-bottom))] sm:pt-20 sm:pb-10">
         <div className="max-w-[1200px] mx-auto">
           <div className="sm:hidden mb-3 flex items-center justify-between gap-2">
             <span className="font-mono text-[15px] font-bold tracking-[-0.02em] text-[var(--logo)]">Booklog</span>
