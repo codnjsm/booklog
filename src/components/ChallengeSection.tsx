@@ -22,11 +22,14 @@ const CARD_DONE = `${CARD_BASE} border-accent`
 /** 카드 안쪽 여백. 줄 단위로 선을 그어야 해서 껍데기와 따로 둔다. */
 const PAD = 'py-3.5 px-4 sm:py-[18px] sm:px-5'
 /**
- * 목표를 채웠다는 뱃지. 「완료는 accent로 채운다」는 규칙 — 역할 표시인 「만든 사람」 회색 뱃지와
- * 무게가 갈려야 한다. 글자는 홈 요약(`HomeTab`)과 같은 「목표 달성」으로 맞춘다 —
- * 홈에서 본 말과 들어와서 보는 말이 다르면 다른 상태로 읽힌다.
+ * 목표를 채웠다는 뱃지. 말도 모양도 홈 요약(`HomeTab`)의 칩과 같게 맞춘다 —
+ * 홈에서 본 것과 들어와서 보는 것이 다르면 다른 상태로 읽힌다.
+ *
+ * 채우지 않고 연하게 두는 건, 완주한 카드는 테두리가 이미 accent로 바뀌어 있어서다.
+ * 뱃지까지 채우면 한 카드 안에서 같은 말을 두 번 세게 하는 꼴이 된다.
+ * 역할 표시인 「만든 사람」(회색)과는 색으로 갈린다.
  */
-const CHIP_DONE = 'flex-shrink-0 text-[11px] font-medium text-white bg-accentfill rounded px-1.5 py-0.5'
+const CHIP_DONE = 'flex-shrink-0 text-[11px] font-medium text-accent bg-accentsoft rounded px-1.5 py-0.5'
 /** 역할·상태 표시. 해낸 것이 아니라 사실이라 중립색으로 둔다. */
 const CHIP_QUIET = 'flex-shrink-0 text-[11px] text-dim bg-surface2 rounded px-1.5 py-0.5'
 // 초대를 받아들이는 쪽이 주 버튼이다. 둘 다 연한 채움이면 어느 쪽이 기본인지 읽히지 않는다.
