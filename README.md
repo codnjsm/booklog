@@ -6,7 +6,7 @@
 
 ## 주요 기능
 
-- **홈** — 오늘의 독서 목표 진행률, 지금 읽는 중인 책, 오늘의 문장, 최근 활동 피드
+- **홈** — 올해 독서 목표 진행률, 지금 읽는 중인 책(「오늘 읽음」으로 바로 체크), 참여 중인 챌린지 요약, 오늘의 문장, 최근 활동 피드
 - **서재** — 위시리스트 / 읽는중 / 완독 상태로 책 관리, 별점·독후감·비공개 설정(친구에게 숨기기)
 - **모음** — 책에서 발췌한 인용구(형광펜으로 부분 강조 가능) + 우리말샘 사전 검색·단어장을 한 화면에서, 책 페이지 사진으로 문장 인식(OCR)해 인용구로 가져오기
 - **기록** — 완독 달력, 최근 12개월 완독 추이, 연간 독서 목표
@@ -23,7 +23,7 @@
 - **Frontend**: React 18, TypeScript, Vite, Tailwind CSS
 - **상태 관리**: React Context(전역 UI 상태) + `@tanstack/react-query`(서버 상태) + `react-router-dom`(URL 상태)
 - **Backend**: Firebase Hosting, Firestore, Google·이메일 Auth, Cloud Messaging(웹 푸시)
-- **Functions**: Firebase Functions v2 (Node 22, asia-northeast3) — 외부 API 프록시 2개 + 콜러블 24개
+- **Functions**: Firebase Functions v2 (Node 22, asia-northeast3) — 외부 API 프록시 2개 + 콜러블 24개 + Firestore 트리거 2개
 
 ## 시작하기
 
@@ -61,11 +61,13 @@ src/
     QuotesTab, WordsTab, StatsTab, CalendarTab   # CollectionTab/RecordsTab 안에서 조합
     ChallengeSection   # 친구 탭의 독서 챌린지 칸
     NotificationBell, PostCard, PostLikes, PostComments, BookCard, QuoteCard,
-    HighlightedText, DatePicker, DateMultiPicker, Toast, TodayRecommendation
+    HighlightedText, DatePicker, DateMultiPicker, Toast, TodayRecommendation,
+    HomeFab(모바일 홈 플로팅 버튼), Stars(별점), WordSearchPanel(사전 검색)
   contexts/
     AppUIContext.tsx  # 탭(URL 라우팅)/모달/테마/토스트 등 전역 UI 상태
   hooks/
     useAuth.ts        # Google·이메일 로그인
+    useChallenges.ts  # 챌린지 조회. 지난 결과를 먼저 보여주고 뒤에서 갱신
     useData.ts        # 로컬스토리지 + Firestore 동기화, 책/인용구/단어 CRUD
     useFriends.ts     # 친구 요청 구독, 친구 책장·피드, 책 권하기
     usePush.ts        # 알림 권한·기기 등록 상태

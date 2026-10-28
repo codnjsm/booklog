@@ -38,11 +38,12 @@ src/
     ChallengeSection             # 친구 탭의 독서 챌린지 칸. 홈에는 요약만 둔다
     NotificationBell             # 알림함. 모바일 상단 서비스명 줄 / 데스크톱 사이드바 로고 줄
     PostCard, PostLikes, PostComments            # 피드 카드와 좋아요·댓글
-    BookCard, QuoteCard, HighlightedText, DatePicker, DateMultiPicker, Toast, LoginOverlay
+    BookCard, QuoteCard, HighlightedText, DatePicker, DateMultiPicker, Toast
   contexts/
     AppUIContext.tsx  # 탭(URL과 동기화)/모달/테마/토스트/로그인 배너 등 전역 UI 상태
   hooks/
     useAuth.ts        # Firebase Google 로그인
+    useChallenges.ts  # 챌린지 조회. 홈 요약과 친구 탭이 같이 쓴다 (아래 「탭 구성」)
     useData.ts        # 로컬스토리지 + Firestore 동기화, 책/인용구/단어 CRUD, txt 내보내기
     useFriends.ts     # 친구 요청 구독, 친구 책장 로드, 피드 게시물 발행·조회·삭제, 책 권하기
     usePush.ts        # 알림 권한·기기 등록 상태 (켜기/끄기/미지원/설치 필요)
@@ -94,8 +95,13 @@ docs/
   기록 탭의 달력/통계 전환은 바깥에서 부를 일이 없어 지역 상태로 둔다.
 - **챌린지 본체는 친구 탭에 있다.** 친구와 기간을 정해 함께 기록하는 것이라 거기 묶인다 —
   기록 탭은 혼자 돌아보는 자리(달력·통계)라 분류가 어긋났다.
-  홈에 있는 건 진행 중인 것만 보여주는 요약이고, 같은 `queryKey: ['challenges']`를 써서
+  홈에 있는 건 진행 중인 것만 보여주는 요약이고, 둘 다 `useChallenges`를 써서
   캐시를 공유한다 — 탭을 오가도 서버를 다시 치지 않는다.
+  **`listChallenges`는 느리다.** 서버가 참여자 **전원의** `reading-notes` 문서를 통째로 읽어
+  기록한 날을 세기 때문이다(`countRecordedDays`). 홈의 다른 영역은 전부 로컬 저장이라 즉시 뜨는데
+  챌린지만 뒤늦게 튀어나와서, 받아온 결과를 로컬스토리지에 남겼다가 다음에 먼저 그리고
+  뒤에서 갱신한다. 캐시에는 uid를 같이 적는다 — 한 브라우저를 둘이 쓰면 앞사람 챌린지가
+  뒷사람 홈에 보인다. `useData`의 소유자 표시와 같은 이유다.
 
 ## 데이터 저장
 
