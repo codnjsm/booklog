@@ -3,7 +3,8 @@ import Modal from './Modal'
 import type { Book, Quote } from '../../types'
 import { readingSince, readDaysCount } from '../../lib/insights'
 import HighlightedText from '../HighlightedText'
-import { IconLock, IconCollection, IconFriends, IconChevronRight } from '../layout/icons'
+import { IconLock, IconCollection, IconFriends, IconChevronRight, IconCheck, IconRefresh } from '../layout/icons'
+import { today } from '../../lib/day'
 import Stars from '../Stars'
 
 const STATUS = {
@@ -40,6 +41,11 @@ interface Props {
   onAddQuote: (bookId: string) => void
   onEditQuote: (id: string) => void
   onTogglePrivate: (id: string, next: boolean) => void
+  /** 읽는 중인 책을 완독으로 바꾼다. 홈 카드에 있던 걸 여기로 옮겼다 —
+   *  거기선 버튼이 셋이 되어 비좁았고, 완독은 자주 누르는 동작도 아니다. */
+  onFinish: (id: string) => void
+  /** 오늘을 읽은 날에서 뺀다. 홈 버튼은 넣기만 하므로 되돌리는 자리가 여기다. */
+  onClearToday: (id: string) => void
   /** 권할 상대(친구)가 있을 때만 참. 없으면 권하기 줄을 숨긴다. */
   canRecommend: boolean
   onRecommend: (bookId: string) => void
@@ -55,6 +61,8 @@ export default function BookDetailModal({
   onAddQuote,
   onEditQuote,
   onTogglePrivate,
+  onFinish,
+  onClearToday,
   canRecommend,
   onRecommend,
 }: Props) {
@@ -183,6 +191,38 @@ export default function BookDetailModal({
               </button>
             </div>
           </div>
+
+          {/* 오늘을 잘못 눌렀을 때 되돌리는 자리. 오늘이 들어 있을 때만 보인다. */}
+          {(book.readDates ?? []).includes(today()) && (
+            <button
+              onClick={() => onClearToday(bookId)}
+              className="flex items-center gap-2.5 px-4 py-3 rounded-[10px] border border-border bg-transparent cursor-pointer text-left w-full"
+            >
+              <span className="text-dim">
+                <IconRefresh size={16} />
+              </span>
+              <span className="flex flex-col gap-px">
+                <span className="text-[13px] font-medium text-ink">오늘 기록 지우기</span>
+                <span className="text-xs sm:text-[13px] text-dim">오늘 읽은 걸로 남아 있어요</span>
+              </span>
+            </button>
+          )}
+
+          {/* 읽는 중일 때만. 이미 완독했거나 아직 안 읽은 책에는 할 일이 없다. */}
+          {book.status === 'reading' && (
+            <button
+              onClick={() => onFinish(bookId)}
+              className="flex items-center gap-2.5 px-4 py-3 rounded-[10px] border border-border bg-transparent cursor-pointer text-left w-full"
+            >
+              <span className="text-dim">
+                <IconCheck />
+              </span>
+              <span className="flex flex-col gap-px">
+                <span className="text-[13px] font-medium text-ink">완독 처리</span>
+                <span className="text-xs sm:text-[13px] text-dim">다 읽었으면 완독으로 옮겨요</span>
+              </span>
+            </button>
+          )}
 
           {/* 비공개 책은 권할 수 없다(서버가 거부한다). 고른 뒤에 에러를 보게 하지 않는다. */}
           {canRecommend && !isPrivate && (

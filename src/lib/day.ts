@@ -48,3 +48,27 @@ export function dayAfter(n: number, now: Date = new Date()): string {
 export function endOfMonth(now: Date = new Date()): string {
   return toDayString(new Date(now.getFullYear(), now.getMonth() + 1, 0))
 }
+
+/**
+ * 읽은 날 목록에서 하루를 켜고 끈다. 이미 있으면 빼고, 없으면 넣는다.
+ *
+ * 항상 오름차순으로 돌려준다 — `startedAt`·`finishedAt`이 이 목록의 첫날·마지막날에서
+ * 파생되므로, 순서가 흐트러지면 시작일과 완독일이 뒤바뀐다.
+ */
+export function toggleDay(days: string[] | undefined, day: string): string[] {
+  const list = days ?? []
+  return list.includes(day) ? list.filter((d) => d !== day) : [...list, day].sort()
+}
+
+/**
+ * 오늘부터 그날까지 남은 날 수. **양끝을 포함**한다 — 오늘이 마지막 날이면 1이다.
+ * 이미 지났거나 날짜가 깨져 있으면 0.
+ *
+ * 양쪽을 같은 기준(UTC 자정)으로 파싱해 뺀다. 시차가 서로 상쇄되므로 지역시간과 어긋나지 않는다.
+ */
+export function daysUntil(day: string, now: Date = new Date()): number {
+  const from = Date.parse(`${today(now)}T00:00:00Z`)
+  const to = Date.parse(`${day}T00:00:00Z`)
+  if (Number.isNaN(to) || to < from) return 0
+  return Math.round((to - from) / 86400000) + 1
+}

@@ -22,6 +22,7 @@ import {
 } from './firebase'
 import type { Post, Recommendation } from './types'
 import { normalizeTitle } from './lib/recommend'
+import { today, toggleDay } from './lib/day'
 import { AppUIProvider, useAppUI } from './contexts/AppUIContext'
 import AppLayout from './components/layout/AppLayout'
 import HomeTab from './components/HomeTab'
@@ -299,6 +300,19 @@ function AppShell() {
     exportData()
     showToast('데이터를 내보냈어요', 'success')
   }, [exportData, showToast])
+  // 오늘을 읽은 날에 넣거나 뺀다. 「기록한 날 수」가 챌린지의 측정 단위라 여기서 바로 올라간다.
+  const handleToggleToday = useCallback(
+    (id: string) => {
+      const book = state.books.find((b) => b.id === id)
+      if (!book) return
+      const day = today()
+      const next = toggleDay(book.readDates, day)
+      updateBook(id, { readDates: next })
+      showToast(next.includes(day) ? '오늘 읽은 걸로 남겼어요' : '오늘 기록을 지웠어요', 'success')
+    },
+    [state.books, updateBook, showToast],
+  )
+
   const handleFinishBook = useCallback(
     (id: string) => {
       updateBook(id, { status: 'done' })
@@ -391,11 +405,11 @@ function AppShell() {
         <HomeTab
           state={state}
           userName={myName.split(' ')[0] || cachedName}
-          onFinishBook={handleFinishBook}
           isGuest={!user}
           guestDays={guestDays}
           onSignIn={() => openLogin()}
           user={user}
+          onToggleToday={handleToggleToday}
         />
       )}
       {tab === 'books' && <BooksTab books={state.books} quotes={state.quotes} />}
@@ -513,6 +527,8 @@ function AppShell() {
             closeModal()
             showToast('책이 삭제됐어요', 'success')
           }}
+          onFinish={handleFinishBook}
+          onClearToday={handleToggleToday}
           onTogglePrivate={(id, next) => {
             updateBook(id, { isPrivate: next || undefined })
             showToast(next ? '친구에게 비공개로 바꿨어요' : '친구에게 공개로 바꿨어요', 'success')

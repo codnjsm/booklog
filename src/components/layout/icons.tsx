@@ -227,3 +227,9 @@ export const IconDocument = ({ size = 18 }: Props) => (
     <path d="M9 13h6M9 17h4" />
   </svg>
 )
+
+export const IconCheck = ({ size = 16 }: Props) => (
+  <svg {...base(size)}>
+    <path d="m4.5 12.5 5 5 10-11" />
+  </svg>
+)

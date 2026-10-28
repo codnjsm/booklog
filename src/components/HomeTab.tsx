@@ -13,6 +13,7 @@ import {
 } from '../lib/insights'
 import { IconCollection, IconRecords, IconRefresh, IconChevronRight } from './layout/icons'
 import { isStorageAtRiskBrowser } from '../lib/browser'
+import { today } from '../lib/day'
 import HighlightedText from './HighlightedText'
 import HomeFab from './HomeFab'
 import TodayRecommendation from './TodayRecommendation'
@@ -25,7 +26,6 @@ const GUEST_WARN_DAYS = 7
 interface Props {
   state: AppState
   userName?: string
-  onFinishBook: (id: string) => void
   /** 로그인하지 않은 상태면 true. 이때만 저장 위험 배너를 띄운다. */
   isGuest: boolean
   /** 게스트로 기록을 남기기 시작한 뒤 지난 날수. 7일을 넘기면 문구를 강하게 바꾼다. */
@@ -33,6 +33,8 @@ interface Props {
   onSignIn: () => void
   /** 챌린지는 로그인한 사람만 쓴다. */
   user: User | null
+  /** 오늘을 그 책의 읽은 날에 넣거나 뺀다. */
+  onToggleToday: (id: string) => void
 }
 
 /**
@@ -135,6 +137,7 @@ function Challenges({ user }: { user: User | null }) {
       {running.map((c) => {
         const days = c.members.find((m) => m.uid === user.uid)?.days ?? 0
         const pct = Math.min(100, Math.round((days / c.goalDays) * 100))
+        const done = days >= c.goalDays
         // 여럿이면 숫자만으로는 어느 챌린지인지 구별되지 않는다. 만든 사람으로 가른다.
         // 남이 만든 것만 이름을 세운다 — 누구 건지 알아야 하는 쪽이라서다.
         // 내 챌린지는 「내가」를 키워봐야 알려주는 게 없으므로 한 덩어리로 흐리게 둔다.
@@ -172,7 +175,14 @@ function Challenges({ user }: { user: User | null }) {
               <span className="text-[22px] sm:text-[25px] font-semibold leading-none">{days}</span>
               <span className="text-[13px] text-dim">/ {c.goalDays}일</span>
               <span className="flex-1" />
-              <span className="font-mono text-[13px] font-bold text-accent">{pct}%</span>
+              {/* 채웠으면 100%라고 쓰는 대신 그렇다고 말한다 — 숫자보다 먼저 읽힌다. */}
+              {done ? (
+                <span className="text-[11px] font-medium text-accent bg-accentsoft rounded px-1.5 py-0.5">
+                  목표 달성
+                </span>
+              ) : (
+                <span className="font-mono text-[13px] font-bold text-accent">{pct}%</span>
+              )}
             </div>
             <div className="h-1.5 rounded-full bg-surface2 overflow-hidden mt-2.5">
               <div
@@ -216,11 +226,15 @@ function Cover({ book, className = '' }: { book: Book; className?: string }) {
   )
 }
 
-export default function HomeTab({ state, userName, onFinishBook, isGuest, guestDays, onSignIn, user }: Props) {
+export default function HomeTab({ state, userName, isGuest, guestDays, onSignIn, user, onToggleToday }: Props) {
   const { openBookDetail, openAddQuote, changeTab } = useAppUI()
   const { books, quotes, words, readingGoal } = state
 
   const now = new Date()
+  const todayStr = today(now)
+  // 홈에서는 넣기만 한다. 한 번 누르면 잠기고, 되돌리는 건 「기록 수정」의 읽은 날에서 한다 —
+  // 같은 버튼이 넣기도 빼기도 하면 잘못 눌렀을 때 그대로 지워진다.
+  const markedToday = (b: Book) => (b.readDates ?? []).includes(todayStr)
   const thisYear = now.getFullYear()
   const doneThisYear = books.filter((b) => b.finishedAt?.startsWith(String(thisYear))).length
   const doneThisMonth = books.filter((b) =>
@@ -404,17 +418,24 @@ export default function HomeTab({ state, userName, onFinishBook, isGuest, guestD
                     </div>
                     <div className="flex-1" />
                     <div className="flex justify-end gap-2">
+                      {/* 오늘 읽었으면 눌러둔다. 지금은 책 수정 모달에서 날짜를 고르는 길밖에 없어서,
+                          문장을 안 담은 날은 기록이 통째로 안 남았다. */}
+                      <button
+                        onClick={() => onToggleToday(book.id)}
+                        disabled={markedToday(book)}
+                        className={`text-[13px] sm:text-sm font-medium px-3 py-1.5 rounded-lg border ${
+                          markedToday(book)
+                            ? 'bg-surface2 text-dim border-border cursor-default'
+                            : 'bg-surface text-ink border-border cursor-pointer hover:bg-surface2'
+                        }`}
+                      >
+                        오늘 읽음
+                      </button>
                       <button
                         onClick={() => openAddQuote(book.id)}
                         className="text-[13px] sm:text-sm font-medium px-3 py-1.5 rounded-lg bg-accentfill text-white border-none cursor-pointer hover:bg-accentfillhover"
                       >
                         문장 저장
-                      </button>
-                      <button
-                        onClick={() => onFinishBook(book.id)}
-                        className="text-[13px] sm:text-sm px-3 py-1.5 rounded-lg bg-surface text-ink border border-border cursor-pointer hover:bg-surface2"
-                      >
-                        완독 처리
                       </button>
                     </div>
                   </div>

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { toDayString, isoToDay, today, dayAfter, endOfMonth } from './day'
+import { toDayString, isoToDay, today, dayAfter, endOfMonth, toggleDay, daysUntil } from './day'
 
 describe('isoToDay — 저장된 값을 날짜로', () => {
   it('날짜만 있는 값은 그대로 둔다 — 달력에서 고른 읽은 날', () => {
@@ -80,5 +80,58 @@ describe('endOfMonth — 이번 달 말일', () => {
 
   it('말일에 불러도 그날이다', () => {
     expect(endOfMonth(new Date(2026, 9, 31))).toBe('2026-10-31')
+  })
+})
+
+describe('toggleDay — 읽은 날 켜고 끄기', () => {
+  it('없으면 넣는다', () => {
+    expect(toggleDay(['2026-10-26'], '2026-10-28')).toEqual(['2026-10-26', '2026-10-28'])
+  })
+
+  it('있으면 뺀다', () => {
+    expect(toggleDay(['2026-10-26', '2026-10-28'], '2026-10-26')).toEqual(['2026-10-28'])
+  })
+
+  it('목록이 아직 없으면 그 하루만 담는다', () => {
+    expect(toggleDay(undefined, '2026-10-28')).toEqual(['2026-10-28'])
+  })
+
+  it('하나뿐인 날을 빼면 빈 목록', () => {
+    expect(toggleDay(['2026-10-28'], '2026-10-28')).toEqual([])
+  })
+
+  it('항상 오름차순 — 시작일·완독일이 이 순서에서 파생된다', () => {
+    expect(toggleDay(['2026-10-28', '2026-10-26'], '2026-10-27')).toEqual(['2026-10-26', '2026-10-27', '2026-10-28'])
+  })
+
+  it('원본을 바꾸지 않는다', () => {
+    const before = ['2026-10-26']
+    toggleDay(before, '2026-10-28')
+    expect(before).toEqual(['2026-10-26'])
+  })
+})
+
+describe('daysUntil — 남은 날 수', () => {
+  const now = new Date(2026, 9, 28)
+
+  it('오늘이 마지막 날이면 1 — 오늘도 기록할 수 있다', () => {
+    expect(daysUntil('2026-10-28', now)).toBe(1)
+  })
+
+  it('내일이 마지막이면 2', () => {
+    expect(daysUntil('2026-10-29', now)).toBe(2)
+  })
+
+  it('이미 지났으면 0', () => {
+    expect(daysUntil('2026-10-27', now)).toBe(0)
+  })
+
+  it('달을 넘겨도 센다', () => {
+    expect(daysUntil('2026-11-02', now)).toBe(6)
+  })
+
+  it('깨진 값이면 0 — 화면이 NaN을 그리지 않게', () => {
+    expect(daysUntil('', now)).toBe(0)
+    expect(daysUntil('어제', now)).toBe(0)
   })
 })
