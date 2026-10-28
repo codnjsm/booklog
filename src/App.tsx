@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/reac
 import { BrowserRouter } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
 import { useData, clearLocalData } from './hooks/useData'
+import { clearChallengeCache } from './hooks/useChallenges'
 import { useFriends } from './hooks/useFriends'
 import {
   upsertUserProfile,
@@ -370,6 +371,7 @@ function AppShell() {
       throw err
     }
     clearLocalData()
+    clearChallengeCache()
     sessionStorage.setItem(DELETED_KEY, '1')
     location.replace('/')
   }, [showToast])

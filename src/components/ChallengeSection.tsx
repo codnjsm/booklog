@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { User } from 'firebase/auth'
 import type { Challenge, ChallengeMember, UserProfile } from '../types'
-import { listChallenges, joinChallenge, declineChallenge, deleteChallenge, leaveChallenge } from '../firebase'
+import { joinChallenge, declineChallenge, deleteChallenge, leaveChallenge } from '../firebase'
+import { useChallenges } from '../hooks/useChallenges'
 import { useAppUI } from '../contexts/AppUIContext'
 import { daysUntil } from '../lib/day'
 import InviteToChallengeModal from './modals/InviteToChallengeModal'
@@ -220,12 +221,7 @@ export default function ChallengeSection({ user, friends }: Props) {
   // 어느 챌린지에 부를지 담아둔다. null이면 모달이 닫힌 상태다.
   const [inviting, setInviting] = useState<Challenge | null>(null)
 
-  const query = useQuery({
-    queryKey: ['challenges'],
-    queryFn: listChallenges,
-    enabled: !!user,
-    staleTime: 30_000,
-  })
+  const query = useChallenges(user)
   const joined = query.data?.joined ?? []
   const invited = query.data?.invited ?? []
 

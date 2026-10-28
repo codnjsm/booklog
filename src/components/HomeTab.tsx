@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import type { User } from 'firebase/auth'
 import type { Book, Quote, AppState } from '../types'
 import { useAppUI } from '../contexts/AppUIContext'
@@ -17,7 +16,7 @@ import { today } from '../lib/day'
 import HighlightedText from './HighlightedText'
 import HomeFab from './HomeFab'
 import TodayRecommendation from './TodayRecommendation'
-import { listChallenges } from '../firebase'
+import { useChallenges } from '../hooks/useChallenges'
 import Stars from './Stars'
 
 /** Safari·아이폰이 미접속 데이터를 지우기 시작하는 기준. App.tsx의 값과 같은 의미다. */
@@ -108,12 +107,7 @@ function shortDay(day: string): string {
  */
 function Challenges({ user }: { user: User | null }) {
   const { changeTab } = useAppUI()
-  const { data } = useQuery({
-    queryKey: ['challenges'],
-    queryFn: listChallenges,
-    enabled: !!user,
-    staleTime: 30_000,
-  })
+  const { data } = useChallenges(user)
 
   const running = (data?.joined ?? []).filter((c) => !c.ended)
   const invited = data?.invited ?? []
