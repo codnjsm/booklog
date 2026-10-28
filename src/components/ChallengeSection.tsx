@@ -9,10 +9,23 @@ import InviteToChallengeModal from './modals/InviteToChallengeModal'
 
 const LABEL = 'font-mono text-[10px] sm:text-[12px] tracking-[0.09em] text-dim'
 /** 카드 껍데기. 한 챌린지가 카드 하나이고 그 안에 달성률·참여자가 나뉘어 들어간다. */
-const CARD = 'bg-surface border border-border rounded-[10px] overflow-hidden flex flex-col'
+const CARD_BASE = 'bg-surface border rounded-[10px] overflow-hidden flex flex-col'
+const CARD = `${CARD_BASE} border-border`
+/**
+ * 완주한 카드.
+ *
+ * `CARD`에 `border-accent`를 덧붙이면 안 된다 — Tailwind는 border-color 유틸을 알파벳 순으로
+ * 내보내서 `.border-border`가 `.border-accent`보다 **뒤에** 온다. 둘 다 클래스 하나라
+ * 특이도가 같으니 나중 것이 이긴다. 그래서 색을 더하지 않고 통째로 갈아끼운다.
+ */
+const CARD_DONE = `${CARD_BASE} border-accent`
 /** 카드 안쪽 여백. 줄 단위로 선을 그어야 해서 껍데기와 따로 둔다. */
 const PAD = 'py-3.5 px-4 sm:py-[18px] sm:px-5'
-/** 완주 뱃지. 「완료는 accent로 채운다」는 규칙 — 역할 표시인 「만든 사람」 회색 뱃지와 무게가 갈려야 한다. */
+/**
+ * 목표를 채웠다는 뱃지. 「완료는 accent로 채운다」는 규칙 — 역할 표시인 「만든 사람」 회색 뱃지와
+ * 무게가 갈려야 한다. 글자는 홈 요약(`HomeTab`)과 같은 「목표 달성」으로 맞춘다 —
+ * 홈에서 본 말과 들어와서 보는 말이 다르면 다른 상태로 읽힌다.
+ */
 const CHIP_DONE = 'flex-shrink-0 text-[11px] font-medium text-white bg-accentfill rounded px-1.5 py-0.5'
 /** 역할·상태 표시. 해낸 것이 아니라 사실이라 중립색으로 둔다. */
 const CHIP_QUIET = 'flex-shrink-0 text-[11px] text-dim bg-surface2 rounded px-1.5 py-0.5'
@@ -88,8 +101,8 @@ function MyProgress({
           {short(c.from)} ~ {short(c.to)}
           {period}
         </span>
-        {/* 완주 뱃지가 남의 줄에만 있고 내 카드엔 없었다. 정작 내 완주가 제일 중요한데. */}
-        {achieved && <span className={CHIP_DONE}>완주</span>}
+        {/* 이 뱃지가 남의 줄에만 있고 내 카드엔 없었다. 정작 내가 채웠는지가 제일 중요한데. */}
+        {achieved && <span className={CHIP_DONE}>목표 달성</span>}
         {(onDelete || onLeave) && <span className="flex-1" />}
         {/* 만든 사람은 지우고, 참여자는 나간다. 만든 사람이 나가면 아무도 못 지우는 문서가 되므로
             둘이 같이 뜨는 일은 없다. 같은 자리에 하나만 오므로 모양도 같게 둔다. */}
@@ -161,7 +174,7 @@ function Members({ c, myUid, onInvite }: { c: Challenge; myUid: string; onInvite
           {/* 「만든 사람」은 역할 표시라 중립색으로 둔다. accent는 완주처럼 해낸 것에만 쓴다.
               이게 없으면 참여자는 자기에게 왜 부르기 버튼이 없는지 알 수 없다. */}
           {m.uid === c.ownerUid && <span className={CHIP_QUIET}>만든 사람</span>}
-          {m.achieved && <span className={CHIP_DONE}>완주</span>}
+          {m.achieved && <span className={CHIP_DONE}>목표 달성</span>}
           <span className="font-mono text-[13px] text-dim flex-shrink-0">{m.days}일</span>
         </div>
       ))}
@@ -291,7 +304,7 @@ export default function ChallengeSection({ user, friends }: Props) {
         return (
           // 완주한 카드는 테두리를 accent로 바꾼다. 뱃지와 한 줄짜리 문구만으로는
           // 여러 장이 쌓였을 때 어느 게 끝까지 간 건지 훑어서 알 수 없다.
-          <div key={c.id} className={`${CARD} ${me?.achieved ? 'border-accent' : ''}`}>
+          <div key={c.id} className={me?.achieved ? CARD_DONE : CARD}>
             <MyProgress
               c={c}
               me={me}
